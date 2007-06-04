@@ -1,0 +1,208 @@
+#! /usr/bin/env python
+
+class Grammar(object):
+
+    """Represent a context free grammar."""
+
+    def __init__(self, rules, clean_up=True, **kwargs):
+	self.rules = {}
+        self.symbols = set()
+	self.terminal = set()
+	self.nonterminal = set()
+
+        for arg in kwargs:
+            if arg == "start":
+                continue
+            raise TypeError("invalid keyword argument '%s'"%arg)
+
+        if not isinstance(rules,dict):
+            rules = dict(enumerate(rules))
+        elif "start" not in kwargs:
+            raise ValueError("start symbol missing")
+        first = True
+	for key in rules:
+            r = rules[key]
+	    self.rules[key] = r
+            self.nonterminal.add(r[0])
+            if first:
+                self.start = r[0]
+                first = False
+	    for s in r[1:]:
+                self.symbols.add(s)
+
+        if "start" in kwargs:
+            self.start = kwargs["start"]
+            if self.start not in self.nonterminal:
+                msg = "start symbol %s is no nonterminal"%repr(start)
+                raise ValueError(msg)
+
+	self.terminal = self.symbols - self.nonterminal
+        if clean_up:
+            self._cleanup()
+        self.nonterminal = frozenset(self.nonterminal)
+        self.terminal = frozenset(self.terminal)
+        self.symbols = frozenset(self.symbols)
+
+        # precompute the set of all nullable symbols
+	self.nbtab = frozenset(self._compute_nbtab())
+
+        # precompute the table of all possible first symbols in expansions
+        fitab = self._compute_fitab()
+	self.fitab = {}
+	for s in self.nonterminal|self.terminal:
+	    self.fitab[s] = frozenset(fitab[s])
+
+        # precompute the table of all possible follow-up symbols
+        fotab = self._compute_fotab()
+	self.fotab = {}
+	for s in self.nonterminal|self.terminal:
+	    self.fotab[s] = frozenset(fotab[s])
+
+    def _cleanup(self):
+        """Remove unnecessary rules and symbols."""
+
+        # remove nonterminal symbols which do not expand into terminals
+	N = set()
+        T = self.terminal
+        R = self.rules.keys()
+	done = False
+	while not done:
+	    done = True
+	    for key in R:
+                r = self.rules[key]
+		if r[0] in N: continue
+		if set(r[1:])&(N|T):
+		    N.add(r[0])
+		    done = False
+	if self.start not in N:
+	    raise ParseError("%s doesn't generate terminals"%repr(self.start))
+        for key in R:
+            if not set(self.rules[key]) <= (N|T):
+                del self.rules[key]
+
+        # remove unreachable symbols
+	gamma = set([self.start])
+	done = False
+	while not done:
+	    done = True
+	    for key in R:
+                r = self.rules[key]
+		if r[0] not in gamma: continue
+		for w in r[1:]:
+		    if w not in gamma:
+			gamma.add(w)
+			done = False
+	N &= gamma
+	T &= gamma
+        for key in R:
+            if not set(self.rules[key]) <= (N|T):
+                del self.rules[key]
+
+        # generate a unique terminator symbol
+        s = "$"
+        while s in N|T:
+            s += "$"
+        T.add(s)
+        self.terminator = s
+
+        # generate a private start symbol
+        s = "start"
+        while s in N|T:
+            s = "_"+s
+        N.add(s)
+        self.rules[None] = (s, self.start, self.terminator)
+        self.start = s
+
+        self.nonterminal = N
+        self.terminal = T
+        self.symbols = N|T
+
+    def _compute_nbtab(self):
+        """Compute the set of nullable symbols."""
+	nbtab = set()
+	done = False
+	while not done:
+	    done = True
+	    for key in self.rules:
+                r = self.rules[key]
+		if r[0] in nbtab: continue
+		for s in r[1:]:
+		    if s not in nbtab: break
+		else:
+		    nbtab.add(r[0])
+		    done = False
+        return nbtab
+
+    def _compute_fitab(self):
+        """Compute the table of all possible first symbols in expansions."""
+	fitab = {}
+	for s in self.nonterminal:
+	    fitab[s] = set()
+	for s in self.terminal:
+	    fitab[s] = set([s])
+	done = False
+	while not done:
+	    done = True
+	    for key in self.rules:
+                r = self.rules[key]
+		fi = set()
+		for s in r[1:]:
+		    fi |= fitab[s]
+		    if s not in self.nbtab: break
+		if not(fi <= fitab[r[0]]):
+		    fitab[r[0]] |= fi
+		    done = False
+        return fitab
+
+    def _compute_fotab(self):
+	fotab = {}
+	for s in self.nonterminal|self.terminal:
+	    fotab[s] = set()
+	done = False
+	while not done:
+	    done = True
+	    for key in self.rules:
+                r = self.rules[key]
+		for i in range(1,len(r)):
+		    fo = set()
+		    for s in r[i+1:]:
+			fo |= self.fitab[s]
+			if s not in self.nbtab: break
+		    else:
+			fo |= fotab[r[0]]
+		    if not (fo <= fotab[r[i]]):
+			fotab[r[i]] |= fo
+			done = False
+        return fotab
+
+    def is_nullable(self, word):
+        """Check whether 'word' can derive the empty word.
+
+        'word' must be a list of symbols.  The return value is True,
+        if every symbol in 'word' is nullable.  Otherwise the return
+        value is false.
+        """
+        for x in word:
+            if x not in self.nbtab: return False
+        return True
+
+    def first_tokens(self, word):
+        """Get all possible first terminals in derivations of 'word'.
+
+        'word' must be a list of symbols.  The return value is the set
+        of all possible terminal symbols which can be the start of a
+        derivation from 'word'.
+        """
+        fi = set()
+        for s in word:
+            fi |= self.fitab[s]
+            if s not in self.nbtab: break
+        return fi
+
+    def follow_tokens(self, x):
+        """Get all possible follow-up tokens after 'x'.
+
+        'x' must be a symbol.  The return value is the set of all
+        terminals which can directly follow 'x' in a derivation.
+        """
+	return self.fotab[x]

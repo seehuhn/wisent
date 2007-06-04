@@ -1,0 +1,9 @@
+S: "if" E "then" S "else" S
+  | "begin" S L
+  | "print" E
+  ;
+L: "end"
+  | ";" S L
+  ;
+E: "num" "=" "num"
+  ;
