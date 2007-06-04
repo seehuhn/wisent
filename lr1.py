@@ -6,68 +6,84 @@ from wifile import read_rules
 from text import layout_list
 from sniplets import emit_class_parseerror, emit_rules
 
-def LR1_closure(g, U):
-    U = set(U)
-    current = U
-    while current:
-        new = set()
-        for key,l,n,next in current:
-            if n == l: continue
-            r = g.rules[key]
-            X = r[n]
-            if X in g.terminal: continue
-            for k in g.rules:
-                s = g.rules[k]
-                if s[0] != X: continue
-                for Y in g.first_tokens(list(r[n+1:])+[next]):
-                    x = (k,len(s),1,Y)
-                    if x not in U:
-                        new.add(x)
-        U |= new
-        current = new
-    return frozenset(U)
+class LR1(Grammar):
 
-def LR1_goto(g, U, X):
-    T = [ (key,l,n+1,next) for key,l,n,next in U if n<l and g.rules[key][n]==X ]
-    return LR1_closure(g, T)
+    def __init__(self, *args, **kwargs):
+        Grammar.__init__(self, *args, **kwargs)
 
-def LR1_tables(g):
-    stateno = 0
-    T = {}
-    Tinv = {}
-    E = {}
+        self.starts = {}
+        for X in self.symbols:
+            self.starts[X] = []
+        for k,s in self.rules.items():
+            self.starts[s[0]].append((k,len(s)))
 
-    for key in g.rules:
-        if g.rules[key][0] == g.start:
-            break
-    state = LR1_closure(g, [ (key,len(g.rules[key]),1,g.terminator) ])
-    T[stateno] = state
-    Tinv[state] = stateno
-    stateno += 1
+        self._cache = {}
 
-    done = False
-    while not done:
-        done = True
-        for I in T.keys():
-            if I not in E: E[I] = {}
-            for key,l,n,next in T[I]:
+    def closure(self, U):
+        rules = self.rules
+        U = set(U)
+        current = U
+        while current:
+            new = set()
+            for key,l,n,Y in current:
                 if n == l: continue
-                r = g.rules[key]
-                X = r[n]
-                J = LR1_goto(g, T[I], X)
-                if J not in Tinv:
-                    T[stateno] = J
-                    Tinv[J] = stateno
-                    stateno += 1
-                    done = False
-                if X not in E[I]: E[I][X] = []
-                if Tinv[J] not in E[I][X]:
-                    E[I][X].append(Tinv[J])
-                    done = False
-    return  T, E
+                r = rules[key]
+                lookahead = self.first_tokens(list(r[n+1:])+[Y])
+                for k,l in self.starts[r[n]]:
+                    for Y in lookahead:
+                        x = (k,l,1,Y)
+                        if x not in U:
+                            new.add(x)
+            current = new
+            U |= new
+        return frozenset(U)
 
-g = Grammar(read_rules(argv[1]))
-T, E = LR1_tables(g)
+    def goto(self, U, X):
+        if (U,X) in self._cache:
+            return self._cache[(U,X)]
+        rules = self.rules
+        T = [ (key,l,n+1,Y) for key,l,n,Y in U if n<l and rules[key][n]==X ]
+        res = self.closure(T)
+        self._cache[(U,X)] = res
+        return res
+
+    def tables(self):
+        stateno = 0
+        T = {}
+        Tinv = {}
+        E = {}
+
+        for key in self.rules:
+            if self.rules[key][0] == self.start:
+                break
+        state = self.closure([ (key,len(self.rules[key]),1,self.terminator) ])
+        T[stateno] = state
+        Tinv[state] = stateno
+        stateno += 1
+
+        done = False
+        while not done:
+            done = True
+            for I in T.keys():
+                if I not in E: E[I] = {}
+                for key,l,n,next in T[I]:
+                    if n == l: continue
+                    r = self.rules[key]
+                    X = r[n]
+                    J = self.goto(T[I], X)
+                    if J not in Tinv:
+                        T[stateno] = J
+                        Tinv[J] = stateno
+                        stateno += 1
+                        done = False
+                    if X not in E[I]: E[I][X] = []
+                    if Tinv[J] not in E[I][X]:
+                        E[I][X].append(Tinv[J])
+                        done = False
+        return  T, E
+
+g = LR1(read_rules(argv[1]))
+T, E = g.tables()
 
 rtab = {}
 for I in T:

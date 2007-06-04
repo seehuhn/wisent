@@ -25,7 +25,7 @@ for n in tab:
     for t in tab[n]:
         if len(tab[n][t]) <= 1:
             continue
-        print >>stderr, "this is not an LL(1) grammar"
+        print >>stderr, "not an LL(1) grammar"
         raise SystemExit(1)
 
 alnum = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
