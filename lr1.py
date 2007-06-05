@@ -19,6 +19,9 @@ class LR1(Grammar):
 
         self._cache = {}
 
+        self.generate_tables()
+        self.check()
+
     def closure(self, U):
         rules = self.rules
         U = set(U)
@@ -47,7 +50,7 @@ class LR1(Grammar):
         self._cache[(U,X)] = res
         return res
 
-    def tables(self):
+    def generate_tables(self):
         stateno = 0
         T = {}
         Tinv = {}
@@ -80,45 +83,49 @@ class LR1(Grammar):
                     if Tinv[J] not in E[I][X]:
                         E[I][X].append(Tinv[J])
                         done = False
-        return  T, E
+        self.T = T
+        self.E = E
+
+    def check(self):
+        T = self.T
+        E = self.E
+
+        self.rtab = {}
+        for I in T:
+            reductions = []
+            for key,l,n,next in T[I]:
+                if n<l:
+                    continue
+                if (I,next) in self.rtab:
+                    print >>stderr, "not an LR(1) grammar (reduce-reduce conflict)"
+                    raise SystemExit(1)
+                r = self.rules[key]
+                self.rtab[(I,next)] = (key, r[0], n-1)
+
+        self.stab = {}
+        self.gtab = {}
+        for I in E:
+            EI = E[I]
+            if not EI:
+                continue
+            for X in EI:
+                if (I,X) in self.rtab:
+                    print >>stderr, "not an LR(1) grammar (shift-reduce conflict)"
+                    raise SystemExit(1)
+                JJ = EI[X]
+                if len(JJ)>1:
+                    # TODO: can this really occur?
+                    print >>stderr, "not an LR(1) grammar (shift-shift conflict)"
+                    raise SystemExit(1)
+                J = JJ[0]
+                if X in self.terminal:
+                    self.stab[(I,X)] = J
+                    if X == self.terminator:
+                        self.final_state = J
+                else:
+                    self.gtab[(I,X)] = J
 
 g = LR1(read_rules(argv[1]))
-T, E = g.tables()
-
-rtab = {}
-for I in T:
-    reductions = []
-    for key,l,n,next in T[I]:
-        if n<l:
-            continue
-        if (I,next) in rtab:
-            print >>stderr, "not an LR(1) grammar (reduce-reduce conflict)"
-            raise SystemExit(1)
-        r = g.rules[key]
-        rtab[(I,next)] = (key, r[0], n-1)
-
-stab = {}
-gtab = {}
-for I in E:
-    EI = E[I]
-    if not EI:
-        continue
-    for X in EI:
-        if (I,X) in rtab:
-            print >>stderr, "not an LR(1) grammar (shift-reduce conflict)"
-            raise SystemExit(1)
-        JJ = EI[X]
-        if len(JJ)>1:
-            # TODO: can this really occur?
-            print >>stderr, "not an LR(1) grammar (shift-shift conflict)"
-            raise SystemExit(1)
-        J = JJ[0]
-        if X in g.terminal:
-            stab[(I,X)] = J
-            if X == g.terminator:
-                final_state = J
-        else:
-            gtab[(I,X)] = J
 
 print "from itertools import chain"
 print
@@ -127,17 +134,17 @@ print
 print "class Parser(object):"
 print
 print "    _rtab = {"
-for l in layout_list("        ", ["%s: %s"%(repr(i),repr(rtab[i])) for i in rtab], ""):
+for l in layout_list("        ", ["%s: %s"%(repr(i),repr(g.rtab[i])) for i in g.rtab], ""):
     print l
 print "    }"
 print
 print "    _stab = {"
-for l in layout_list("        ", ["(%d,%s): %s"%(i,repr(x),stab[(i,x)]) for i,x in stab], ""):
+for l in layout_list("        ", ["(%d,%s): %s"%(i,repr(x),g.stab[(i,x)]) for i,x in g.stab], ""):
     print l
 print "    }"
 print
 print "    _gtab = {"
-for l in layout_list("        ", ["(%d,%s): %s"%(i,repr(x),gtab[(i,x)]) for i,x in gtab], ""):
+for l in layout_list("        ", ["(%d,%s): %s"%(i,repr(x),g.gtab[(i,x)]) for i,x in g.gtab], ""):
     print l
 print "    }"
 print
@@ -162,7 +169,7 @@ print "        self.input = chain(input,[(%s,)])"%repr(g.terminator)
 print "        self.valid = False"
 print "        self.state = 0"
 print "        self.stack = []"
-print "        while self.state != %s:"%final_state
+print "        while self.state != %s:"%g.final_state
 print "            X = self._peek()"
 print "            if (self.state,X) in self._rtab:"
 print "                key,X,n = self._rtab[(self.state,X)]"
