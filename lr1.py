@@ -8,7 +8,7 @@ from sniplets import emit_class_parseerror, emit_rules
 
 class LR1(Grammar):
 
-    name = "LR(1)"
+    """Represent LR(1) grammars and generate parsers."""
 
     def __init__(self, *args, **kwargs):
         Grammar.__init__(self, *args, **kwargs)
@@ -16,7 +16,7 @@ class LR1(Grammar):
         self.starts = {}
         for X in self.symbols:
             self.starts[X] = []
-        for k,s in self.rules.items():
+        for k, s in self.rules.iteritems():
             self.starts[s[0]].append((k,len(s)))
 
         self._cache = {}
@@ -44,6 +44,7 @@ class LR1(Grammar):
         return frozenset(U)
 
     def goto(self, U, X):
+        """ Given a state U and a symbol X, return the new parser state."""
         if (U,X) in self._cache:
             return self._cache[(U,X)]
         rules = self.rules
@@ -58,10 +59,8 @@ class LR1(Grammar):
         Tinv = {}
         E = {}
 
-        for key in self.rules:
-            if self.rules[key][0] == self.start:
-                break
-        state = self.closure([ (key,len(self.rules[key]),1,self.terminator) ])
+        key, l = self.starts[self.start][0]
+        state = self.closure([ (key,l,1,self.terminator) ])
         T[stateno] = state
         Tinv[state] = stateno
         stateno += 1
@@ -69,7 +68,8 @@ class LR1(Grammar):
         done = False
         while not done:
             done = True
-            for I in T.keys():
+            states = T.keys()
+            for I in states:
                 if I not in E: E[I] = {}
                 for key,l,n,next in T[I]:
                     if n == l: continue
@@ -99,7 +99,8 @@ class LR1(Grammar):
                 if n<l:
                     continue
                 if (I,next) in self.rtab:
-                    print >>stderr, "not an LR(1) grammar (reduce-reduce conflict)"
+                    msg = "not an LR(1) grammar (reduce-reduce conflict)"
+                    print >>stderr, msg
                     raise SystemExit(1)
                 r = self.rules[key]
                 self.rtab[(I,next)] = (key, r[0], n-1)
@@ -112,12 +113,14 @@ class LR1(Grammar):
                 continue
             for X in EI:
                 if (I,X) in self.rtab:
-                    print >>stderr, "not an LR(1) grammar (shift-reduce conflict)"
+                    msg = "not an LR(1) grammar (shift-reduce conflict)"
+                    print >>stderr, msg
                     raise SystemExit(1)
                 JJ = EI[X]
                 if len(JJ)>1:
                     # TODO: can this really occur?
-                    print >>stderr, "not an LR(1) grammar (shift-shift conflict)"
+                    msg = "not an LR(1) grammar (shift-shift conflict)"
+                    print >>stderr, msg
                     raise SystemExit(1)
                 J = JJ[0]
                 if X in self.terminal:
@@ -127,9 +130,77 @@ class LR1(Grammar):
                 else:
                     self.gtab[(I,X)] = J
 
+    def write_decorations(self, fd):
+        fd.write("# terminal symbols:\n")
+        tt = map(repr, sorted(self.terminal))
+        line = "#   "+tt[0]
+        for t in tt[1:]:
+            test = line+" "+t
+            if len(test)>=80:
+                fd.write(line+"\n")
+                line = "#   "+t
+            else:
+                line = test
+        fd.write(line+"\n\n")
+
+        fd.write("# non-terminal symbols:\n")
+        tt = map(repr, sorted(self.nonterminal))
+        line = "#   "+tt[0]
+        for t in tt[1:]:
+            test = line+" "+t
+            if len(test)>=80:
+                fd.write(line+"\n")
+                line = "#   "+t
+            else:
+                line = test
+        fd.write(line+"\n\n")
+
+        fd.write("# grammar rules:\n")
+        keys = sorted(self.rules.keys())
+        for key in keys:
+            r = self.rules[key]
+            head = repr(r[0])
+            tail = " ".join(map(repr, r[1:]))
+            fd.write("#   %s -> %s\n"%(head,tail))
+        fd.write("\n")
+
+        fd.write("# parser states:\n")
+        keys = sorted(self.T.keys())
+        for k in keys:
+            fd.write("#\n")
+            fd.write("# state %d:\n"%k)
+            for k,l,n,readahead in self.T[k]:
+                r = self.rules[k]
+                head = repr(r[0])
+                tail1 = " ".join(map(repr, r[1:n]))
+                tail2 = " ".join(map(repr, r[n:l]))
+                readahead = repr(readahead)
+                fd.write("#   %s -> %s.%s | %s\n"%(head,tail1,tail2,readahead))
+        fd.write("\n")
+
+        fd.write("# transition table:\n")
+        fd.write("#\n")
+        tt = sorted(self.terminal)+sorted(self.nonterminal)
+        ttt = [ repr(t) for t in tt ]
+        widths = [ len(t) for t in ttt ]
+        fd.write("# state | "+" ".join(ttt)+"\n")
+        fd.write("# %s\n"%("-"*(7+sum(widths)+len(tt))))
+        keys = sorted(self.T.keys())
+        for I in keys:
+            rest = [ ]
+            for t,l in zip(tt,widths):
+                if t in self.E[I]:
+                    next = ",".join(["%d"%x for x in self.E[I][t]])
+                    rest.append(next.center(l))
+                else:
+                    rest.append(" "*l)
+            fd.write("# %5d | %s\n"%(I," ".join(rest)))
+        fd.write("\n")
+
     def write_tables(self, fd):
         fd.write("\n")
-        r_items = [ "%s: %s"%(repr(i),repr(self.rtab[i])) for i in self.rtab ]
+        r_items = [ tuple(map(repr,i+self.rtab[i])) for i in self.rtab ]
+        r_items = [ "(%s,%s): (%s,%s,%s)"%ri for ri in r_items ]
         fd.write("    _rtab = {\n")
         for l in list_lines("        ", r_items, ""):
             fd.write(l+'\n')
@@ -155,7 +226,10 @@ class LR1(Grammar):
         def _shift(self):
             t = self._peek()
             self.stack.append((self.state,t,self.val))
-            self.state = self._stab[(self.state,t)]
+            try:
+                self.state = self._stab[(self.state,t)]
+            except:
+                raise ParseError("unexpected token '%s'"%t, self.val)
             self.valid = False
         """)
 

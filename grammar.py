@@ -4,7 +4,18 @@ class Grammar(object):
 
     """Represent a context free grammar."""
 
-    def __init__(self, rules, clean_up=True, **kwargs):
+    def __init__(self, rules, cleanup=True, **kwargs):
+        """Create a new grammar instance.
+
+        The argument 'rules' must be a dictionary with the production
+        rules in the values or an iterable listing all production
+        rules.  Each production rule must be a list or tuple with a
+        non-terminal as the first element, and the replacement of the
+        non-terminal in the remaining elements.
+
+        The required keyword argument 'start' denotes the start symbol
+        of the grammar.
+        """
 	self.rules = {}
         self.symbols = set()
 	self.terminal = set()
@@ -20,8 +31,7 @@ class Grammar(object):
         elif "start" not in kwargs:
             raise ValueError("start symbol missing")
         first = True
-	for key in rules:
-            r = rules[key]
+	for key, r in rules.iteritems():
 	    self.rules[key] = r
             self.nonterminal.add(r[0])
             if first:
@@ -33,11 +43,11 @@ class Grammar(object):
         if "start" in kwargs:
             self.start = kwargs["start"]
             if self.start not in self.nonterminal:
-                msg = "start symbol %s is no nonterminal"%repr(start)
+                msg = "start symbol %s is not a nonterminal"%repr(start)
                 raise ValueError(msg)
 
 	self.terminal = self.symbols - self.nonterminal
-        if clean_up:
+        if cleanup:
             self._cleanup()
         self.nonterminal = frozenset(self.nonterminal)
         self.terminal = frozenset(self.terminal)
@@ -123,8 +133,7 @@ class Grammar(object):
 	done = False
 	while not done:
 	    done = True
-	    for key in self.rules:
-                r = self.rules[key]
+	    for key, r in self.rules.iteritems():
 		if r[0] in nbtab: continue
 		for s in r[1:]:
 		    if s not in nbtab: break
@@ -143,8 +152,7 @@ class Grammar(object):
 	done = False
 	while not done:
 	    done = True
-	    for key in self.rules:
-                r = self.rules[key]
+	    for key, r in self.rules.iteritems():
 		fi = set()
 		for s in r[1:]:
 		    fi |= fitab[s]
@@ -161,8 +169,7 @@ class Grammar(object):
 	done = False
 	while not done:
 	    done = True
-	    for key in self.rules:
-                r = self.rules[key]
+	    for key, r in self.rules.iteritems():
 		for i in range(1,len(r)):
 		    fo = set()
 		    for s in r[i+1:]:
