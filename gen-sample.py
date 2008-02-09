@@ -63,28 +63,10 @@ def grow(text, maxdepth, minlen):
             for res in grow(pre+r+post, maxdepth-1, minlen):
                 yield res
 
-for skel in grow([ g.start ], 1000, 1000):
+for skel in grow([ g.start ], 20, 20):
     res = []
     for X in skel:
         res += rng.choice(terminations[X])
-    print " ".join(map(repr, res[:-1]))
+    for k,X in enumerate(res[:-1]):
+        print "  (%s, %d),"%(repr(X),k)
     break
-raise SystemExit(1)
-
-
-i = 1
-done = False
-while not done:
-    print "depth %d"%i
-    maxlen = 0
-    for res in all_expansions([ g.start ], i):
-        n = len(res)
-        if n > maxlen:
-            maxlen = n
-        if n>20:
-            done = True
-            break
-    else:
-        print "  maxlen = %d"%maxlen
-    i += 1
-print "-->"+" ".join(map(repr, res))
