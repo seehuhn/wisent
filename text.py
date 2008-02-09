@@ -15,7 +15,7 @@ def list_lines(prefix, bits, postfix):
     line = prefix+bits[0]
     for b in bits[1:]:
         test = line+", "+b
-        if len(test)>79:
+        if len(test)>=79:
             yield line+","
             line = " "*len(prefix) + b
         else:
