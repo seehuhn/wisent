@@ -32,4 +32,4 @@ def write_block(fd, indent, str):
         del lines[-1]
     strip = min([len(l)-len(l.lstrip()) for l in lines if l!=""])
     for l in lines:
-        fd.write(" "*indent+l[strip:]+"\n")
+        fd.write((" "*indent+l[strip:]).rstrip()+"\n")

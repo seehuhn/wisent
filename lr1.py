@@ -81,6 +81,7 @@ class LR1(Grammar):
                         Tinv[J] = stateno
                         stateno += 1
                         done = False
+
                     if X not in E[I]: E[I][X] = []
                     if Tinv[J] not in E[I][X]:
                         E[I][X].append(Tinv[J])
@@ -107,8 +108,7 @@ class LR1(Grammar):
 
         self.stab = {}
         self.gtab = {}
-        for I in E:
-            EI = E[I]
+        for I, EI in E.iteritems():
             if not EI:
                 continue
             for X in EI:
@@ -223,36 +223,28 @@ class LR1(Grammar):
     def write_methods(self, fd):
         fd.write("\n")
         write_block(fd, 4, """
-        def _shift(self):
-            t = self._peek()
-            self.stack.append((self.state,t,self.val))
-            try:
-                self.state = self._stab[(self.state,t)]
-            except:
-                raise ParseError("unexpected token '%s'"%t, self.val)
-            self.valid = False
-        """)
-
-        fd.write("\n")
-        write_block(fd, 4, """
         def parse(self, input):
             self.input = chain(input,[(%(terminator)s,)])
             self.valid = False
-            self.state = 0
-            self.stack = []
-            while self.state != %(final_state)s:
+            state = 0
+            stack = []
+            while state != %(final_state)s:
                 X = self._peek()
-                if (self.state,X) in self._rtab:
-                    key,X,n = self._rtab[(self.state,X)]
-                    oldstate = self.stack[-n][0]
-                    self.stack[-n:] = [ (oldstate, X,[(Y,val) for s,Y,val in self.stack[-n:]]) ]
+                if (state,X) in self._rtab:
+                    key,X,n = self._rtab[(state,X)]
+                    oldstate = stack[-n][0]
+                    stack[-n:] = [ (oldstate, X,[(Y,val) for s,Y,val in stack[-n:]]) ]
                     if X == %(start)s:
                         break
-                    self.state = self._gtab[(oldstate,X)]
+                    state = self._gtab[(oldstate,X)]
+                elif (state,X) in self._stab:
+                    stack.append((state,X,self.val))
+                    state = self._stab[(state,X)]
+                    self.valid = False
                 else:
-                    self._shift()
+                    raise ParseError("unexpected token '%%s'"%%X, self.val)
 
-            return (self.stack[0][1], self.stack[0][2])
+            return (stack[0][1], stack[0][2])
         """%{'terminator': repr(self.terminator),
              'final_state': self.final_state,
              'start': repr(self.start) })
