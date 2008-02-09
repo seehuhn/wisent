@@ -5,6 +5,8 @@ from time import strftime
 from optparse import OptionParser
 
 from grammar import Grammar
+from lr1 import LR1
+from text import write_block
 from wifile import read_rules
 
 wisent_version ="0.1"
@@ -33,14 +35,6 @@ parser.add_option("-V","--version",action="store_true",dest="version_flag",
                   help="show version information")
 (options,args)=parser.parse_args()
 
-if len(args) != 1:
-    parser.error("wrong number of command line arguments")
-source = args[0]
-
-if options.type not in parser_types:
-    parser.error("invalid parser type %s"%options.type)
-parser_name, = parser_types[options.type]
-
 if options.help_flag:
     parser.print_help()
     print ""
@@ -55,20 +49,18 @@ the terms of the GNU General Public License.  For more
 information about these matters, see the file named COPYING."""%wisent_version
     raise SystemExit(0)
 
+if len(args) < 1:
+    parser.error("no grammar file specified")
+if len(args) > 1:
+    parser.error("too many command line arguments")
+source = args[0]
+
+if options.type not in parser_types:
+    parser.error("invalid parser type %s"%options.type)
+parser_name, = parser_types[options.type]
+
 ######################################################################
 # output the parser class
-
-def write_block(fd, indent, str):
-    lines = [l.rstrip().expandtabs() for l in str.splitlines()]
-    if not lines:
-        return
-    while lines and not lines[0]:
-        del lines[0]
-    while lines and not lines[-1]:
-        del lines[-1]
-    strip = min([len(l)-len(l.lstrip()) for l in lines if l!=""])
-    for l in lines:
-        fd.write(" "*indent+l[strip:]+"\n")
 
 def print_parser(fd, g, params):
     write_block(fd, 0, """
@@ -96,9 +88,10 @@ def print_parser(fd, g, params):
     """)
     fd.write('\n')
 
-    fd.write('class Parser(object):\n\n')
+    fd.write('class Parser(object):\n')
 
     if params['rules_flag']:
+        fd.write('\n')
         keys = sorted(g.rules.keys())
         fd.write("    rules = {\n")
         for k in keys:
@@ -106,9 +99,11 @@ def print_parser(fd, g, params):
                 continue
             fd.write("        %s: %s,\n"%(repr(k), repr(g.rules[k])))
         fd.write("    }\n")
-        fd.write('\n')
+
+    g.write_tables(fd)
 
     if params['read_ahead']:
+        fd.write('\n')
         write_block(fd, 4, """
         def _peek(self):
             if not self.valid:
@@ -117,17 +112,12 @@ def print_parser(fd, g, params):
                 self.valid = True
             return self.t
         """)
-        fd.write('\n')
 
-    fd.write("    def parse(self, input):\n")
-    fd.write("        self.input = chain(input, [(%s,)])\n"%repr(g.terminator))
-    if params['read_ahead']:
-        fd.write("        self.valid = False\n")
-    
+    g.write_methods(fd)
 
 ######################################################################
 
-g = Grammar(read_rules(source))
+g = LR1(read_rules(source))
 
 params = {
     'source': source,

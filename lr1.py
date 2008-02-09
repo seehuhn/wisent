@@ -3,10 +3,12 @@
 from sys import argv, stderr
 from grammar import Grammar
 from wifile import read_rules
-from text import layout_list
+from text import list_lines, write_block
 from sniplets import emit_class_parseerror, emit_rules
 
 class LR1(Grammar):
+
+    name = "LR(1)"
 
     def __init__(self, *args, **kwargs):
         Grammar.__init__(self, *args, **kwargs)
@@ -125,60 +127,58 @@ class LR1(Grammar):
                 else:
                     self.gtab[(I,X)] = J
 
-g = LR1(read_rules(argv[1]))
+    def write_tables(self, fd):
+        fd.write("\n")
+        r_items = [ "%s: %s"%(repr(i),repr(self.rtab[i])) for i in self.rtab ]
+        fd.write("    _rtab = {\n")
+        for l in list_lines("        ", r_items, ""):
+            fd.write(l+'\n')
+        fd.write("    }\n")
 
-print "from itertools import chain"
-print
-emit_class_parseerror()
-print
-print "class Parser(object):"
-print
-print "    _rtab = {"
-for l in layout_list("        ", ["%s: %s"%(repr(i),repr(g.rtab[i])) for i in g.rtab], ""):
-    print l
-print "    }"
-print
-print "    _stab = {"
-for l in layout_list("        ", ["(%d,%s): %s"%(i,repr(x),g.stab[(i,x)]) for i,x in g.stab], ""):
-    print l
-print "    }"
-print
-print "    _gtab = {"
-for l in layout_list("        ", ["(%d,%s): %s"%(i,repr(x),g.gtab[(i,x)]) for i,x in g.gtab], ""):
-    print l
-print "    }"
-print
-print "    def __init__(self):"
-print "        pass"
-print
-print "    def _peek(self):"
-print "        if not self.valid:"
-print "            next = self.input.next()"
-print "            self.t,self.val = next[0], next[1:]"
-print "            self.valid = True"
-print "        return self.t"
-print
-print "    def _shift(self):"
-print "        t = self._peek()"
-print "        self.stack.append((self.state,t,self.val))"
-print "        self.state = self._stab[(self.state,t)]"
-print "        self.valid = False"
-print
-print "    def parse(self, input):"
-print "        self.input = chain(input,[(%s,)])"%repr(g.terminator)
-print "        self.valid = False"
-print "        self.state = 0"
-print "        self.stack = []"
-print "        while self.state != %s:"%g.final_state
-print "            X = self._peek()"
-print "            if (self.state,X) in self._rtab:"
-print "                key,X,n = self._rtab[(self.state,X)]"
-print "                oldstate = self.stack[-n][0]"
-print "                self.stack[-n:] = [ (oldstate, X,[(Y,val) for s,Y,val in self.stack[-n:]]) ]"
-print "                if X == %s:"%repr(g.start)
-print "                    break"
-print "                self.state = self._gtab[(oldstate,X)]"
-print "            else:"
-print "                self._shift()"
-print "                "
-print "        return (self.stack[0][1], self.stack[0][2])"
+        fd.write("\n")
+        s_items = [ "(%d,%s): %s"%(i,repr(x),self.stab[(i,x)]) for i,x in self.stab ]
+        fd.write("    _stab = {\n")
+        for l in list_lines("        ", s_items, ""):
+            fd.write(l+'\n')
+        fd.write("    }\n")
+
+        fd.write("\n")
+        g_items = [ "(%d,%s): %s"%(i,repr(x),self.gtab[(i,x)]) for i,x in self.gtab ]
+        fd.write("    _gtab = {\n")
+        for l in list_lines("        ", g_items, ""):
+            fd.write(l+'\n')
+        fd.write("    }\n")
+
+    def write_methods(self, fd):
+        fd.write("\n")
+        write_block(fd, 4, """
+        def _shift(self):
+            t = self._peek()
+            self.stack.append((self.state,t,self.val))
+            self.state = self._stab[(self.state,t)]
+            self.valid = False
+        """)
+
+        fd.write("\n")
+        write_block(fd, 4, """
+        def parse(self, input):
+            self.input = chain(input,[(%(terminator)s,)])
+            self.valid = False
+            self.state = 0
+            self.stack = []
+            while self.state != %(final_state)s:
+                X = self._peek()
+                if (self.state,X) in self._rtab:
+                    key,X,n = self._rtab[(self.state,X)]
+                    oldstate = self.stack[-n][0]
+                    self.stack[-n:] = [ (oldstate, X,[(Y,val) for s,Y,val in self.stack[-n:]]) ]
+                    if X == %(start)s:
+                        break
+                    self.state = self._gtab[(oldstate,X)]
+                else:
+                    self._shift()
+
+            return (self.stack[0][1], self.stack[0][2])
+        """%{'terminator': repr(self.terminator),
+             'final_state': self.final_state,
+             'start': repr(self.start) })
