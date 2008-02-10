@@ -1,5 +1,21 @@
 #! /usr/bin/env python
 
+from wifile import ParseError
+
+class Marker(object):
+
+    def __init__(self, text):
+        self.texts = [ text ]
+
+    def __repr__(self):
+        return self.texts[-1]
+
+    def push(self, text):
+        self.texts.append(text)
+
+    def pop(self):
+        return self.texts.pop()
+
 class Grammar(object):
 
     """Represent a context free grammar."""
@@ -7,14 +23,14 @@ class Grammar(object):
     def __init__(self, rules, cleanup=True, **kwargs):
         """Create a new grammar instance.
 
-        The argument 'rules' must be a dictionary with the production
-        rules in the values or an iterable listing all production
-        rules.  Each production rule must be a list or tuple with a
-        non-terminal as the first element, and the replacement of the
-        non-terminal in the remaining elements.
+        The argument 'rules' must be an iterable, listing all
+        production rules.  Each production rule must be a list or
+        tuple with a non-terminal as the first element, and the
+        replacement of the non-terminal in the remaining elements.
 
-        The required keyword argument 'start' denotes the start symbol
-        of the grammar.
+        The optional keyword argument 'start' denotes the start symbol
+        of the grammar.  If it is not given, the head of the first
+        rule is used as the start symbol.
         """
 	self.rules = {}
         self.symbols = set()
@@ -26,10 +42,8 @@ class Grammar(object):
                 continue
             raise TypeError("invalid keyword argument '%s'"%arg)
 
-        if not isinstance(rules,dict):
-            rules = dict(enumerate(rules))
-        elif "start" not in kwargs:
-            raise ValueError("start symbol missing")
+        rules = dict(enumerate(rules))
+
         first = True
 	for key, r in rules.iteritems():
 	    self.rules[key] = r
@@ -43,7 +57,7 @@ class Grammar(object):
         if "start" in kwargs:
             self.start = kwargs["start"]
             if self.start not in self.nonterminal:
-                msg = "start symbol %s is not a nonterminal"%repr(start)
+                msg = "start symbol %s is not a nonterminal"%repr(self.start)
                 raise ValueError(msg)
 
 	self.terminal = self.symbols - self.nonterminal
@@ -70,6 +84,9 @@ class Grammar(object):
 
     def _cleanup(self):
         """Remove unnecessary rules and symbols."""
+
+	if len(self.rules) == 0:
+	    raise ParseError("empty grammar")
 
         # remove nonterminal symbols which do not expand into terminals
 	N = set()
@@ -108,19 +125,15 @@ class Grammar(object):
             if not set(self.rules[key]) <= (N|T):
                 del self.rules[key]
 
-        # generate a unique terminator symbol
-        s = "$"
-        while s in N|T:
-            s += "$"
+        # generate a terminator symbol
+        s = Marker('$')
         T.add(s)
         self.terminator = s
 
         # generate a private start symbol
-        s = "start"
-        while s in N|T:
-            s = "_"+s
+        s = Marker('S')
         N.add(s)
-        self.rules[None] = (s, self.start, self.terminator)
+        self.rules[-1] = (s, self.start, self.terminator)
         self.start = s
 
         self.nonterminal = N

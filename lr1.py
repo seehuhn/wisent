@@ -6,6 +6,8 @@ from wifile import read_rules
 from text import list_lines, write_block
 from sniplets import emit_class_parseerror, emit_rules
 
+from wifile import ParseError
+
 class LR1(Grammar):
 
     """Represent LR(1) grammars and generate parsers."""
@@ -130,121 +132,156 @@ class LR1(Grammar):
                 else:
                     self.gtab[(I,X)] = J
 
-    def write_decorations(self, fd):
-        fd.write("# terminal symbols:\n")
-        tt = map(repr, sorted(self.terminal))
-        line = "#   "+tt[0]
-        for t in tt[1:]:
-            test = line+" "+t
-            if len(test)>=80:
-                fd.write(line+"\n")
-                line = "#   "+t
-            else:
-                line = test
-        fd.write(line+"\n\n")
-
-        fd.write("# non-terminal symbols:\n")
-        tt = map(repr, sorted(self.nonterminal))
-        line = "#   "+tt[0]
-        for t in tt[1:]:
-            test = line+" "+t
-            if len(test)>=80:
-                fd.write(line+"\n")
-                line = "#   "+t
-            else:
-                line = test
-        fd.write(line+"\n\n")
-
-        fd.write("# grammar rules:\n")
-        keys = sorted(self.rules.keys())
-        for key in keys:
-            r = self.rules[key]
-            head = repr(r[0])
-            tail = " ".join(map(repr, r[1:]))
-            fd.write("#   %s -> %s\n"%(head,tail))
-        fd.write("\n")
-
-        fd.write("# parser states:\n")
-        keys = sorted(self.T.keys())
-        for k in keys:
-            fd.write("#\n")
-            fd.write("# state %d:\n"%k)
-            for k,l,n,readahead in self.T[k]:
-                r = self.rules[k]
-                head = repr(r[0])
-                tail1 = " ".join(map(repr, r[1:n]))
-                tail2 = " ".join(map(repr, r[n:l]))
-                readahead = repr(readahead)
-                fd.write("#   %s -> %s.%s | %s\n"%(head,tail1,tail2,readahead))
-        fd.write("\n")
-
-        fd.write("# transition table:\n")
-        fd.write("#\n")
-        tt = sorted(self.terminal)+sorted(self.nonterminal)
-        ttt = [ repr(t) for t in tt ]
-        widths = [ len(t) for t in ttt ]
-        fd.write("# state | "+" ".join(ttt)+"\n")
-        fd.write("# %s\n"%("-"*(7+sum(widths)+len(tt))))
-        keys = sorted(self.T.keys())
-        for I in keys:
-            rest = [ ]
-            for t,l in zip(tt,widths):
-                if t in self.E[I]:
-                    next = ",".join(["%d"%x for x in self.E[I][t]])
-                    rest.append(next.center(l))
+    def write_decorations(self, fd, grammar=True, parser=False):
+        if grammar:
+            fd.write("# terminal symbols:\n")
+            tt = map(repr, sorted(self.terminal-set([self.terminator])))
+            line = "#   "+tt[0]
+            for t in tt[1:]:
+                test = line+" "+t
+                if len(test)>=80:
+                    fd.write(line+"\n")
+                    line = "#   "+t
                 else:
-                    rest.append(" "*l)
-            fd.write("# %5d | %s\n"%(I," ".join(rest)))
-        fd.write("\n")
+                    line = test
+            fd.write(line+"\n\n")
+
+            fd.write("# non-terminal symbols:\n")
+            tt = map(repr, sorted(self.nonterminal-set([self.start])))
+            line = "#   "+tt[0]
+            for t in tt[1:]:
+                test = line+" "+t
+                if len(test)>=80:
+                    fd.write(line+"\n")
+                    line = "#   "+t
+                else:
+                    line = test
+            fd.write(line+"\n\n")
+
+            fd.write("# production rules:\n")
+            keys = sorted(self.rules.keys())
+            for key in keys:
+                r = self.rules[key]
+                if r[0] == self.start:
+                    continue
+                head = repr(r[0])
+                tail = " ".join(map(repr, r[1:]))
+                fd.write("#   %s -> %s\n"%(head, tail))
+            fd.write("\n")
+
+        if parser:
+            fd.write("# parser states:\n")
+            keys = sorted(self.T.keys())
+            for k in keys:
+                fd.write("#\n")
+                fd.write("# state %d:\n"%k)
+                for k,l,n,readahead in self.T[k]:
+                    r = self.rules[k]
+                    head = repr(r[0])
+                    tail1 = " ".join(map(repr, r[1:n]))
+                    tail2 = " ".join(map(repr, r[n:l]))
+                    readahead = repr(readahead)
+                    fd.write("#   %s -> %s.%s [%s]\n"%(head,tail1,tail2,readahead))
+            fd.write("\n")
+
+            fd.write("# transition table:\n")
+            fd.write("#\n")
+            tt1 = sorted(self.terminal)
+            tt2 = sorted(self.nonterminal-set([self.start]))
+            tt = tt1 + tt2
+            ttt = [ repr(t) for t in tt ]
+            widths = [ len(t) for t in ttt ]
+            fd.write("# state | "+" ".join(ttt)+"\n")
+            fd.write("# %s\n"%("-"*(7+sum(widths)+len(tt))))
+            keys = sorted(self.T.keys())
+            for I in keys:
+                rest = [ ]
+                for t,l in zip(tt,widths):
+                    if t in self.E[I]:
+                        next = ",".join(["%d"%x for x in self.E[I][t]])
+                        rest.append(next.center(l))
+                    else:
+                        rest.append(" "*l)
+                fd.write("# %5d | %s\n"%(I," ".join(rest)))
+            fd.write("\n")
 
     def write_tables(self, fd):
         fd.write("\n")
-        r_items = [ tuple(map(repr,i+self.rtab[i])) for i in self.rtab ]
-        r_items = [ "(%s,%s): (%s,%s,%s)"%ri for ri in r_items ]
-        fd.write("    _rtab = {\n")
+
+        self.terminator.push("EOF")
+        fd.write("    EOF = object()\n")
+        self.start.push("_start")
+        fd.write("    _start = object()\n")
+
+        fd.write("\n")
+        r_items = [ (i[0], repr(i[1]), repr(ri[1]), ri[2])
+                    for i,ri in self.rtab.iteritems() ]
+        r_items = [ "(%d,%s): (%s,%d)"%ri for ri in r_items ]
+        fd.write("    _reduce = {\n")
         for l in list_lines("        ", r_items, ""):
             fd.write(l+'\n')
         fd.write("    }\n")
 
         fd.write("\n")
         s_items = [ "(%d,%s): %s"%(i,repr(x),self.stab[(i,x)]) for i,x in self.stab ]
-        fd.write("    _stab = {\n")
+        fd.write("    _shift = {\n")
         for l in list_lines("        ", s_items, ""):
             fd.write(l+'\n')
         fd.write("    }\n")
 
         fd.write("\n")
         g_items = [ "(%d,%s): %s"%(i,repr(x),self.gtab[(i,x)]) for i,x in self.gtab ]
-        fd.write("    _gtab = {\n")
+        fd.write("    _goto = {\n")
         for l in list_lines("        ", g_items, ""):
             fd.write(l+'\n')
         fd.write("    }\n")
 
-    def write_methods(self, fd):
+        self.terminator.pop()
+        self.start.pop()
+
+    def write_parser(self, fd):
+        self.terminator.push("self.EOF")
+        self.start.push("self._start")
+
         fd.write("\n")
         write_block(fd, 4, """
-        def parse(self, input):
-            self.input = chain(input,[(%(terminator)s,)])
-            self.valid = False
+        def parse_tree(self, input):
             state = 0
             stack = []
+            read_next = True
             while state != %(final_state)s:
-                X = self._peek()
-                if (state,X) in self._rtab:
-                    key,X,n = self._rtab[(state,X)]
-                    oldstate = stack[-n][0]
-                    stack[-n:] = [ (oldstate, X,[(Y,val) for s,Y,val in stack[-n:]]) ]
+                if read_next:
+                    try:
+                        readahead = input.next()
+                    except StopIteration:
+                        readahead = (%(terminator)s,)
+                    read_next = False
+                token = readahead[0]
+                if (state,token) in self._reduce:
+                    X,n = self._reduce[(state,token)]
+                    if n == 0:
+                        tree = (False,X)
+                    else:
+                        state = stack[-n][0]
+                        tree = (False,X)+tuple(s[1] for s in stack[-n:])
+                        del stack[-n:]
+                    stack.append((state,tree))
                     if X == %(start)s:
                         break
-                    state = self._gtab[(oldstate,X)]
-                elif (state,X) in self._stab:
-                    stack.append((state,X,self.val))
-                    state = self._stab[(state,X)]
-                    self.valid = False
+                    state = self._goto[(state,X)]
+                elif (state,token) in self._shift:
+                    stack.append((state,(True,)+readahead))
+                    read_next = True
+                    state = self._shift[(state,token)]
+                elif token == %(terminator)s:
+                    raise self.ParseError("unexpected end of input")
                 else:
-                    raise ParseError("unexpected token '%%s'"%%X, self.val)
+                    raise self.ParseError("unexpected token '%%s'"%%token, readahead[1:])
 
-            return (stack[0][1], stack[0][2])
+            return stack[0][1]
         """%{'terminator': repr(self.terminator),
              'final_state': self.final_state,
              'start': repr(self.start) })
+
+        self.terminator.pop()
+        self.start.pop()

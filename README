@@ -1,0 +1,14 @@
+The generated parser returns a parse tree of the following form:
+leafes are represented as tuples of the form
+
+    (True, x, ...)
+
+where 'x' is a terminal symbol and "..." stands for any data attached
+to it (i.e. '(x, ...)' was part of the input data.  Inner nodes are
+represented as tuples of the form
+
+    (False, X, ...)
+
+where the non-terminal 'X' is the head of the corresponding production
+and "..." stands for the parse trees for each of the symbols from the
+right hand side of the production.

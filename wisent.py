@@ -25,8 +25,6 @@ parser = OptionParser("usage: %prog [options] grammar")
 parser.remove_option("-h")
 parser.add_option("-h", "--help", action="store_true", dest="help_flag",
                   help="show this message")
-parser.add_option("-r","--rules",action="store_true",dest="rules_flag",
-                  help="store a copy of the rules in the parser class")
 parser.add_option("-t", "--type", action="store", type="string",
                   dest="type", default="lr1",
                   help="choose parse type (%s)"%", ".join(parser_types.keys()),
@@ -70,10 +68,11 @@ def print_parser(fd, g, params):
     # generator: wisent %(version)s, http://seehuhn.de/pages/wisent
     """%params)
     fd.write('\n')
+    g.write_decorations(fd)
 
-    fd.write('from itertools import chain\n\n')
+    fd.write('class Parser(object):\n')
 
-    write_block(fd, 0, """
+    write_block(fd, 4, """
     class ParseError(Exception):
 
         def __init__(self, msg, data=None):
@@ -88,32 +87,8 @@ def print_parser(fd, g, params):
     """)
     fd.write('\n')
 
-    fd.write('class Parser(object):\n')
-
-    if params['rules_flag']:
-        fd.write('\n')
-        keys = sorted(g.rules.keys())
-        fd.write("    rules = {\n")
-        for k in keys:
-            if k is None:
-                continue
-            fd.write("        %s: %s,\n"%(repr(k), repr(g.rules[k])))
-        fd.write("    }\n")
-
     g.write_tables(fd)
-
-    if params['read_ahead']:
-        fd.write('\n')
-        write_block(fd, 4, """
-        def _peek(self):
-            if not self.valid:
-                next = self.input.next()
-                self.t, self.val = next[0], next[1:]
-                self.valid = True
-            return self.t
-        """)
-
-    g.write_methods(fd)
+    g.write_parser(fd)
 
 ######################################################################
 
@@ -124,8 +99,6 @@ params = {
     'type': parser_name,
     'version': wisent_version,
     'date': strftime("%Y-%m-%d %H:%M:%S"),
-    'read_ahead': True,
-    'rules_flag': options.rules_flag,
 }
 
 print_parser(sys.stdout, g, params)
