@@ -72,20 +72,18 @@ def print_parser(fd, g, params):
 
     fd.write('class Parser(object):\n')
 
+    fd.write('\n')
     write_block(fd, 4, """
     class ParseError(Exception):
 
-        def __init__(self, msg, data=None):
-            self.msg = msg
-            self.data = data
+        def __init__(self, found, expected, stack):
+            self.found = found
+            self.expected = expected
+            self.stack = stack
 
         def __str__(self):
-            if self.data is not None:
-                return 'parse error: %s, %s'%(self.msg,self.data)
-            else:
-                return 'parse error: %s'%self.msg
+            return 'parse error at %s'%(repr(self.found),)
     """)
-    fd.write('\n')
 
     g.write_tables(fd)
     g.write_parser(fd)

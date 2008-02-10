@@ -273,10 +273,11 @@ class LR1(Grammar):
                     stack.append((state,(True,)+readahead))
                     read_next = True
                     state = self._shift[(state,token)]
-                elif token == %(terminator)s:
-                    raise self.ParseError("unexpected end of input")
                 else:
-                    raise self.ParseError("unexpected token '%%s'"%%token, readahead[1:])
+                    expect = [ t for s,t in self._reduce.keys()+self._shift.keys()
+                               if s == state ]
+                    raise self.ParseError(readahead, expect,
+                                          [ s[1] for s in stack ])
 
             return stack[0][1]
         """%{'terminator': repr(self.terminator),
