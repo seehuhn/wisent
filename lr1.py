@@ -324,8 +324,7 @@ class LR1(Grammar):
         def _try_correction(self, stack, state, input):
             read_next = True
             pos = 0
-            maxpos = len(input)
-            while pos < maxpos:
+            while pos < len(input):
                 token = input[pos][0]
                 if (state,token) in self._reduce:
                     X,n = self._reduce[(state,token)]
@@ -333,16 +332,16 @@ class LR1(Grammar):
                         state = stack[-n]
                         del stack[-n:]
                     stack.append(state)
+                    if X == self._start:
+                        break
                     state = self._goto[(state,X)]
                 elif (state,token) in self._shift:
-                    if token == self.EOF:
-                        break
                     stack.append(state)
                     pos += 1
                     state = self._shift[(state,token)]
                 else:
                     break
-            return maxpos - pos
+            return pos
         """)
         fd.write('\n')
 
@@ -382,7 +381,7 @@ class LR1(Grammar):
                         break
 
                 def vary_queue(queue, m):
-                    for i in range(self.m, -1, -1):
+                    for i in range(m-1, -1, -1):
                         for t in self.terminal:
                             yield queue[:i]+[(t,)]+queue[i:]
                         if queue[i][0] == self.EOF:
@@ -392,15 +391,17 @@ class LR1(Grammar):
                                 continue
                             yield queue[:i]+[(t,)]+queue[i+1:]
                         yield queue[:i]+queue[i+1:]
-                best_rest = len(queue)+2
+                best_val = len(queue)-m+1
+                best_queue = queue
                 for q2 in vary_queue(queue, m):
-                    rest = self._try_correction([ s[0] for s in stack ], state, q2)
-                    if rest < best_rest:
-                        best_rest = rest
+                    pos = self._try_correction([ s[0] for s in stack ], state, q2)
+                    val = len(q2) - pos
+                    if val < best_val:
+                        best_val = val
                         best_queue = q2
-                        if rest == 0:
+                        if val == len(q2):
                             break
-                if best_rest >= self.n:
+                if best_val >= len(queue)-m+1:
                     raise self.ParseErrors(errors, None)
                 input = chain(best_queue, input)
 

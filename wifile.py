@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 class ParseError(Exception):
+
     def __init__(self, msg, fname=None, line=None):
 	self.msg = msg
 	self.fname = fname
