@@ -70,22 +70,6 @@ def print_parser(fd, g, params):
     fd.write('\n')
     g.write_decorations(fd)
 
-    fd.write('class Parser(object):\n')
-
-    fd.write('\n')
-    write_block(fd, 4, """
-    class ParseError(Exception):
-
-        def __init__(self, found, expected, stack):
-            self.found = found
-            self.expected = expected
-            self.stack = stack
-
-        def __str__(self):
-            return 'parse error at %s'%(repr(self.found),)
-    """)
-
-    g.write_tables(fd)
     g.write_parser(fd)
 
 ######################################################################
