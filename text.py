@@ -22,14 +22,29 @@ def list_lines(prefix, bits, postfix):
             line = test
     yield line+postfix
 
-def write_block(fd, indent, str):
+def write_block(fd, indent, str, params={}):
     lines = [l.rstrip().expandtabs() for l in str.splitlines()]
-    if not lines:
-        return
     while lines and not lines[0]:
         del lines[0]
     while lines and not lines[-1]:
         del lines[-1]
+    if not lines:
+        return
+
+    fd.write("\n")
     strip = min([len(l)-len(l.lstrip()) for l in lines if l!=""])
+    stack = [ True ]
     for l in lines:
-        fd.write((" "*indent+l[strip:]).rstrip()+"\n")
+        l = l[strip:].rstrip()
+        l0 = l.lstrip()
+        if l0.startswith('#@'):
+            token = l0[2:].split()
+            if token[0] == "IF":
+                stack.append(params.get(token[1], False))
+            elif token[0] == "ELSE":
+                stack[-1] = not stack[-1]
+            elif token[0] == "ENDIF":
+                stack.pop()
+            continue
+        if stack[-1]:
+            fd.write(" "*indent+l+"\n")

@@ -1,12 +1,177 @@
 #! /usr/bin/env python
 
 from sys import argv, stderr
-from grammar import Grammar
+from inspect import getsource
+
+from grammar import Grammar, ParseError
 from wifile import read_rules
 from text import list_lines, write_block
-from sniplets import emit_class_parseerror, emit_rules
 
-from wifile import ParseError
+
+class Parser(object):
+
+    """Parser class template.
+
+    This class is only used to store source code sniplets for the
+    generated parser.  Code is taken out via code inspection and
+    pasted into the output file.
+    """
+
+    class ParseErrors(Exception):
+
+        def __init__(self, errors, tree):
+            self.errors = errors
+            self.tree = tree
+
+
+    def __init__(self, max_err=None, errcorr_pre=4, errcorr_post=4):
+        self.max_err = max_err
+        self.m = errcorr_pre
+        self.n = errcorr_post
+
+    @staticmethod
+    def leaves(tree):
+        if tree[0]:
+            yield tree[1:]
+        else:
+            for x in tree[2:]:
+                for t in Parser.leaves(x):
+                    yield t
+
+    def _parse_tree(self, input, stack, state):
+        """Internal function to construct a parse tree.
+
+        'Input' is the input token stream, 'stack' is the inital stack
+        and 'state' is the inital state of the automaton.
+
+        Returns a 4-tuple (done, count, state, error).  'done' is a
+        boolean indicationg whether parsing is completed, 'count' is
+        number of successfully shifted tokens, and 'error' is None on
+        success or else the first token which could not be parsed.
+        """
+        read_next = True
+        count = 0
+        while state != self._halting_state:
+            if read_next:
+                try:
+                    readahead = input.next()
+                except StopIteration:
+                    return (False,count,state,None)
+                read_next = False
+            token = readahead[0]
+
+            if (state,token) in self._reduce:
+                X,n = self._reduce[(state,token)]
+                if n > 0:
+                    state = stack[-n][0]
+                    #@ IF transparent_tokens
+                    tree = [ False, X ]
+                    for s in stack[-n:]:
+                        if s[1][1] in self._transparent:
+                            tree.extend(s[1][2:])
+                        else:
+                            tree.append(s[1])
+                    tree = tuple(tree)
+                    #@ ELSE
+                    tree = (False,X) + tuple(s[1] for s in stack[-n:])
+                    #@ ENDIF
+                    del stack[-n:]
+                else:
+                    tree = (False, X)
+                stack.append((state,tree))
+                state = self._goto[(state,X)]
+            elif (state,token) in self._shift:
+                stack.append((state,(True,)+readahead))
+                state = self._shift[(state,token)]
+                read_next = True
+                count += 1
+            else:
+                return (False,count,state,readahead)
+        return (True,count,state,None)
+
+    def _try_parse(self, input, stack, state):
+        count = 0
+        while state != self._halting_state and count < len(input):
+            token = input[count][0]
+
+            if (state,token) in self._reduce:
+                X,n = self._reduce[(state,token)]
+                if n > 0:
+                    state = stack[-n]
+                    del stack[-n:]
+                stack.append(state)
+                state = self._goto[(state,X)]
+            elif (state,token) in self._shift:
+                stack.append(state)
+                state = self._shift[(state,token)]
+                count += 1
+            else:
+                break
+        return count
+
+    def parse_tree(self, input):
+        errors = []
+        input = chain(input, [(self.EOF,)])
+        stack = []
+        state = 0
+        while True:
+            done,_,state,readahead = self._parse_tree(input, stack, state)
+            if done:
+                break
+
+            expect = [ t for s,t in self._reduce.keys()+self._shift.keys()
+                       if s == state ]
+            errors.append(([ s[1] for s in stack ], readahead, expect))
+            if self.max_err is not None and len(errors) >= self.max_err:
+                raise self.ParseErrors(errors, None)
+
+            queue = []
+            def split_input(m, stack, readahead, input, queue):
+                for s in stack:
+                    for t in self.leaves(s[1]):
+                        queue.append(t)
+                        if len(queue) > m:
+                            yield queue.pop(0)
+                queue.append(readahead)
+            in2 = split_input(self.m, stack, readahead, input, queue)
+            stack = []
+            done,_,state,readahead = self._parse_tree(in2, stack, 0)
+            m = len(queue)
+            for i in range(0, self.n):
+                try:
+                    queue.append(input.next())
+                except StopIteration:
+                    break
+
+            def vary_queue(queue, m):
+                for i in range(m-1, -1, -1):
+                    for t in self.terminal:
+                        yield queue[:i]+[(t,)]+queue[i:]
+                    if queue[i][0] == self.EOF:
+                        continue
+                    for t in self.terminal:
+                        if t == queue[i]:
+                            continue
+                        yield queue[:i]+[(t,)]+queue[i+1:]
+                    yield queue[:i]+queue[i+1:]
+            best_val = len(queue)-m+1
+            best_queue = queue
+            for q2 in vary_queue(queue, m):
+                pos = self._try_parse(q2, [ s[0] for s in stack ], state)
+                val = len(q2) - pos
+                if val < best_val:
+                    best_val = val
+                    best_queue = q2
+                    if val == len(q2):
+                        break
+            if best_val >= len(queue)-m+1:
+                raise self.ParseErrors(errors, None)
+            input = chain(best_queue, input)
+
+        tree = stack[0][1]
+        if errors:
+            raise self.ParseErrors(errors, tree)
+        return tree
 
 class LR1(Grammar):
 
@@ -128,12 +293,14 @@ class LR1(Grammar):
                 if X in self.terminal:
                     self.stab[(I,X)] = J
                     if X == self.terminator:
-                        self.final_state = J
+                        self.halting_state = J
                 else:
                     self.gtab[(I,X)] = J
 
     def write_decorations(self, fd, grammar=True, parser=False):
         if grammar:
+            fd.write("\n")
+
             fd.write("# terminal symbols:\n")
             tt = map(repr, sorted(self.terminal-set([self.terminator])))
             line = "#   "+tt[0]
@@ -167,9 +334,10 @@ class LR1(Grammar):
                 head = repr(r[0])
                 tail = " ".join(map(repr, r[1:]))
                 fd.write("#   %s -> %s\n"%(head, tail))
-            fd.write("\n")
 
         if parser:
+            fd.write("\n")
+
             fd.write("# parser states:\n")
             keys = sorted(self.T.keys())
             for k in keys:
@@ -203,15 +371,10 @@ class LR1(Grammar):
                     else:
                         rest.append(" "*l)
                 fd.write("# %5d | %s\n"%(I," ".join(rest)))
-            fd.write("\n")
 
     def _write_tables(self, fd):
-        fd.write("\n")
-
         self.terminator.push("EOF")
-        fd.write("    EOF = object()\n")
         self.start.push("_start")
-        fd.write("    _start = object()\n")
 
         fd.write("\n")
         r_items = [ (i[0], repr(i[1]), repr(ri[1]), ri[2])
@@ -236,177 +399,33 @@ class LR1(Grammar):
             fd.write(l+'\n')
         fd.write("    }\n")
 
-        self.terminator.pop()
         self.start.pop()
+        self.terminator.pop()
 
-    def write_parser(self, fd):
+    def write_parser(self, fd, param={}):
+        fd.write('\n')
         fd.write('from itertools import chain\n\n')
-        fd.write('class Parser(object):\n\n')
-        write_block(fd, 4, """
-        class ParseErrors(Exception):
+        fd.write('class Parser(object):\n')
 
-            def __init__(self, errors, tree):
-                self.errors = errors
-                self.tree = tree
+        write_block(fd, 4, getsource(Parser.ParseErrors))
 
-            def __str__(self):
-                n = len(self.errors)
-                if n == 1:
-                    msg = '1 syntax error'
-                else:
-                    msg = '%d syntax errors'%n
-                if self.tree is None:
-                    msg += ', unrecoverable'
-                return "<"+msg+">"
-        """)
         fd.write('\n')
         tt = map(repr, sorted(self.terminal-set([self.terminator])))
         for l in list_lines("    terminal = [ ", tt, " ]"):
             fd.write(l+'\n')
+        fd.write("    EOF = object()\n")
+        transparent = param.get("transparent_tokens", False)
+        if transparent:
+            tt = map(repr, transparent)
+            for l in list_lines("    _transparent = [ ", tt, " ]"):
+                fd.write(l+'\n')
+        fd.write("    _start = object()\n")
+        fd.write("    _halting_state = %d\n"%self.halting_state)
 
         self._write_tables(fd)
-        fd.write('\n')
 
-        write_block(fd, 4, """
-        def __init__(self, max_err=None, errcorr_pre=4, errcorr_post=4):
-            self.max_err = max_err
-            self.m = errcorr_pre
-            self.n = errcorr_post
-        """)
-        fd.write('\n')
-
-        write_block(fd, 4, """
-        @staticmethod
-        def leaves(tree):
-            if tree[0]:
-                yield tree[1:]
-            else:
-                for x in tree[2:]:
-                    for t in Parser.leaves(x):
-                        yield t
-        """)
-        fd.write('\n')
-
-        write_block(fd, 4, """
-        def _parse_tree(self, input, stack, state):
-            read_next = True
-            while True:
-                if read_next:
-                    try:
-                        readahead = input.next()
-                    except StopIteration:
-                        return (False, state, None)
-                    read_next = False
-                token = readahead[0]
-                if (state,token) in self._reduce:
-                    X,n = self._reduce[(state,token)]
-                    if n > 0:
-                        state = stack[-n][0]
-                        tree = (False,X)+tuple(s[1] for s in stack[-n:])
-                        del stack[-n:]
-                    else:
-                        tree = (False,X)
-                    stack.append((state,tree))
-                    state = self._goto[(state,X)]
-                elif (state,token) in self._shift:
-                    if token == self.EOF:
-                        break
-                    stack.append((state,(True,)+readahead))
-                    read_next = True
-                    state = self._shift[(state,token)]
-                else:
-                    return (False,state,readahead)
-            return (True,state,None)
-        """)
-        fd.write('\n')
-
-        write_block(fd, 4, """
-        def _try_correction(self, stack, state, input):
-            read_next = True
-            pos = 0
-            while pos < len(input):
-                token = input[pos][0]
-                if (state,token) in self._reduce:
-                    X,n = self._reduce[(state,token)]
-                    if n > 0:
-                        state = stack[-n]
-                        del stack[-n:]
-                    stack.append(state)
-                    if X == self._start:
-                        break
-                    state = self._goto[(state,X)]
-                elif (state,token) in self._shift:
-                    stack.append(state)
-                    pos += 1
-                    state = self._shift[(state,token)]
-                else:
-                    break
-            return pos
-        """)
-        fd.write('\n')
-
-        write_block(fd, 4, """
-        def parse_tree(self, input):
-            errors = []
-            input = chain(input, [(self.EOF,)])
-            stack = []
-            state = 0
-            while True:
-                done,state,readahead = self._parse_tree(input, stack, state)
-                if done:
-                    break
-
-                expect = [ t for s,t in self._reduce.keys()+self._shift.keys()
-                           if s == state ]
-                errors.append(([ s[1] for s in stack ], readahead, expect))
-                if self.max_err is not None and len(errors) >= self.max_err:
-                    raise self.ParseErrors(errors, None)
-
-                queue = []
-                def split_input(m, stack, readahead, input, queue):
-                    for s in stack:
-                        for t in self.leaves(s[1]):
-                            queue.append(t)
-                            if len(queue) > m:
-                                yield queue.pop(0)
-                    queue.append(readahead)
-                in2 = split_input(self.m, stack, readahead, input, queue)
-                stack = []
-                done,state,readahead = self._parse_tree(in2, stack, 0)
-                m = len(queue)
-                for i in range(0, self.n):
-                    try:
-                        queue.append(input.next())
-                    except StopIteration:
-                        break
-
-                def vary_queue(queue, m):
-                    for i in range(m-1, -1, -1):
-                        for t in self.terminal:
-                            yield queue[:i]+[(t,)]+queue[i:]
-                        if queue[i][0] == self.EOF:
-                            continue
-                        for t in self.terminal:
-                            if t == queue[i]:
-                                continue
-                            yield queue[:i]+[(t,)]+queue[i+1:]
-                        yield queue[:i]+queue[i+1:]
-                best_val = len(queue)-m+1
-                best_queue = queue
-                for q2 in vary_queue(queue, m):
-                    pos = self._try_correction([ s[0] for s in stack ], state, q2)
-                    val = len(q2) - pos
-                    if val < best_val:
-                        best_val = val
-                        best_queue = q2
-                        if val == len(q2):
-                            break
-                if best_val >= len(queue)-m+1:
-                    raise self.ParseErrors(errors, None)
-                input = chain(best_queue, input)
-
-            tree = stack[0][1]
-            if errors:
-                raise self.ParseErrors(errors, tree)
-            return tree
-        """)
+        write_block(fd, 4, getsource(Parser.__init__), param)
+        write_block(fd, 4, getsource(Parser.leaves), param)
+        write_block(fd, 4, getsource(Parser._parse_tree), param)
+        write_block(fd, 4, getsource(Parser._try_parse), param)
+        write_block(fd, 4, getsource(Parser.parse_tree), param)
