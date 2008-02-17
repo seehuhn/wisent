@@ -1,10 +1,9 @@
 #! /usr/bin/env python
 
-from sys import argv, stderr
+from sys import stderr
 from inspect import getsource
 
 from grammar import Grammar, ParseError
-from wifile import read_rules
 from text import list_lines, write_block
 
 
@@ -19,9 +18,10 @@ class Parser(object):
 
     class ParseErrors(Exception):
 
-        def __init__(self, errors, tree):
+        def __init__(self, errors, tree, EOF):
             self.errors = errors
             self.tree = tree
+            self.EOF = EOF
 
 
     def __init__(self, max_err=None, errcorr_pre=4, errcorr_post=4):
@@ -123,7 +123,7 @@ class Parser(object):
                        if s == state ]
             errors.append(([ s[1] for s in stack ], readahead, expect))
             if self.max_err is not None and len(errors) >= self.max_err:
-                raise self.ParseErrors(errors, None)
+                raise self.ParseErrors(errors, None, self.EOF)
 
             queue = []
             def split_input(m, stack, readahead, input, queue):
@@ -165,12 +165,12 @@ class Parser(object):
                     if val == len(q2):
                         break
             if best_val >= len(queue)-m+1:
-                raise self.ParseErrors(errors, None)
+                raise self.ParseErrors(errors, None, self.EOF)
             input = chain(best_queue, input)
 
         tree = stack[0][1]
         if errors:
-            raise self.ParseErrors(errors, tree)
+            raise self.ParseErrors(errors, tree, self.EOF)
         return tree
 
 class LR1(Grammar):
@@ -402,7 +402,7 @@ class LR1(Grammar):
         self.start.pop()
         self.terminator.pop()
 
-    def write_parser(self, fd, param={}):
+    def write_parser(self, fd, params={}):
         fd.write('\n')
         fd.write('from itertools import chain\n\n')
         fd.write('class Parser(object):\n')
@@ -414,7 +414,7 @@ class LR1(Grammar):
         for l in list_lines("    terminal = [ ", tt, " ]"):
             fd.write(l+'\n')
         fd.write("    EOF = object()\n")
-        transparent = param.get("transparent_tokens", False)
+        transparent = params.get("transparent_tokens", False)
         if transparent:
             tt = map(repr, transparent)
             for l in list_lines("    _transparent = [ ", tt, " ]"):
@@ -424,8 +424,8 @@ class LR1(Grammar):
 
         self._write_tables(fd)
 
-        write_block(fd, 4, getsource(Parser.__init__), param)
-        write_block(fd, 4, getsource(Parser.leaves), param)
-        write_block(fd, 4, getsource(Parser._parse_tree), param)
-        write_block(fd, 4, getsource(Parser._try_parse), param)
-        write_block(fd, 4, getsource(Parser.parse_tree), param)
+        write_block(fd, 4, getsource(Parser.__init__), params)
+        write_block(fd, 4, getsource(Parser.leaves), params)
+        write_block(fd, 4, getsource(Parser._parse_tree), params)
+        write_block(fd, 4, getsource(Parser._try_parse), params)
+        write_block(fd, 4, getsource(Parser.parse_tree), params)

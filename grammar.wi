@@ -1,0 +1,6 @@
+grammar: rule*;
+rule: token ":" _rhs ";";
+_rhs: list | _rhs "|" list;
+list: _item*;
+_item: _tos | _tos "+" | _tos "*";
+_tos: token | string;

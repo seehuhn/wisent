@@ -1,6 +1,12 @@
 #! /usr/bin/env python
 
-from wifile import ParseError
+class ParseError(Exception):
+
+    def __init__(self, msg, fname=None, line=None):
+        self.msg = msg
+        self.fname = fname
+        self.line = line
+
 
 class Marker(object):
 

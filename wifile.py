@@ -1,126 +1,53 @@
 #! /usr/bin/env python
 
-class ParseError(Exception):
+from sys import argv
 
-    def __init__(self, msg, fname=None, line=None):
-	self.msg = msg
-	self.fname = fname
-	self.line = line
+from scanner import tokens
+from parser import Parser
 
-    def __str__(self):
-	res = ""
-	if self.fname: res += self.fname+":"
-	if self.line: res += str(self.line)+":"
-	if res: res += " "
-	return res+"parse error: "+self.msg
+def rules(tree):
+    for rule in tree[2:]:
+        target = rule[2][1:3]
+        for l in rule[4:-1]:
+            if l[1] != "list":
+                continue
+            yield tuple([target]+[x[1:3] for x in l[2:]])
 
-wordchar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-whitespace = " \t\r\n"
+def read_rules(fname, aux):
+    p = Parser()
+    fd = open(fname)
+    res = p.parse_tree(tokens(fd))
+    fd.close()
 
-def tokens(source, special=[], comment=[]):
-    def read_and_count(fname):
-	source["line"] = 1
-	for c in open(fname).read():
-	    yield c
-	    if c == '\n': source["line"] += 1
-    input = read_and_count(source["fname"])
-    c = None
-    s = None
-    state = "normal"
-    try:
-	while True:
-	    if state == "normal":
-		c = input.next()
-		state = "test"
-	    elif state == "test":
-		if c in special:
-		    yield (1,c)
-		    state = "normal"
-		elif c == "'":
-		    state = "string"
-		    sep = "'"
-		    s = ""
-		elif c == '"':
-		    state = "string"
-		    sep = '"'
-		    s = ""
-		elif c in wordchar:
-		    state = "word"
-		    s = c
-		elif c in comment:
-		    state = "comment"
-		elif c in whitespace:
-		    state = "normal"
-		else:
-		    yield (0,c)
-		    state = "normal"
-	    elif state == "word":
-		c = input.next()
-		if c in wordchar:
-		    s += c
-		else:
-		    yield (0,s)
-		    state = "test"
-	    elif state == "string":
-		c = input.next()
-		if c == '\\':
-		    state = "quote"
-		elif c == sep:
-		    yield (0,s)
-		    state = "normal"
-		else:
-		    s += c
-	    elif state == "quote":
-		c = input.next()
-		s += c
-	    elif state == "comment":
-		c = input.next()
-		if c == '\n': state = "normal"
-    except StopIteration:
-	pass
-    if state == "word":
-	yield (0,s)
-	state = "normal"
-    if state == "comment":
-	raise ParseError("missing end of line",
-			  source["fname"], source["line"])
-    if state != "normal":
-	raise ParseError("unterminated string",
-			  source["fname"], source["line"])
-
-def read_rules(fname):
-    source = { 'fname': fname, 'line': None }
-    input = tokens(source, ":;|", "#")
-    state = "head"
-    while True:
-	try:
-	    special,token = input.next()
-	except StopIteration:
-	    break
-	if state == "head":
-	    if special: raise  ParseError("missing production head",
-					   source["fname"], source["line"])
-            if token.lstrip(wordchar) != "":
-                raise  ParseError("invalid nonterminal '%s'"%token,
-				   source["fname"], source["line"])
-	    head = token
-	    state = "colon"
-	elif state == "colon":
-	    if token != ":" or not special:
-		msg = "missing colon after production head '%s'"%head
-		raise  ParseError(msg, source["fname"], source["line"])
-	    body = []
-	    state = "rule"
-	elif state == "rule":
-	    if special:
-		if token == "|":
-		    yield tuple([head]+body)
-		    body = []
-		elif token == ";":
-		    yield tuple([head]+body)
-		    state = "head"
-	    else:
-		body.append(token)
-    if state != "head":
-	raise ParseError("incomplete grammar file",
-			  source["fname"], source["line"])
+    for l in rules(res):
+        if l[0][0] == 'token' and l[0][1].startswith("_"):
+            aux.add(l[0][1])
+        todo = []
+        ll = []
+        attention = ""
+        for token in reversed(l):
+            if attention == "+":
+                seq = token[1]+"+"
+                if seq not in aux:
+                    todo.append((seq, token[1]))
+                    todo.append((seq, seq, token[1]))
+                    aux.add(seq)
+                ll.append(seq)
+                attention = False
+            elif attention == "*":
+                seq = token[1]+"*"
+                if seq not in aux:
+                    todo.append((seq,))
+                    todo.append((seq, seq, token[1]))
+                    aux.add(seq)
+                ll.append(seq)
+                attention = False
+            elif token[0] == '*':
+                attention = "*"
+            elif token[0] == '+':
+                attention = "+"
+            else:
+                ll.append(token[1])
+        yield tuple(reversed(ll))
+        while todo:
+            yield todo.pop(0)

@@ -9,7 +9,7 @@ from lr1 import LR1
 from text import write_block
 from wifile import read_rules
 
-wisent_version ="0.1"
+wisent_version = "0.1"
 
 parser_types = {
     "ll1": ("LL(1)",),
@@ -66,17 +66,19 @@ def print_parser(fd, g, params):
     fd.write("# source grammar: %(source)s\n"%params)
     fd.write("# generator: wisent %(version)s, http://seehuhn.de/pages/wisent\n"%params)
     g.write_decorations(fd)
-    g.write_parser(fd)
+    g.write_parser(fd, params)
 
 ######################################################################
 
-g = LR1(read_rules(source))
+aux = set()
+g = LR1(read_rules(source, aux))
 
 params = {
     'source': source,
     'type': parser_name,
     'version': wisent_version,
     'date': strftime("%Y-%m-%d %H:%M:%S"),
+    'transparent_tokens': aux,
 }
 
 print_parser(sys.stdout, g, params)
