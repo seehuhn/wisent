@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from text import split_it
+
 class ParseError(Exception):
 
     def __init__(self, msg, fname=None, line=None):
@@ -232,3 +234,26 @@ class Grammar(object):
         terminals which can directly follow 'x' in a derivation.
         """
 	return self.fotab[x]
+
+    def write_terminals(self, fd, prefix=""):
+        fd.write(prefix+"terminal symbols:\n")
+        tt = map(repr, sorted(self.terminal-set([self.terminator])))
+        for l in split_it(tt, padding=prefix+"  "):
+            fd.write(l+"\n")
+
+    def write_nonterminals(self, fd, prefix=""):
+        fd.write(prefix+"nonterminal symbols:\n")
+        tt = map(repr, sorted(self.nonterminal-set([self.start])))
+        for l in split_it(tt, padding=prefix+"  "):
+            fd.write(l+"\n")
+
+    def write_productions(self, fd, prefix=""):
+        fd.write(prefix+"production rules:\n")
+        keys = sorted(self.rules.keys())
+        for key in keys:
+            r = self.rules[key]
+            if r[0] == self.start:
+                continue
+            head = repr(r[0])
+            tail = " ".join(map(repr, r[1:]))
+            fd.write(prefix+"  %s -> %s\n"%(head, tail))

@@ -4,44 +4,47 @@ def tokens(source):
     """Generator to read input and break it into tokens.
 
     'Source' must iterate over the lines of input, it could, for
-    example, be a file-like object.  The generator then yield 3-tuples
-    consisting of a type string, a value and a line number: if the
-    type string is one of _token_ or _string_, the value is the
+    example, be a file-like object.  The generator then yields
+    4-tuples consisting of a type string, a value, the line number
+    (starting with 1) and the column number (starting with 1): if the
+    type string is one of "token" or "string", the value is the
     corresponding input character sequence.  Otherwise both the type
     string and the value are the same, single input character.  The
-    third element in the tuple is the 0-based input line number.
+    third element of the tuple is the input line number.
 
     If the input ends in an unterminated string or comment, a
-    ValueError exception is raised.
+    SyntaxError exception is raised.
     """
     s = None
     state = None
-    line = 0
+    line = 1
     for l in source:
-        for c in l:
-            if state == "normal":
+        for col, c in enumerate(l):
+            if state == "skip":
                 state = None
             elif state == "word":
                 if c.isalnum() or c == "_":
                     s += c
                 else:
-                    yield ("token", s, line)
+                    yield ("token", s, line0, col0)
                     state = None
             elif state == "string":
                 if c == '\\':
                     state = "quote"
                 elif c == sep:
-                    yield ("string", s, line)
-                    state = "normal"
+                    yield ("string", s, line0, col0)
+                    state = "skip"
                 else:
                     s += c
             elif state == "quote":
                 s += c
-            elif state == "comment":
-                if c == '\n':
-                    state = "normal"
+                state = "string"
+            elif state == "comment" and c == '\n':
+                state = "skip"
 
             if state is None:
+                line0 = line
+                col0 = col+1
                 if c == "'":
                     state = "string"
                     sep = "'"
@@ -56,13 +59,16 @@ def tokens(source):
                 elif c == "#":
                     state = "comment"
                 elif c.isspace():
-                    state = "normal"
+                    state = "skip"
                 else:
-                    yield (c, c, line)
-                    state = "normal"
+                    yield (c, c, line0, col0)
+                    state = "skip"
         line += 1
 
     if state == "word":
-	yield ("token", s, line)
-    elif state != "normal":
-	raise ValueError("incomplete input")
+	yield ("token", s, line0, col0)
+    elif state not in [ None, "skip", "comment" ]:
+        if l[-1] == '\n':
+            l = l[:-1]
+        msg = "unterminated string"
+	raise SyntaxError(msg, (source.name, line0, col0, l[-20:]))

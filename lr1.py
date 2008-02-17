@@ -4,7 +4,7 @@ from sys import stderr
 from inspect import getsource
 
 from grammar import Grammar, ParseError
-from text import list_lines, write_block
+from text import split_it, write_block
 
 
 class Parser(object):
@@ -18,11 +18,29 @@ class Parser(object):
 
     class ParseErrors(Exception):
 
-        def __init__(self, errors, tree, EOF):
+        """Exception class to represent a collection of parse errors.
+
+        Instances of this class have two attributes, `errors` and `tree`.
+
+        `errors` is a list of tuples, each describing one error.
+        #@ IF error_stacks
+        Each tuple consists of the first token which could not
+        be processed, the list of token types which were expected
+        at this point, and a list of partial parse trees which
+        represent the input parsed so far.
+        #@ ELSE
+        Each tuple consists of the first token which could not
+        be processed and the list of token types which were expected
+        at this point.
+        #@ ENDIF
+
+        `tree` is a "repaired" parse tree which might be used for further
+        error checking, or `None` if no repair was possible.
+        """
+
+        def __init__(self, errors, tree):
             self.errors = errors
             self.tree = tree
-            self.EOF = EOF
-
 
     def __init__(self, max_err=None, errcorr_pre=4, errcorr_post=4):
         self.max_err = max_err
@@ -121,9 +139,13 @@ class Parser(object):
 
             expect = [ t for s,t in self._reduce.keys()+self._shift.keys()
                        if s == state ]
-            errors.append(([ s[1] for s in stack ], readahead, expect))
+            #@ IF error_stacks
+            errors.append((readahead, expect, [ s[1] for s in stack ]))
+            #@ ELSE
+            errors.append((readahead, expect))
+            #@ ENDIF
             if self.max_err is not None and len(errors) >= self.max_err:
-                raise self.ParseErrors(errors, None, self.EOF)
+                raise self.ParseErrors(errors, None)
 
             queue = []
             def split_input(m, stack, readahead, input, queue):
@@ -165,12 +187,12 @@ class Parser(object):
                     if val == len(q2):
                         break
             if best_val >= len(queue)-m+1:
-                raise self.ParseErrors(errors, None, self.EOF)
+                raise self.ParseErrors(errors, None)
             input = chain(best_queue, input)
 
         tree = stack[0][1]
         if errors:
-            raise self.ParseErrors(errors, tree, self.EOF)
+            raise self.ParseErrors(errors, tree)
         return tree
 
 class LR1(Grammar):
@@ -297,105 +319,69 @@ class LR1(Grammar):
                 else:
                     self.gtab[(I,X)] = J
 
-    def write_decorations(self, fd, grammar=True, parser=False):
-        if grammar:
-            fd.write("\n")
+    def _write_decorations(self, fd):
+        fd.write('\n')
 
-            fd.write("# terminal symbols:\n")
-            tt = map(repr, sorted(self.terminal-set([self.terminator])))
-            line = "#   "+tt[0]
-            for t in tt[1:]:
-                test = line+" "+t
-                if len(test)>=80:
-                    fd.write(line+"\n")
-                    line = "#   "+t
-                else:
-                    line = test
-            fd.write(line+"\n\n")
-
-            fd.write("# non-terminal symbols:\n")
-            tt = map(repr, sorted(self.nonterminal-set([self.start])))
-            line = "#   "+tt[0]
-            for t in tt[1:]:
-                test = line+" "+t
-                if len(test)>=80:
-                    fd.write(line+"\n")
-                    line = "#   "+t
-                else:
-                    line = test
-            fd.write(line+"\n\n")
-
-            fd.write("# production rules:\n")
-            keys = sorted(self.rules.keys())
-            for key in keys:
-                r = self.rules[key]
-                if r[0] == self.start:
-                    continue
-                head = repr(r[0])
-                tail = " ".join(map(repr, r[1:]))
-                fd.write("#   %s -> %s\n"%(head, tail))
-
-        if parser:
-            fd.write("\n")
-
-            fd.write("# parser states:\n")
-            keys = sorted(self.T.keys())
-            for k in keys:
-                fd.write("#\n")
-                fd.write("# state %d:\n"%k)
-                for k,l,n,readahead in self.T[k]:
-                    r = self.rules[k]
-                    head = repr(r[0])
-                    tail1 = " ".join(map(repr, r[1:n]))
-                    tail2 = " ".join(map(repr, r[n:l]))
-                    readahead = repr(readahead)
-                    fd.write("#   %s -> %s.%s [%s]\n"%(head,tail1,tail2,readahead))
-            fd.write("\n")
-
-            fd.write("# transition table:\n")
+        fd.write("# parser states:\n")
+        keys = sorted(self.T.keys())
+        for k in keys:
             fd.write("#\n")
-            tt1 = sorted(self.terminal)
-            tt2 = sorted(self.nonterminal-set([self.start]))
-            tt = tt1 + tt2
-            ttt = [ repr(t) for t in tt ]
-            widths = [ len(t) for t in ttt ]
-            fd.write("# state | "+" ".join(ttt)+"\n")
-            fd.write("# %s\n"%("-"*(7+sum(widths)+len(tt))))
-            keys = sorted(self.T.keys())
-            for I in keys:
-                rest = [ ]
-                for t,l in zip(tt,widths):
-                    if t in self.E[I]:
-                        next = ",".join(["%d"%x for x in self.E[I][t]])
-                        rest.append(next.center(l))
-                    else:
-                        rest.append(" "*l)
-                fd.write("# %5d | %s\n"%(I," ".join(rest)))
+            fd.write("# state %d:\n"%k)
+            for k,l,n,readahead in self.T[k]:
+                r = self.rules[k]
+                head = repr(r[0])
+                tail1 = " ".join(map(repr, r[1:n]))
+                tail2 = " ".join(map(repr, r[n:l]))
+                readahead = repr(readahead)
+                fd.write("#   %s -> %s.%s [%s]\n"%(head,tail1,tail2,readahead))
+        fd.write('\n')
+
+        fd.write("# transition table:\n")
+        fd.write("#\n")
+        tt1 = sorted(self.terminal)
+        tt2 = sorted(self.nonterminal-set([self.start]))
+        tt = tt1 + tt2
+        ttt = [ repr(t) for t in tt ]
+        widths = [ len(t) for t in ttt ]
+        fd.write("# state | "+" ".join(ttt)+'\n')
+        fd.write("# %s\n"%("-"*(7+sum(widths)+len(tt))))
+        keys = sorted(self.T.keys())
+        for I in keys:
+            rest = [ ]
+            for t,l in zip(tt,widths):
+                if t in self.E[I]:
+                    next = ",".join(["%d"%x for x in self.E[I][t]])
+                    rest.append(next.center(l))
+                else:
+                    rest.append(" "*l)
+            fd.write("# %5d | %s\n"%(I," ".join(rest)))
 
     def _write_tables(self, fd):
         self.terminator.push("EOF")
         self.start.push("_start")
 
-        fd.write("\n")
+        fd.write('\n')
         r_items = [ (i[0], repr(i[1]), repr(ri[1]), ri[2])
-                    for i,ri in self.rtab.iteritems() ]
+                    for i,ri in sorted(self.rtab.items()) ]
         r_items = [ "(%d,%s): (%s,%d)"%ri for ri in r_items ]
         fd.write("    _reduce = {\n")
-        for l in list_lines("        ", r_items, ""):
+        for l in split_it(r_items, padding="        "):
             fd.write(l+'\n')
         fd.write("    }\n")
 
-        fd.write("\n")
-        s_items = [ "(%d,%s): %s"%(i,repr(x),self.stab[(i,x)]) for i,x in self.stab ]
+        fd.write('\n')
+        s_items = [ "(%d,%s): %s"%(i,repr(x),self.stab[(i,x)])
+                    for i,x in sorted(self.stab) ]
         fd.write("    _shift = {\n")
-        for l in list_lines("        ", s_items, ""):
+        for l in split_it(s_items, padding="        "):
             fd.write(l+'\n')
         fd.write("    }\n")
 
-        fd.write("\n")
-        g_items = [ "(%d,%s): %s"%(i,repr(x),self.gtab[(i,x)]) for i,x in self.gtab ]
+        fd.write('\n')
+        g_items = [ "(%d,%s): %s"%(i,repr(x),self.gtab[(i,x)])
+                    for i,x in sorted(self.gtab) ]
         fd.write("    _goto = {\n")
-        for l in list_lines("        ", g_items, ""):
+        for l in split_it(g_items, padding="        "):
             fd.write(l+'\n')
         fd.write("    }\n")
 
@@ -405,22 +391,35 @@ class LR1(Grammar):
     def write_parser(self, fd, params={}):
         fd.write('\n')
         fd.write('from itertools import chain\n\n')
-        fd.write('class Parser(object):\n')
+        fd.write('class Parser(object):\n\n')
+
+        fd.write('    """%(type)s parser class.\n\n'%params)
+        self.write_terminals(fd, "    ")
+        fd.write('\n')
+        self.write_nonterminals(fd, "    ")
+        fd.write('\n')
+        self.write_productions(fd, "    ")
+        fd.write('    """\n')
 
         write_block(fd, 4, getsource(Parser.ParseErrors))
 
         fd.write('\n')
         tt = map(repr, sorted(self.terminal-set([self.terminator])))
-        for l in list_lines("    terminal = [ ", tt, " ]"):
+        for l in split_it(tt, padding="    ", start1="terminal = [ ",
+                          end2=" ]"):
             fd.write(l+'\n')
         fd.write("    EOF = object()\n")
         transparent = params.get("transparent_tokens", False)
         if transparent:
             tt = map(repr, transparent)
-            for l in list_lines("    _transparent = [ ", tt, " ]"):
+            for l in split_it(tt, padding="    ", start1="_transparent = [ ",
+                              end2=" ]"):
                 fd.write(l+'\n')
         fd.write("    _start = object()\n")
         fd.write("    _halting_state = %d\n"%self.halting_state)
+
+        if "parser_comment" in params:
+            self._write_decorations(fd)
 
         self._write_tables(fd)
 

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from sys import argv
+from sys import argv, stderr
 
 from scanner import tokens
 from parser import Parser
@@ -16,7 +16,11 @@ def rules(tree):
 def read_rules(fname, aux):
     p = Parser()
     fd = open(fname)
-    res = p.parse_tree(tokens(fd))
+    try:
+        res = p.parse_tree(tokens(fd))
+    except SyntaxError, e:
+        print >>stderr, "%s:%d:%d: %s"%(e.filename, e.lineno, e.offset, e.msg)
+        raise SystemExit(1)
     fd.close()
 
     for l in rules(res):

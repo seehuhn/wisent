@@ -1,5 +1,38 @@
 #! /usr/bin/env python
 
+def split_it(args, padding="", start1="", start2=None, sep=", ",
+             end1=",", end2="", maxwidth=79):
+    """A generator to format args and split into lines.
+
+    The elements of the list 'args' are converted into strings and
+    grouped into lines.  'args' must not be empty.
+
+    The first line is preceeded by 'padding+start1', all subsequent
+    lines are preceeded by 'padding+start2' (or by 'padding+" "*len(start1)',
+    if 'start2' is None).  The elements within a line are separated by
+    'sep'.  All lines except for the last are terminated by 'end1',
+    the last line is terminated by 'end2'.  If possible, lines are at
+    most 'maxwidth' characters long.
+    """
+    if start2 is None:
+        start2 = " "*len(start1)
+    args = [ str(arg) for arg in args[:-1] ] + [ str(args[-1])+end2 ]
+
+    line = padding + start1 + args.pop(0)
+    while args:
+        test = sep.join([line]+args)
+        if len(test) <= maxwidth:
+            line = test
+            break
+
+        arg = args.pop(0)
+        if len(line+sep+arg+end1) > maxwidth:
+            yield line+end1
+            line = padding + start2 + arg
+        else:
+            line += sep+arg
+    yield line
+
 def layout_list(prefix, bits, postfix):
     output = prefix+", ".join(bits)+postfix
     while len(output)>79:
@@ -10,17 +43,6 @@ def layout_list(prefix, bits, postfix):
 	except:
 	    break
     yield output
-
-def list_lines(prefix, bits, postfix):
-    line = prefix+bits[0]
-    for b in bits[1:]:
-        test = line+", "+b
-        if len(test)>=79:
-            yield line+","
-            line = " "*len(prefix) + b
-        else:
-            line = test
-    yield line+postfix
 
 def write_block(fd, indent, str, params={}):
     lines = [l.rstrip().expandtabs() for l in str.splitlines()]
@@ -47,4 +69,4 @@ def write_block(fd, indent, str, params={}):
                 stack.pop()
             continue
         if stack[-1]:
-            fd.write(" "*indent+l+"\n")
+            fd.write((" "*indent+l).rstrip()+"\n")
