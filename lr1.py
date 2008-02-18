@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 
-from sys import stderr
 from inspect import getsource
 
-from grammar import Grammar, ParseError
+from grammar import Grammar, GrammarError
 from text import split_it, write_block
 
 
@@ -194,7 +193,7 @@ class Parser(object):
         if errors:
             raise self.ParseErrors(errors, tree)
         return tree
-
+
 class LR1(Grammar):
 
     """Represent LR(1) grammars and generate parsers."""
@@ -233,7 +232,7 @@ class LR1(Grammar):
         return frozenset(U)
 
     def goto(self, U, X):
-        """ Given a state U and a symbol X, return the new parser state."""
+        """Given a state U and a symbol X, return the next parser state."""
         if (U,X) in self._cache:
             return self._cache[(U,X)]
         rules = self.rules
@@ -290,8 +289,7 @@ class LR1(Grammar):
                     continue
                 if (I,next) in self.rtab:
                     msg = "not an LR(1) grammar (reduce-reduce conflict)"
-                    print >>stderr, msg
-                    raise SystemExit(1)
+                    raise GrammarError(msg)
                 r = self.rules[key]
                 self.rtab[(I,next)] = (key, r[0], n-1)
 
@@ -303,14 +301,12 @@ class LR1(Grammar):
             for X in EI:
                 if (I,X) in self.rtab:
                     msg = "not an LR(1) grammar (shift-reduce conflict)"
-                    print >>stderr, msg
-                    raise SystemExit(1)
+                    raise GrammarError(msg)
                 JJ = EI[X]
                 if len(JJ)>1:
                     # TODO: can this really occur?
                     msg = "not an LR(1) grammar (shift-shift conflict)"
-                    print >>stderr, msg
-                    raise SystemExit(1)
+                    raise GrammarError(msg)
                 J = JJ[0]
                 if X in self.terminal:
                     self.stab[(I,X)] = J

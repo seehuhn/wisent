@@ -4,10 +4,11 @@ from sys import stderr, stdout
 from time import strftime
 from optparse import OptionParser
 
+from grammar import GrammarError
 from lr1 import LR1
-from text import write_block
 from scanner import tokens
 from parser import Parser
+from text import write_block
 
 wisent_version = "0.1"
 
@@ -57,17 +58,11 @@ if options.type not in parser_types:
     getopt.error("invalid parser type %s"%options.type)
 parser_name, = parser_types[options.type]
 
-######################################################################
-# collect/prepare global parameters
-
-aux = set()
-
 params = {
     'date': strftime("%Y-%m-%d %H:%M:%S"),
     'version': wisent_version,
     'fname': fname,
     'type': parser_name,
-    'transparent_tokens': aux,
 }
 
 ######################################################################
@@ -75,61 +70,11 @@ params = {
 
 errors_only = False
 
-def rules(tree):
-    for rule in tree[2:]:
-        target = rule[2][1:3]
-        for l in rule[4:-1]:
-            if l[1] != "list":
-                continue
-            yield tuple([target]+[x[1:3] for x in l[2:]])
-
-def read_rules(p, fname, aux):
-    """Read and parse the input file.
-
-    This generator yields the grammar rules one by one.  The special
-    "*" and "+" suffix tokens are expanded here.  All transparent
-    symbols are added to aux.
-    """
-    fd = open(fname)
-    res = p.parse_tree(tokens(fd))
-    fd.close()
-
-    for l in rules(res):
-        if l[0][0] == 'token' and l[0][1].startswith("_"):
-            aux.add(l[0][1])
-        todo = []
-        ll = []
-        special = ""
-        for token in reversed(l):
-            if special == "+":
-                seq = token[1]+"+"
-                if seq not in aux:
-                    todo.append((seq, token[1]))
-                    todo.append((seq, seq, token[1]))
-                    aux.add(seq)
-                ll.append(seq)
-                special = False
-            elif special == "*":
-                seq = token[1]+"*"
-                if seq not in aux:
-                    todo.append((seq,))
-                    todo.append((seq, seq, token[1]))
-                    aux.add(seq)
-                ll.append(seq)
-                special = False
-            elif token[0] == '*':
-                special = "*"
-            elif token[0] == '+':
-                special = "+"
-            else:
-                ll.append(token[1])
-        yield tuple(reversed(ll))
-        while todo:
-            yield todo.pop(0)
-
 p = Parser()
 try:
-    g = LR1(read_rules(p, fname, aux))
+    fd = open(fname)
+    tree = p.parse_tree(tokens(fd))
+    fd.close()
 except SyntaxError, e:
     print >>stderr, "%s:%d:%d: %s"%(e.filename, e.lineno, e.offset, e.msg)
     raise SystemExit(1)
@@ -169,17 +114,76 @@ except p.ParseErrors, e:
         msg2 = "expected "+", ".join(l[:-1])+" or "+l[-1]
         tmpl = "%s:%d:%d: %s, %s"
         print >>stderr, tmpl%(fname, token[2], token[3], msg1, msg2)
-    res = e.tree
-    if res is None:
+    tree = e.tree
+    if tree is None:
         raise SystemExit(1)
     else:
         errors_only = True
+del p
 
-######################################################################
-# emit the parser
+def rules(tree, aux):
+    """Extract the grammar rules from the parse tree.
+
+    This generator yields the grammar rules one by one.  The special
+    "*" and "+" suffix tokens are expanded here.  All transparent
+    symbols are added to aux.
+    """
+
+    def extract(tree):
+        for rule in tree[2:]:
+            target = rule[2][1:3]
+            for l in rule[4:-1]:
+                if l[1] != "list":
+                    continue
+                yield tuple([target]+[x[1:3] for x in l[2:]])
+
+    for l in extract(tree):
+        if l[0][0] == 'token' and l[0][1].startswith("_"):
+            aux.add(l[0][1])
+        todo = []
+        ll = []
+        special = ""
+        for token in reversed(l):
+            if special == "+":
+                seq = token[1]+"+"
+                if seq not in aux:
+                    todo.append((seq, token[1]))
+                    todo.append((seq, seq, token[1]))
+                    aux.add(seq)
+                ll.append(seq)
+                special = False
+            elif special == "*":
+                seq = token[1]+"*"
+                if seq not in aux:
+                    todo.append((seq,))
+                    todo.append((seq, seq, token[1]))
+                    aux.add(seq)
+                ll.append(seq)
+                special = False
+            elif token[0] == '*':
+                special = "*"
+            elif token[0] == '+':
+                special = "+"
+            else:
+                ll.append(token[1])
+        yield tuple(reversed(ll))
+        while todo:
+            yield todo.pop(0)
+
+aux = set()
+try:
+    g = LR1(rules(tree, aux))
+except GrammarError, e:
+    print >>stderr, "%s: %s"%(fname, e)
+    raise SystemExit(1)
 
 if errors_only:
     raise SystemExit(1)
+
+params['transparent_tokens'] = aux
+
+######################################################################
+# emit the parser
 
 fd = stdout
 

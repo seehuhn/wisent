@@ -2,13 +2,13 @@
 
 from text import split_it
 
-class ParseError(Exception):
+class GrammarError(Exception):
 
-    def __init__(self, msg, fname=None, line=None):
+    def __init__(self, msg):
         self.msg = msg
-        self.fname = fname
-        self.line = line
 
+    def __str__(self):
+        return self.msg
 
 class Marker(object):
 
@@ -40,35 +40,36 @@ class Grammar(object):
         of the grammar.  If it is not given, the head of the first
         rule is used as the start symbol.
         """
-	self.rules = {}
-        self.symbols = set()
-	self.terminal = set()
-	self.nonterminal = set()
-
         for arg in kwargs:
             if arg == "start":
                 continue
             raise TypeError("invalid keyword argument '%s'"%arg)
 
-        rules = dict(enumerate(rules))
+        self.rules = {}
+        self.symbols = set()
+        self.terminal = set()
+        self.nonterminal = set()
 
+        rules = dict(enumerate(rules))
+        if not rules:
+            raise GrammarError("empty grammar")
         first = True
-	for key, r in rules.iteritems():
-	    self.rules[key] = r
+        for key, r in rules.iteritems():
+            self.rules[key] = r
             self.nonterminal.add(r[0])
             if first:
                 self.start = r[0]
                 first = False
-	    for s in r[1:]:
+            for s in r[1:]:
                 self.symbols.add(s)
 
         if "start" in kwargs:
             self.start = kwargs["start"]
             if self.start not in self.nonterminal:
                 msg = "start symbol %s is not a nonterminal"%repr(self.start)
-                raise ValueError(msg)
+                raise GrammarError(msg)
 
-	self.terminal = self.symbols - self.nonterminal
+        self.terminal = self.symbols - self.nonterminal
         if cleanup:
             self._cleanup()
         self.nonterminal = frozenset(self.nonterminal)
@@ -76,59 +77,56 @@ class Grammar(object):
         self.symbols = frozenset(self.symbols)
 
         # precompute the set of all nullable symbols
-	self.nbtab = frozenset(self._compute_nbtab())
+        self.nbtab = frozenset(self._compute_nbtab())
 
         # precompute the table of all possible first symbols in expansions
         fitab = self._compute_fitab()
-	self.fitab = {}
-	for s in self.nonterminal|self.terminal:
-	    self.fitab[s] = frozenset(fitab[s])
+        self.fitab = {}
+        for s in self.nonterminal|self.terminal:
+            self.fitab[s] = frozenset(fitab[s])
 
         # precompute the table of all possible follow-up symbols
         fotab = self._compute_fotab()
-	self.fotab = {}
-	for s in self.nonterminal|self.terminal:
-	    self.fotab[s] = frozenset(fotab[s])
+        self.fotab = {}
+        for s in self.nonterminal|self.terminal:
+            self.fotab[s] = frozenset(fotab[s])
 
     def _cleanup(self):
         """Remove unnecessary rules and symbols."""
-
-	if len(self.rules) == 0:
-	    raise ParseError("empty grammar")
-
         # remove nonterminal symbols which do not expand into terminals
-	N = set()
+        N = set()
         T = self.terminal
         R = self.rules.keys()
-	done = False
-	while not done:
-	    done = True
-	    for key in R:
+        done = False
+        while not done:
+            done = True
+            for key in R:
                 r = self.rules[key]
-		if r[0] in N: continue
-		if set(r[1:])&(N|T):
-		    N.add(r[0])
-		    done = False
-	if self.start not in N:
-	    raise ParseError("%s doesn't generate terminals"%repr(self.start))
+                if r[0] in N: continue
+                if set(r[1:])&(N|T):
+                    N.add(r[0])
+                    done = False
+        if self.start not in N:
+            tmpl = "start symbal %s doesn't generate terminals"
+            raise GrammarError(tmpl%repr(self.start))
         for key in R:
             if not set(self.rules[key]) <= (N|T):
                 del self.rules[key]
 
         # remove unreachable symbols
-	gamma = set([self.start])
-	done = False
-	while not done:
-	    done = True
-	    for key in R:
+        gamma = set([self.start])
+        done = False
+        while not done:
+            done = True
+            for key in R:
                 r = self.rules[key]
-		if r[0] not in gamma: continue
-		for w in r[1:]:
-		    if w not in gamma:
-			gamma.add(w)
-			done = False
-	N &= gamma
-	T &= gamma
+                if r[0] not in gamma: continue
+                for w in r[1:]:
+                    if w not in gamma:
+                        gamma.add(w)
+                        done = False
+        N &= gamma
+        T &= gamma
         for key in R:
             if not set(self.rules[key]) <= (N|T):
                 del self.rules[key]
@@ -150,57 +148,57 @@ class Grammar(object):
 
     def _compute_nbtab(self):
         """Compute the set of nullable symbols."""
-	nbtab = set()
-	done = False
-	while not done:
-	    done = True
-	    for key, r in self.rules.iteritems():
-		if r[0] in nbtab: continue
-		for s in r[1:]:
-		    if s not in nbtab: break
-		else:
-		    nbtab.add(r[0])
-		    done = False
+        nbtab = set()
+        done = False
+        while not done:
+            done = True
+            for key, r in self.rules.iteritems():
+                if r[0] in nbtab: continue
+                for s in r[1:]:
+                    if s not in nbtab: break
+                else:
+                    nbtab.add(r[0])
+                    done = False
         return nbtab
 
     def _compute_fitab(self):
         """Compute the table of all possible first symbols in expansions."""
-	fitab = {}
-	for s in self.nonterminal:
-	    fitab[s] = set()
-	for s in self.terminal:
-	    fitab[s] = set([s])
-	done = False
-	while not done:
-	    done = True
-	    for key, r in self.rules.iteritems():
-		fi = set()
-		for s in r[1:]:
-		    fi |= fitab[s]
-		    if s not in self.nbtab: break
-		if not(fi <= fitab[r[0]]):
-		    fitab[r[0]] |= fi
-		    done = False
+        fitab = {}
+        for s in self.nonterminal:
+            fitab[s] = set()
+        for s in self.terminal:
+            fitab[s] = set([s])
+        done = False
+        while not done:
+            done = True
+            for key, r in self.rules.iteritems():
+                fi = set()
+                for s in r[1:]:
+                    fi |= fitab[s]
+                    if s not in self.nbtab: break
+                if not(fi <= fitab[r[0]]):
+                    fitab[r[0]] |= fi
+                    done = False
         return fitab
 
     def _compute_fotab(self):
-	fotab = {}
-	for s in self.nonterminal|self.terminal:
-	    fotab[s] = set()
-	done = False
-	while not done:
-	    done = True
-	    for key, r in self.rules.iteritems():
-		for i in range(1,len(r)):
-		    fo = set()
-		    for s in r[i+1:]:
-			fo |= self.fitab[s]
-			if s not in self.nbtab: break
-		    else:
-			fo |= fotab[r[0]]
-		    if not (fo <= fotab[r[i]]):
-			fotab[r[i]] |= fo
-			done = False
+        fotab = {}
+        for s in self.nonterminal|self.terminal:
+            fotab[s] = set()
+        done = False
+        while not done:
+            done = True
+            for key, r in self.rules.iteritems():
+                for i in range(1,len(r)):
+                    fo = set()
+                    for s in r[i+1:]:
+                        fo |= self.fitab[s]
+                        if s not in self.nbtab: break
+                    else:
+                        fo |= fotab[r[0]]
+                    if not (fo <= fotab[r[i]]):
+                        fotab[r[i]] |= fo
+                        done = False
         return fotab
 
     def is_nullable(self, word):
@@ -233,7 +231,7 @@ class Grammar(object):
         'x' must be a symbol.  The return value is the set of all
         terminals which can directly follow 'x' in a derivation.
         """
-	return self.fotab[x]
+        return self.fotab[x]
 
     def write_terminals(self, fd, prefix=""):
         fd.write(prefix+"terminal symbols:\n")
