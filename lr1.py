@@ -2,13 +2,18 @@
 
 from inspect import getsource
 
-from grammar import Grammar, GrammarError
+from grammar import Grammar, GrammarError, Unique
 from text import split_it, write_block
 
 
 class Parser(object):
 
     """Parser class template.
+
+    #@ IF parser_debugprint
+    Instances of this class print additional debug messages and are
+    not suitable for production use.
+    #@ ENDIF
 
     This class is only used to store source code sniplets for the
     generated parser.  Code is taken out via code inspection and
@@ -76,6 +81,14 @@ class Parser(object):
                     return (False,count,state,None)
                 read_next = False
             token = readahead[0]
+            #@ IF parser_debugprint
+
+            debug = [ ]
+            for s in stack:
+                debug.extend([str(s[0]), repr(s[1][1])])
+            debug.append(str(state))
+            print " ".join(debug)+" [%s]"%repr(token)
+            #@ ENDIF parser_debugprint
 
             if (state,token) in self._reduce:
                 X,n = self._reduce[(state,token)]
@@ -92,12 +105,24 @@ class Parser(object):
                     #@ ELSE
                     tree = (False,X) + tuple(s[1] for s in stack[-n:])
                     #@ ENDIF
+                    #@ IF parser_debugprint
+                    debug = [ s[1][1] for s in stack[-n:] ]
+                    #@ ENDIF
                     del stack[-n:]
                 else:
                     tree = (False, X)
+                    #@ IF parser_debugprint
+                    debug = [ ]
+                    #@ ENDIF
+                #@ IF parser_debugprint
+                print "reduce %s -> %s"%(repr(debug),repr(X))
+                #@ ENDIF
                 stack.append((state,tree))
                 state = self._goto[(state,X)]
             elif (state,token) in self._shift:
+                #@ IF parser_debugprint
+                print "shift %s"%repr(token)
+                #@ ENDIF
                 stack.append((state,(True,)+readahead))
                 state = self._shift[(state,token)]
                 read_next = True
@@ -346,30 +371,22 @@ class LR1(Grammar):
             rest = [ ]
             for t,l in zip(tt,widths):
                 if t in self.E[I]:
-                    next = ",".join(["%d"%x for x in self.E[I][t]])
+                    if t in self.terminal:
+                        next = ",".join(["s%d"%x for x in self.E[I][t]])
+                    else:
+                        next = ",".join(["g%d"%x for x in self.E[I][t]])
                     rest.append(next.center(l))
                 else:
                     rest.append(" "*l)
             fd.write("# %5d | %s\n"%(I," ".join(rest)))
 
     def _write_tables(self, fd):
-        self.terminator.push("EOF")
-        self.start.push("_start")
-
         fd.write('\n')
         r_items = [ (i[0], repr(i[1]), repr(ri[1]), ri[2])
                     for i,ri in sorted(self.rtab.items()) ]
         r_items = [ "(%d,%s): (%s,%d)"%ri for ri in r_items ]
         fd.write("    _reduce = {\n")
         for l in split_it(r_items, padding="        "):
-            fd.write(l+'\n')
-        fd.write("    }\n")
-
-        fd.write('\n')
-        s_items = [ "(%d,%s): %s"%(i,repr(x),self.stab[(i,x)])
-                    for i,x in sorted(self.stab) ]
-        fd.write("    _shift = {\n")
-        for l in split_it(s_items, padding="        "):
             fd.write(l+'\n')
         fd.write("    }\n")
 
@@ -381,12 +398,21 @@ class LR1(Grammar):
             fd.write(l+'\n')
         fd.write("    }\n")
 
-        self.start.pop()
-        self.terminator.pop()
+        fd.write('\n')
+        s_items = [ "(%d,%s): %s"%(i,repr(x),self.stab[(i,x)])
+                    for i,x in sorted(self.stab) ]
+        fd.write("    _shift = {\n")
+        for l in split_it(s_items, padding="        "):
+            fd.write(l+'\n')
+        fd.write("    }\n")
 
     def write_parser(self, fd, params={}):
         fd.write('\n')
-        fd.write('from itertools import chain\n\n')
+        fd.write('from itertools import chain\n')
+
+        write_block(fd, 0, getsource(Unique))
+        fd.write('\n')
+
         fd.write('class Parser(object):\n\n')
 
         fd.write('    """%(type)s parser class.\n\n'%params)
@@ -404,14 +430,14 @@ class LR1(Grammar):
         for l in split_it(tt, padding="    ", start1="terminal = [ ",
                           end2=" ]"):
             fd.write(l+'\n')
-        fd.write("    EOF = object()\n")
+        fd.write("    EOF = Unique('EOF')\n")
+        fd.write("    S = Unique('S')\n")
         transparent = params.get("transparent_tokens", False)
         if transparent:
             tt = map(repr, transparent)
             for l in split_it(tt, padding="    ", start1="_transparent = [ ",
                               end2=" ]"):
                 fd.write(l+'\n')
-        fd.write("    _start = object()\n")
         fd.write("    _halting_state = %d\n"%self.halting_state)
 
         if "parser_comment" in params:

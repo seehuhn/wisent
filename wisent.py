@@ -30,6 +30,10 @@ getopt.add_option("-t", "--type", action="store", type="string",
                   dest="type", default="lr1",
                   help="choose parse type (%s)"%", ".join(parser_types.keys()),
                   metavar="T")
+getopt.add_option("-d", "--debug", action="store", type="string",
+                  dest="debug", default="",
+                  help="enable debugging (p=parser)",
+                  metavar="CHARS")
 getopt.add_option("-V","--version",action="store_true",dest="version_flag",
                   help="show version information")
 (options,args)=getopt.parse_args()
@@ -64,6 +68,9 @@ params = {
     'fname': fname,
     'type': parser_name,
 }
+if "p" in options.debug:
+    params["parser_comment"] = True
+    params["parser_debugprint"] = True
 
 ######################################################################
 # read the grammar file

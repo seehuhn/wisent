@@ -10,19 +10,15 @@ class GrammarError(Exception):
     def __str__(self):
         return self.msg
 
-class Marker(object):
+class Unique(object):
 
-    def __init__(self, text):
-        self.texts = [ text ]
+    """Unique objects for use as markers."""
+
+    def __init__(self, label):
+        self.label = label
 
     def __repr__(self):
-        return self.texts[-1]
-
-    def push(self, text):
-        self.texts.append(text)
-
-    def pop(self):
-        return self.texts.pop()
+        return self.label
 
 class Grammar(object):
 
@@ -132,12 +128,12 @@ class Grammar(object):
                 del self.rules[key]
 
         # generate a terminator symbol
-        s = Marker('$')
+        s = Unique('EOF')
         T.add(s)
         self.terminator = s
 
         # generate a private start symbol
-        s = Marker('S')
+        s = Unique('S')
         N.add(s)
         self.rules[-1] = (s, self.start, self.terminator)
         self.start = s
