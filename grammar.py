@@ -36,11 +36,6 @@ class Grammar(object):
         of the grammar.  If it is not given, the head of the first
         rule is used as the start symbol.
         """
-        for arg in kwargs:
-            if arg == "start":
-                continue
-            raise TypeError("invalid keyword argument '%s'"%arg)
-
         self.rules = {}
         self.symbols = set()
         self.terminal = set()
@@ -98,7 +93,8 @@ class Grammar(object):
             done = True
             for key in R:
                 r = self.rules[key]
-                if r[0] in N: continue
+                if r[0] in N:
+                    continue
                 if set(r[1:])&(N|T):
                     N.add(r[0])
                     done = False
@@ -116,7 +112,8 @@ class Grammar(object):
             done = True
             for key in R:
                 r = self.rules[key]
-                if r[0] not in gamma: continue
+                if r[0] not in gamma:
+                    continue
                 for w in r[1:]:
                     if w not in gamma:
                         gamma.add(w)
@@ -149,9 +146,11 @@ class Grammar(object):
         while not done:
             done = True
             for key, r in self.rules.iteritems():
-                if r[0] in nbtab: continue
+                if r[0] in nbtab:
+                    continue
                 for s in r[1:]:
-                    if s not in nbtab: break
+                    if s not in nbtab:
+                        break
                 else:
                     nbtab.add(r[0])
                     done = False
@@ -171,7 +170,8 @@ class Grammar(object):
                 fi = set()
                 for s in r[1:]:
                     fi |= fitab[s]
-                    if s not in self.nbtab: break
+                    if s not in self.nbtab:
+                        break
                 if not(fi <= fitab[r[0]]):
                     fitab[r[0]] |= fi
                     done = False
@@ -189,7 +189,8 @@ class Grammar(object):
                     fo = set()
                     for s in r[i+1:]:
                         fo |= self.fitab[s]
-                        if s not in self.nbtab: break
+                        if s not in self.nbtab:
+                            break
                     else:
                         fo |= fotab[r[0]]
                     if not (fo <= fotab[r[i]]):
@@ -205,7 +206,8 @@ class Grammar(object):
         value is false.
         """
         for x in word:
-            if x not in self.nbtab: return False
+            if x not in self.nbtab:
+                return False
         return True
 
     def first_tokens(self, word):
@@ -218,7 +220,8 @@ class Grammar(object):
         fi = set()
         for s in word:
             fi |= self.fitab[s]
-            if s not in self.nbtab: break
+            if s not in self.nbtab:
+                break
         return fi
 
     def follow_tokens(self, x):

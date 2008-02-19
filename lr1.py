@@ -224,6 +224,7 @@ class LR1(Grammar):
     """Represent LR(1) grammars and generate parsers."""
 
     def __init__(self, *args, **kwargs):
+        kwargs.setdefault("check", True)
         Grammar.__init__(self, *args, **kwargs)
 
         self.starts = {}
@@ -234,8 +235,9 @@ class LR1(Grammar):
 
         self._cache = {}
 
-        self.generate_tables()
-        self.check()
+        self.generate_graph()
+        if kwargs["check"]:
+            self.check()
 
     def closure(self, U):
         rules = self.rules
@@ -244,7 +246,8 @@ class LR1(Grammar):
         while current:
             new = set()
             for key,l,n,Y in current:
-                if n == l: continue
+                if n == l:
+                    continue
                 r = rules[key]
                 lookahead = self.first_tokens(list(r[n+1:])+[Y])
                 for k,l in self.starts[r[n]]:
@@ -266,7 +269,7 @@ class LR1(Grammar):
         self._cache[(U,X)] = res
         return res
 
-    def generate_tables(self):
+    def generate_graph(self):
         stateno = 0
         T = {}
         Tinv = {}
@@ -283,9 +286,11 @@ class LR1(Grammar):
             done = True
             states = T.keys()
             for I in states:
-                if I not in E: E[I] = {}
+                if I not in E:
+                    E[I] = {}
                 for key,l,n,next in T[I]:
-                    if n == l: continue
+                    if n == l:
+                        continue
                     r = self.rules[key]
                     X = r[n]
                     J = self.goto(T[I], X)
@@ -295,7 +300,8 @@ class LR1(Grammar):
                         stateno += 1
                         done = False
 
-                    if X not in E[I]: E[I][X] = []
+                    if X not in E[I]:
+                        E[I][X] = []
                     if Tinv[J] not in E[I][X]:
                         E[I][X].append(Tinv[J])
                         done = False
