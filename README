@@ -12,3 +12,14 @@ represented as tuples of the form
 where the non-terminal 'X' is the head of the corresponding production
 and "..." stands for the parse trees for each of the symbols from the
 right hand side of the production.
+
+
+
+terminology:
+
+rule, production rule --- r, rule
+word, string, sequence
+(terminal, nonterminal) symbol, token --- X
+symbols have "replacements", "expansions", "derivations"
+input: (type,value), (symbol, value)
+parser state --- I?

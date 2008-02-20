@@ -68,7 +68,7 @@ class Grammar(object):
         self.symbols = frozenset(self.symbols)
 
         # precompute the set of all nullable symbols
-        self.nbtab = frozenset(self._compute_nbtab())
+        self.nullable = frozenset(self._compute_nbtab())
 
         # precompute the table of all possible first symbols in expansions
         fitab = self._compute_fitab()
@@ -170,7 +170,7 @@ class Grammar(object):
                 fi = set()
                 for s in r[1:]:
                     fi |= fitab[s]
-                    if s not in self.nbtab:
+                    if s not in self.nullable:
                         break
                 if not(fi <= fitab[r[0]]):
                     fitab[r[0]] |= fi
@@ -189,7 +189,7 @@ class Grammar(object):
                     fo = set()
                     for s in r[i+1:]:
                         fo |= self.fitab[s]
-                        if s not in self.nbtab:
+                        if s not in self.nullable:
                             break
                     else:
                         fo |= fotab[r[0]]
@@ -206,7 +206,7 @@ class Grammar(object):
         value is false.
         """
         for x in word:
-            if x not in self.nbtab:
+            if x not in self.nullable:
                 return False
         return True
 
@@ -220,7 +220,7 @@ class Grammar(object):
         fi = set()
         for s in word:
             fi |= self.fitab[s]
-            if s not in self.nbtab:
+            if s not in self.nullable:
                 break
         return fi
 
@@ -232,15 +232,55 @@ class Grammar(object):
         """
         return self.fotab[x]
 
-    def shortcut_grammar(self):
-        newrules = []
-        for r in self.rules.itervalues():
-            if self.is_nullable([r[0]]):
-                newrules.append((r[0],))
+    def shortcuts(self):
+        """Return a dictionary containing short expansions for every symbol.
+
+        Nullable symbols are expanded to empty sequences, terminal
+        symbols are mapped to one-element sequences containing
+        themselves.
+        """
+        res = {}
+        for X in self.terminal:
+            res[X] = (X,)
+        todo = set()
+        for X in self.nonterminal:
+            if X in self.nullable:
+                res[X] = ()
             else:
-                newtail = tuple(x for x in r[1:] if not self.is_nullable([x]))
-                newrules.append((r[0],)+newtail)
-        return Grammar(newrules, cleanup=False, start=self.start)
+                todo.add(X)
+
+        rtab = {}
+        for X in todo:
+            rtab[X] = []
+        for r in self.rules.itervalues():
+            if r[0] in todo:
+                rtab[r[0]].append(r[1:])
+
+        while todo:
+            still_todo = set()
+            for X in todo:
+                good_rules = []
+                for r in rtab[X]:
+                    for Y in r:
+                        if Y not in res:
+                            break
+                    else:
+                        good_rules.append(r)
+                if good_rules:
+                    word = reduce(lambda x,y: x+y,
+                                  (res[Y] for Y in good_rules[0]),
+                                  ())
+                    for r in good_rules[1:]:
+                        w2 = reduce(lambda x,y: x+y,
+                                    (res[Y] for Y in r),
+                                    ())
+                        if len(w2) < len(word):
+                            word = w2
+                    res[X] = word
+                else:
+                    still_todo.add(X)
+            todo = still_todo
+        return res
 
     def write_terminals(self, fd, prefix=""):
         fd.write(prefix+"terminal symbols:\n")
