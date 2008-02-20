@@ -127,12 +127,12 @@ class Grammar(object):
         # generate a terminator symbol
         s = Unique('EOF')
         T.add(s)
-        self.terminator = s
+        self.EOF = s
 
         # generate a private start symbol
         s = Unique('S')
         N.add(s)
-        self.rules[-1] = (s, self.start, self.terminator)
+        self.rules[-1] = (s, self.start, self.EOF)
         self.start = s
 
         self.nonterminal = N
@@ -284,7 +284,7 @@ class Grammar(object):
 
     def write_terminals(self, fd, prefix=""):
         fd.write(prefix+"terminal symbols:\n")
-        tt = map(repr, sorted(self.terminal-set([self.terminator])))
+        tt = map(repr, sorted(self.terminal-set([self.EOF])))
         for l in split_it(tt, padding=prefix+"  "):
             fd.write(l+"\n")
 

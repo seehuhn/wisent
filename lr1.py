@@ -11,17 +11,24 @@ class LR1(Grammar):
 
     """Represent LR(1) grammars and generate parsers."""
 
+    class LR1Errors(Exception):
+
+        def __init__(self):
+            self.list = {}
+
+        def __len__(self):
+            return len(self.list)
+
+        def __iter__(self):
+            return self.list.iteritems()
+
+        def add(self, data, text):
+            if data not in self.list or len(self.list[data]) > len(text):
+                self.list[data] = text
+
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("check", True)
         Grammar.__init__(self, *args, **kwargs)
-
         self.init_graph()
-
-        self._gotocache = {}
-
-        if kwargs["check"]:
-            self.generate_graph()
-            self.check()
 
     def closure(self, U):
         rules = self.rules
@@ -29,22 +36,19 @@ class LR1(Grammar):
         current = U
         while current:
             new = set()
-            for key,l,n,Y in current:
+            for key,l,n,X in current:
                 if n == l:
                     continue
                 r = rules[key]
-                lookahead = self.first_tokens(list(r[n+1:])+[Y])
+                lookahead = self.first_tokens(list(r[n+1:])+[X])
                 for k,l in self.rule_from_head[r[n]]:
-                    for Y in lookahead:
-                        x = (k,l,1,Y)
-                        if x not in U:
-                            new.add(x)
+                    for X in lookahead:
+                        z = (k,l,1,X)
+                        if z not in U:
+                            new.add(z)
             current = new
             U |= new
-        return frozenset(U)
-
-    def closure2(self, U):
-        U = self.closure(U)
+        U = frozenset(U)
         try:
             return self.rstate[U]
         except KeyError:
@@ -54,18 +58,7 @@ class LR1(Grammar):
             self.nstates += 1
             return no
 
-    def goto(self, U, X):
-        """Given a state U and a symbol X, return the next parser state."""
-        if (U,X) in self._gotocache:
-            return self._gotocache[(U,X)]
-        rules = self.rules
-        T = [ (key,l,n+1,Y) for key,l,n,Y in U if n<l and rules[key][n]==X ]
-        res = self.closure(T)
-        self._gotocache[(U,X)] = res
-        return res
-
     def init_graph(self):
-        """Set up the on-demand graph computation framework."""
         self.nstates = 0
         self.state = {}
         self.rstate = {}
@@ -78,7 +71,7 @@ class LR1(Grammar):
             self.rule_from_head[s[0]].append((k,len(s)))
 
         key, l = self.rule_from_head[self.start][0]
-        self.closure2([ (key,l,1,self.terminator) ])
+        self.closure([ (key,l,1,self.EOF) ])
 
     def neighbours(self, state):
         try:
@@ -91,8 +84,10 @@ class LR1(Grammar):
             for key,l,n,next in U:
                 r = rules[key]
                 if n == l:
-                    red.add((next,"reduce",r[0],n-1,key))
+                    # reduce using rule 'key'
+                    red.add((next,'R',key))
                 else:
+                    # shift using rule 'key'
                     X = r[n]
                     seed = shift.get(X,[])
                     seed.append((key,l,n+1,next))
@@ -100,97 +95,99 @@ class LR1(Grammar):
 
             res = set()
             for X,seed in shift.iteritems():
-                res.add((X,"shift",self.closure2(seed)))
+                next = self.closure(seed)
+                res.add((X,'S',next))
+                if X == self.EOF:
+                    self.halting_state = next
             res.update(red)
             self.edges[state] = res
             return res
 
-    def generate_graph(self):
-        stateno = 0
-        T = {}
-        Tinv = {}
-        E = {}
-
-        key, l = self.rule_from_head[self.start][0]
-        state = self.closure([ (key,l,1,self.terminator) ])
-        T[stateno] = state
-        Tinv[state] = stateno
-        stateno += 1
-
-        done = False
-        while not done:
-            done = True
-            states = T.keys()
-            for I in states:
-                if I not in E:
-                    E[I] = {}
-                for key,l,n,next in T[I]:
-                    if n == l:
-                        continue
-                    r = self.rules[key]
-                    X = r[n]
-                    J = self.goto(T[I], X)
-                    if J not in Tinv:
-                        T[stateno] = J
-                        Tinv[J] = stateno
-                        stateno += 1
-                        done = False
-
-                    if X not in E[I]:
-                        E[I][X] = []
-                    if Tinv[J] not in E[I][X]:
-                        E[I][X].append(Tinv[J])
-                        done = False
-        self.T = T
-        self.E = E
-
     def check(self):
-        T = self.T
-        E = self.E
+        """Check whether the grammar is LR(1).
 
-        self.rtab = {}
-        for I in T:
-            reductions = []
-            for key,l,n,next in T[I]:
-                if n<l:
-                    continue
-                if (I,next) in self.rtab:
-                    msg = "not an LR(1) grammar (reduce-reduce conflict)"
-                    raise GrammarError(msg)
-                r = self.rules[key]
-                self.rtab[(I,next)] = (key, r[0], n-1)
+        If conflicts are detected, an LR1Error exception is raised,
+        listing all detected conflicts.
+        """
+        errors = self.LR1Errors()
+        shortcuts = self.shortcuts()
 
-        self.stab = {}
-        self.gtab = {}
-        for I, EI in E.iteritems():
-            if not EI:
-                continue
-            for X in EI:
-                if (I,X) in self.rtab:
-                    msg = "not an LR(1) grammar (shift-reduce conflict)"
-                    raise GrammarError(msg)
-                JJ = EI[X]
-                if len(JJ)>1:
-                    # TODO: can this really occur?
-                    msg = "not an LR(1) grammar (shift-shift conflict)"
-                    raise GrammarError(msg)
-                J = JJ[0]
-                if X in self.terminal:
-                    self.stab[(I,X)] = J
-                    if X == self.terminator:
-                        self.halting_state = J
+        rtab = {}
+        gtab = {}
+        stab = {}
+
+        path = {}
+        path[0] = ()
+        todo = set([0])
+        while todo:
+            state = todo.pop()
+            word = path[state]
+            actions = {}
+            for m in self.neighbours(state):
+                X = m[0]
+                if m[1] == 'S':
+                    # shift
+                    next = m[2]
+                    if X in self.terminal:
+                        stab[(state,X)] = next
+                    else:
+                        gtab[(state,X)] = next
                 else:
-                    self.gtab[(I,X)] = J
+                    # reduce
+                    r = self.rules[m[2]]
+                    rtab[(state,X)] = (r[0],len(r)-1)
+
+                if X not in actions:
+                    actions[X] = []
+                actions[X].append(m[1:])
+            for X,mm in actions.iteritems():
+                word += (X,)
+                if len(mm) == 1:
+                    # no conflicts
+                    m = mm[0]
+                    if m[0] == 'R' or m[1] in path:
+                        continue
+                    path[m[1]] = word
+                    todo.add(m[1])
+                else:
+                    # more than one action possible
+                    res = []
+                    for m in mm:
+                        if m[0] == 'S':
+                            for k,l,n,_ in self.state[state]:
+                                if n<l and self.rules[k][n] == X:
+                                    if ('S',k,n) not in res:
+                                        res.append(('S',k,n))
+                        else:
+                            res.append(('R', m[1]))
+                    res = tuple(res)
+                    text = tuple(" ".join(repr(Y) for Y in shortcuts[X])
+                                 for X in word)
+                    errors.add(res, text)
+
+        self.rtab = rtab
+        self.gtab = gtab
+        self.stab = stab
+        if errors:
+            raise errors
+
+    def generate_tables(self):
+        if not hasattr(self, "rtab"):
+            try:
+                self.check()
+            except self.LR1Errors:
+                pass
 
     def _write_decorations(self, fd):
-        fd.write('\n')
+        self.generate_tables()
 
+        fd.write('\n')
         fd.write("# parser states:\n")
-        keys = sorted(self.T.keys())
-        for k in keys:
+        for n in range(0, self.nstates):
+            U = self.state[n]
             fd.write("#\n")
-            fd.write("# state %d:\n"%k)
-            for k,l,n,lookahead in self.T[k]:
+            fd.write("# state %d:\n"%n)
+            for k,l,n,lookahead in U:
                 r = self.rules[k]
                 head = repr(r[0])
                 tail1 = " ".join(map(repr, r[1:n]))
@@ -208,23 +205,32 @@ class LR1(Grammar):
         widths = [ len(t) for t in ttt ]
         fd.write("# state | "+" ".join(ttt)+'\n')
         fd.write("# %s\n"%("-"*(7+sum(widths)+len(tt))))
-        keys = sorted(self.T.keys())
-        for I in keys:
+        for I in range(0, self.nstates):
+            line = {}
+            for m in self.neighbours(I):
+                X = m[0]
+                line.setdefault(X, [])
+                if m[1] == 'S':
+                    if X in self.terminal:
+                        line[X].append("s%d"%m[2])
+                    else:
+                        line[X].append("g%d"%m[2])
+                else:
+                    if m[2] == -1:
+                        line[X].append("HLT")
+                    else:
+                        line[X].append("r%d"%m[2])
             rest = [ ]
             for t,l in zip(tt,widths):
-                if t in self.E[I]:
-                    if t in self.terminal:
-                        next = ",".join(["s%d"%x for x in self.E[I][t]])
-                    else:
-                        next = ",".join(["g%d"%x for x in self.E[I][t]])
-                    rest.append(next.center(l))
-                else:
-                    rest.append(" "*l)
+                s = ",".join(line.get(t,[]))
+                rest.append(s.center(l))
             fd.write("# %5d | %s\n"%(I," ".join(rest)))
 
     def _write_tables(self, fd):
+        self.generate_tables()
+
         fd.write('\n')
-        r_items = [ (i[0], repr(i[1]), repr(ri[1]), ri[2])
+        r_items = [ (i[0], repr(i[1]), repr(ri[0]), ri[1])
                     for i,ri in sorted(self.rtab.items()) ]
         r_items = [ "(%d,%s): (%s,%d)"%ri for ri in r_items ]
         fd.write("    _reduce = {\n")
@@ -233,16 +239,16 @@ class LR1(Grammar):
         fd.write("    }\n")
 
         fd.write('\n')
-        g_items = [ "(%d,%s): %s"%(i,repr(x),self.gtab[(i,x)])
-                    for i,x in sorted(self.gtab) ]
+        g_items = [ "(%d,%s): %s"%(i[0],repr(i[1]),next)
+                    for i,next in sorted(self.gtab.items()) ]
         fd.write("    _goto = {\n")
         for l in split_it(g_items, padding="        "):
             fd.write(l+'\n')
         fd.write("    }\n")
 
         fd.write('\n')
-        s_items = [ "(%d,%s): %s"%(i,repr(x),self.stab[(i,x)])
-                    for i,x in sorted(self.stab) ]
+        s_items = [ "(%d,%s): %s"%(i[0],repr(i[1]),next)
+                    for i,next in sorted(self.stab.items()) ]
         fd.write("    _shift = {\n")
         for l in split_it(s_items, padding="        "):
             fd.write(l+'\n')
@@ -268,7 +274,7 @@ class LR1(Grammar):
         write_block(fd, 4, getsource(Parser.ParseErrors))
 
         fd.write('\n')
-        tt = map(repr, sorted(self.terminal-set([self.terminator])))
+        tt = map(repr, sorted(self.terminal-set([self.EOF])))
         for l in split_it(tt, padding="    ", start1="terminal = [ ",
                           end2=" ]"):
             fd.write(l+'\n')
@@ -280,12 +286,14 @@ class LR1(Grammar):
             for l in split_it(tt, padding="    ", start1="_transparent = [ ",
                               end2=" ]"):
                 fd.write(l+'\n')
-        fd.write("    _halting_state = %d\n"%self.halting_state)
 
         if "parser_comment" in params:
             self._write_decorations(fd)
 
         self._write_tables(fd)
+
+        fd.write('\n')
+        fd.write("    _halting_state = %d\n"%self.halting_state)
 
         write_block(fd, 4, getsource(Parser.__init__), params)
         write_block(fd, 4, getsource(Parser.leaves), params)

@@ -17,9 +17,11 @@ right hand side of the production.
 
 terminology:
 
-rule, production rule --- r, rule
+rule, production rule    --- r, rule
+rule index    --- k, key
 word, string, sequence
-(terminal, nonterminal) symbol, token --- X
+(terminal, nonterminal) symbol, token    --- X
 symbols have "replacements", "expansions", "derivations"
 input: (type,value), (symbol, value)
-parser state --- I?
+parser state as a set    --- I???
+parser state as a number    --- state

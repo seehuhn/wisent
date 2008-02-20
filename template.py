@@ -84,7 +84,15 @@ class LR1Parser(object):
             print " ".join(debug)+" [%s]"%repr(token)
             #@ ENDIF parser_debugprint
 
-            if (state,token) in self._reduce:
+            if (state,token) in self._shift:
+                #@ IF parser_debugprint
+                print "shift %s"%repr(token)
+                #@ ENDIF
+                stack.append((state,(True,)+lookahead))
+                state = self._shift[(state,token)]
+                read_next = True
+                count += 1
+            elif (state,token) in self._reduce:
                 X,n = self._reduce[(state,token)]
                 if n > 0:
                     state = stack[-n][0]
@@ -113,14 +121,6 @@ class LR1Parser(object):
                 #@ ENDIF
                 stack.append((state,tree))
                 state = self._goto[(state,X)]
-            elif (state,token) in self._shift:
-                #@ IF parser_debugprint
-                print "shift %s"%repr(token)
-                #@ ENDIF
-                stack.append((state,(True,)+lookahead))
-                state = self._shift[(state,token)]
-                read_next = True
-                count += 1
             else:
                 return (False,count,state,lookahead)
         return (True,count,state,None)
