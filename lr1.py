@@ -86,12 +86,12 @@ class LR1(Grammar):
         except:
             rules = self.rules
             U = self.state[state]
-            red = []
+            red = set()
             shift = {}
             for key,l,n,next in U:
                 r = rules[key]
                 if n == l:
-                    red.append((next,r[0],n-1,key))
+                    red.add((next,"reduce",r[0],n-1,key))
                 else:
                     X = r[n]
                     seed = shift.get(X,[])
@@ -100,9 +100,8 @@ class LR1(Grammar):
 
             res = set()
             for X,seed in shift.iteritems():
-                res.add(("shift",X,self.closure2(seed)))
-            for R in red:
-                res.add(("reduce",)+R)
+                res.add((X,"shift",self.closure2(seed)))
+            res.update(red)
             self.edges[state] = res
             return res
 

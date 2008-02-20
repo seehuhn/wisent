@@ -232,6 +232,16 @@ class Grammar(object):
         """
         return self.fotab[x]
 
+    def shortcut_grammar(self):
+        newrules = []
+        for r in self.rules.itervalues():
+            if self.is_nullable([r[0]]):
+                newrules.append((r[0],))
+            else:
+                newtail = tuple(x for x in r[1:] if not self.is_nullable([x]))
+                newrules.append((r[0],)+newtail)
+        return Grammar(newrules, cleanup=False, start=self.start)
+
     def write_terminals(self, fd, prefix=""):
         fd.write(prefix+"terminal symbols:\n")
         tt = map(repr, sorted(self.terminal-set([self.terminator])))
