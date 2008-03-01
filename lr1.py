@@ -26,6 +26,7 @@ class LR1(Grammar):
             if data not in self.list or len(self.list[data]) > len(text):
                 self.list[data] = text
 
+
     def __init__(self, *args, **kwargs):
         Grammar.__init__(self, *args, **kwargs)
         self.init_graph()
@@ -42,10 +43,10 @@ class LR1(Grammar):
                 r = rules[key]
                 lookahead = self.first_tokens(list(r[n+1:])+[X])
                 for k,l in self.rule_from_head[r[n]]:
-                    for X in lookahead:
-                        z = (k,l,1,X)
-                        if z not in U:
-                            new.add(z)
+                    for Z in lookahead:
+                        item = (k,l,1,Z)
+                        if item not in U:
+                            new.add(item)
             current = new
             U |= new
         U = frozenset(U)
@@ -95,10 +96,10 @@ class LR1(Grammar):
 
             res = set()
             for X,seed in shift.iteritems():
-                next = self.closure(seed)
-                res.add((X,'S',next))
+                nextstate = self.closure(seed)
+                res.add((X,'S',nextstate))
                 if X == self.EOF:
-                    self.halting_state = next
+                    self.halting_state = nextstate
             res.update(red)
             self.edges[state] = res
             return res

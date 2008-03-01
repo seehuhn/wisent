@@ -61,25 +61,27 @@ def LR0_states(g):
                 E.add((I,Tinv[J]))
     return  T, E
 
-def LALR1_closure(g, U):
+def LALR1_closure(self, U):
+    rules = self.rules
     U = set(U)
     current = U
     while current:
         new = set()
-        for key,l,n,next in current:
-            if n == l: continue
-            r = g.rules[key]
-            X = r[n]
-            if X in g.terminal: continue
-            for k in g.rules:
-                s = g.rules[k]
-                if s[0] != X: continue
-                for Y in g.first_tokens(list(r[n+1:])+[next]):
-                    x = (k,len(s),1,Y)
-                    if x not in U:
-                        new.add(x)
-        U |= new
+        for key,l,n,X in current:
+            if n == l:
+                continue
+            r = rules[key]
+            lookahead = self.first_tokens(list(r[n+1:])+[X])
+            if r[n] in self.terminal: continue
+            for k in rules:
+                s = rules[k]
+                if s[0] != r[n]: continue
+                for Z in lookahead:
+                    zz = (k,len(s),1,Z)
+                    if zz not in U:
+                        new.add(zz)
         current = new
+        U |= new
     return frozenset(U)
 
 def LALR1_goto(g, U, X):

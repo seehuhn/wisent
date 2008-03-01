@@ -1,156 +1,301 @@
 #! /usr/bin/env python
 
-from sys import argv, stderr
-from grammar import Grammar
-from wifile import read_rules
-from text import layout_list
-from sniplets import emit_class_parseerror, emit_rules
+from inspect import getsource
+
+from grammar import Grammar, GrammarError, Unique
+from template import LR1Parser as Parser
+from text import split_it, write_block
+
 
 class LR0(Grammar):
 
+    """Represent LR(0) grammars and generate parsers."""
+
+    class LR0Errors(Exception):
+
+        def __init__(self):
+            self.list = {}
+
+        def __len__(self):
+            return len(self.list)
+
+        def __iter__(self):
+            return self.list.iteritems()
+
+        def add(self, data, text):
+            if data not in self.list or len(self.list[data]) > len(text):
+                self.list[data] = text
+
+
     def __init__(self, *args, **kwargs):
         Grammar.__init__(self, *args, **kwargs)
-
-        self.starts = {}
-        for X in self.symbols:
-            self.starts[X] = []
-        for k,s in self.rules.items():
-            self.starts[s[0]].append((k,len(s),1))
+        self.init_graph()
 
     def closure(self, U):
+        rules = self.rules
         U = set(U)
         current = U
         while current:
             new = set()
             for key,l,n in current:
-                if n == l: continue
-                r = self.rules[key]
-                X = r[n]
+                if n == l:
+                    continue
+                r = rules[key]
 
-                for x in self.starts[X]:
-                    if x not in U:
-                        new.add(x)
-            U |= new
+                for k,l in self.rule_from_head[r[n]]:
+                    item = (k,l,1)
+                    if item not in U:
+                        new.add(item)
             current = new
-        return frozenset(U)
+            U |= new
+        try:
+            return self.rstate[U]
+        except KeyError:
+            no = self.nstates
+            self.state[no] = U
+            self.rstate[U] = no
+            self.nstates += 1
+            return no
 
-    def goto(self, U, X):
-        rules = self.rules
-        T = [ (key,l,n+1) for key,l,n in U if n<l and rules[key][n]==X ]
-        return self.closure(T)
+    def init_graph(self):
+        self.nstates = 0
+        self.state = {}
+        self.rstate = {}
+        self.edges = {}
 
-    def tables(self):
-        stateno = 0
-        T = {}
-        Tinv = {}
-        E = {}
+        self.rule_from_head = {}
+        for X in self.symbols:
+            self.rule_from_head[X] = []
+        for k, s in self.rules.iteritems():
+            self.rule_from_head[s[0]].append((k,len(s)))
 
-        for key in self.rules:
-            if self.rules[key][0] == self.start:
-                break
-        state = self.closure([ (key,len(self.rules[key]),1) ])
-        T[stateno] = state
-        Tinv[state] = stateno
-        stateno += 1
+        key, l = self.rule_from_head[self.start][0]
+        self.closure([ (key,l,1) ])
 
-        done = False
-        while not done:
-            done = True
-            for I in T.keys():
-                if I not in E: E[I] = {}
-                for key,l,n in T[I]:
-                    if n == l: continue
-                    r = self.rules[key]
+    def neighbours(self, state):
+        try:
+            return self.edges[state]
+        except:
+            rules = self.rules
+            U = self.state[state]
+            red = set()
+            shift = {}
+            for key,l,n in U:
+                r = rules[key]
+                if n == l:
+                    # reduce using rule 'key'
+                    red.add((None,'R',key))
+                else:
+                    # shift using rule 'key'
                     X = r[n]
-                    J = self.goto(T[I], X)
-                    if J not in Tinv:
-                        T[stateno] = J
-                        Tinv[J] = stateno
-                        stateno += 1
-                        done = False
-                    if X not in E[I]: E[I][X] = []
-                    if Tinv[J] not in E[I][X]:
-                        E[I][X].append(Tinv[J])
-                        done = False
-        return  T, E
+                    seed = shift.get(X,[])
+                    seed.append((key,l,n+1))
+                    shift[X] = seed
 
-g = LR0(read_rules(argv[1]))
-T, E = g.tables()
+            res = set()
+            for X,seed in shift.iteritems():
+                nextstate = self.closure(seed)
+                res.add((X,'S',nextstate))
+                if X == self.EOF:
+                    self.halting_state = nextstate
+            res.update(red)
+            self.edges[state] = res
+            return res
 
-rtab = {}
-for I in T:
-    reductions = []
-    for key,l,n in T[I]:
-        r = g.rules[key]
-        if l == n:
-            reductions.append((key, r[0], n-1))
-    if len(reductions) == 1:
-        rtab[I] = reductions[0]
-    elif len(reductions) > 1:
-        print >>stderr, "not an LR(0) grammar (reduce-reduce conflict)"
-        raise SystemExit(1)
+    def check(self):
+        """Check whether the grammar is LR(0).
 
-stab = {}
-gtab = {}
-for I in E:
-    EI = E[I]
-    if not EI:
-        continue
-    if I in rtab:
-        print >>stderr, "not an LR(0) grammar (shift-reduce conflict)"
-        raise SystemExit(1)
-    for X in EI:
-        JJ = EI[X]
-        if len(JJ)>1:
-            # TODO: can this really occur?
-            print >>stderr, "not an LR(0) grammar (shift-shift conflict)"
-            raise SystemExit(1)
-        J = JJ[0]
-        if X in g.terminal:
-            stab[(I,X)] = J
-        else:
-            gtab[(I,X)] = J
+        If conflicts are detected, an LR0Error exception is raised,
+        listing all detected conflicts.
+        """
+        errors = self.LR1Errors()
+        shortcuts = self.shortcuts()
 
-print "from itertools import chain"
-print
-emit_class_parseerror()
-print
-print "class Parser(object):"
-print
-print "    _rtab = {"
-for l in layout_list("        ", ["%d: %s"%(i,repr(rtab[i])) for i in rtab], ""):
-    print l
-print "    }"
-print
-print "    _stab = {"
-for l in layout_list("        ", ["(%d,%s): %s"%(i,repr(x),stab[(i,x)]) for i,x in stab], ""):
-    print l
-print "    }"
-print
-print "    _gtab = {"
-for l in layout_list("        ", ["(%d,%s): %s"%(i,repr(x),gtab[(i,x)]) for i,x in gtab], ""):
-    print l
-print "    }"
-print
-print "    def __init__(self):"
-print "        pass"
-print
-print "    def parse(self, input):"
-print "        input = chain(input,[(%s,)])"%repr(g.terminator)
-print "        state = 0"
-print "        stack = []"
-print "        while True:"
-print "            if state in self._rtab:"
-print "                key,X,n = self._rtab[state]"
-print "                oldstate = stack[-n][0]"
-print "                stack[-n:] = [ (oldstate, X,[(Y,val) for s,Y,val in stack[-n:]]) ]"
-print "                if X == %s:"%repr(g.start)
-print "                    break"
-print "                state = self._gtab[(oldstate,X)]"
-print "            else:"
-print "                next = input.next()"
-print "                t,val = next[0], next[1:]"
-print "                stack.append((state,t,val))"
-print "                state = self._stab[(state,t)]"
-print "                "
-print "        return stack[-1][2][0]"
+        rtab = {}
+        gtab = {}
+        stab = {}
+
+        path = {}
+        path[0] = ()
+        todo = set([0])
+        while todo:
+            state = todo.pop()
+            word = path[state]
+            actions = {}
+            for m in self.neighbours(state):
+                X = m[0]
+                if m[1] == 'S':
+                    # shift
+                    next = m[2]
+                    if X in self.terminal:
+                        stab[(state,X)] = next
+                    else:
+                        gtab[(state,X)] = next
+                else:
+                    # reduce
+                    r = self.rules[m[2]]
+                    rtab[(state,X)] = (r[0],len(r)-1)
+
+                if X not in actions:
+                    actions[X] = []
+                actions[X].append(m[1:])
+            for X,mm in actions.iteritems():
+                word += (X,)
+                if len(mm) == 1:
+                    # no conflicts
+                    m = mm[0]
+                    if m[0] == 'R' or m[1] in path:
+                        continue
+                    path[m[1]] = word
+                    todo.add(m[1])
+                else:
+                    # more than one action possible
+                    res = []
+                    for m in mm:
+                        if m[0] == 'S':
+                            for k,l,n,_ in self.state[state]:
+                                if n<l and self.rules[k][n] == X:
+                                    if ('S',k,n) not in res:
+                                        res.append(('S',k,n))
+                        else:
+                            res.append(('R', m[1]))
+                    res = tuple(res)
+                    text = tuple(" ".join(repr(Y) for Y in shortcuts[X])
+                                 for X in word)
+                    errors.add(res, text)
+
+        self.rtab = rtab
+        self.gtab = gtab
+        self.stab = stab
+        if errors:
+            raise errors
+
+    def generate_tables(self):
+        if not hasattr(self, "rtab"):
+            try:
+                self.check()
+            except self.LR0Errors:
+                pass
+
+    def _write_decorations(self, fd):
+        self.generate_tables()
+
+        fd.write('\n')
+        fd.write("# parser states:\n")
+        for n in range(0, self.nstates):
+            U = self.state[n]
+            fd.write("#\n")
+            fd.write("# state %d:\n"%n)
+            for k,l,n,lookahead in U:
+                r = self.rules[k]
+                head = repr(r[0])
+                tail1 = " ".join(map(repr, r[1:n]))
+                tail2 = " ".join(map(repr, r[n:l]))
+                lookahead = repr(lookahead)
+                fd.write("#   %s -> %s.%s [%s]\n"%(head,tail1,tail2,lookahead))
+        fd.write('\n')
+
+        fd.write("# transition table:\n")
+        fd.write("#\n")
+        tt1 = sorted(self.terminal)
+        tt2 = sorted(self.nonterminal-set([self.start]))
+        tt = tt1 + tt2
+        ttt = [ repr(t) for t in tt ]
+        widths = [ len(t) for t in ttt ]
+        fd.write("# state | "+" ".join(ttt)+'\n')
+        fd.write("# %s\n"%("-"*(7+sum(widths)+len(tt))))
+        for I in range(0, self.nstates):
+            line = {}
+            for m in self.neighbours(I):
+                X = m[0]
+                line.setdefault(X, [])
+                if m[1] == 'S':
+                    if X in self.terminal:
+                        line[X].append("s%d"%m[2])
+                    else:
+                        line[X].append("g%d"%m[2])
+                else:
+                    if m[2] == -1:
+                        line[X].append("HLT")
+                    else:
+                        line[X].append("r%d"%m[2])
+            rest = [ ]
+            for t,l in zip(tt,widths):
+                s = ",".join(line.get(t,[]))
+                rest.append(s.center(l))
+            fd.write("# %5d | %s\n"%(I," ".join(rest)))
+
+    def _write_tables(self, fd):
+        self.generate_tables()
+
+        fd.write('\n')
+        r_items = [ (i[0], repr(i[1]), repr(ri[0]), ri[1])
+                    for i,ri in sorted(self.rtab.items()) ]
+        r_items = [ "(%d,%s): (%s,%d)"%ri for ri in r_items ]
+        fd.write("    _reduce = {\n")
+        for l in split_it(r_items, padding="        "):
+            fd.write(l+'\n')
+        fd.write("    }\n")
+
+        fd.write('\n')
+        g_items = [ "(%d,%s): %s"%(i[0],repr(i[1]),next)
+                    for i,next in sorted(self.gtab.items()) ]
+        fd.write("    _goto = {\n")
+        for l in split_it(g_items, padding="        "):
+            fd.write(l+'\n')
+        fd.write("    }\n")
+
+        fd.write('\n')
+        s_items = [ "(%d,%s): %s"%(i[0],repr(i[1]),next)
+                    for i,next in sorted(self.stab.items()) ]
+        fd.write("    _shift = {\n")
+        for l in split_it(s_items, padding="        "):
+            fd.write(l+'\n')
+        fd.write("    }\n")
+
+    def write_parser(self, fd, params={}):
+        fd.write('\n')
+        fd.write('from itertools import chain\n')
+
+        write_block(fd, 0, getsource(Unique))
+        fd.write('\n')
+
+        fd.write('class Parser(object):\n\n')
+
+        fd.write('    """%(type)s parser class.\n\n'%params)
+        self.write_terminals(fd, "    ")
+        fd.write('\n')
+        self.write_nonterminals(fd, "    ")
+        fd.write('\n')
+        self.write_productions(fd, "    ")
+        fd.write('    """\n')
+
+        write_block(fd, 4, getsource(Parser.ParseErrors))
+
+        fd.write('\n')
+        tt = map(repr, sorted(self.terminal-set([self.EOF])))
+        for l in split_it(tt, padding="    ", start1="terminal = [ ",
+                          end2=" ]"):
+            fd.write(l+'\n')
+        fd.write("    EOF = Unique('EOF')\n")
+        fd.write("    S = Unique('S')\n")
+        transparent = params.get("transparent_tokens", False)
+        if transparent:
+            tt = map(repr, transparent)
+            for l in split_it(tt, padding="    ", start1="_transparent = [ ",
+                              end2=" ]"):
+                fd.write(l+'\n')
+
+        if "parser_comment" in params:
+            self._write_decorations(fd)
+
+        self._write_tables(fd)
+
+        fd.write('\n')
+        fd.write("    _halting_state = %d\n"%self.halting_state)
+
+        write_block(fd, 4, getsource(Parser.__init__), params)
+        write_block(fd, 4, getsource(Parser.leaves), params)
+        write_block(fd, 4, getsource(Parser._parse_tree), params)
+        write_block(fd, 4, getsource(Parser._try_parse), params)
+        write_block(fd, 4, getsource(Parser.parse_tree), params)
