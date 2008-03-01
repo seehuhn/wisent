@@ -17,9 +17,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from os import remove
+import sys
+from os import remove, rmdir
+from os.path import join
+from tempfile import mkdtemp
 
 from lr1 import LR1
+
+
+testdir = mkdtemp()
+sys.path = [testdir] + sys.path
+
 
 class FakeEOF(object):
 
@@ -39,7 +47,7 @@ ignore = object()
 def check(rules, tests, parser_args={}):
     print "-"*70
     g = LR1(rules)
-    fd = open("tmp.py", "w")
+    fd = open(join(testdir,"tmp.py"), "w")
     g.write_parser(fd)
     fd.close()
     del g
@@ -76,8 +84,8 @@ def check(rules, tests, parser_args={}):
 
         print success and "  success" or "  failure"
     try:
-        remove("tmp.py")
-        remove("tmp.pyc")
+        remove(join(testdir,"tmp.py"))
+        remove(join(testdir,"tmp.pyc"))
     except OSError:
         pass
 
@@ -143,7 +151,6 @@ tests = [
     ]
 check(rules, tests, {'errcorr_pre':4})
 
-
 # check errcorr_post
 rules = [
     ('A', 1, 0, 0, 1),
@@ -162,3 +169,5 @@ tests = [
     ([3, 0, 0, 2], ('A', (2,), (0,1), (0,2), (2,3)), [((3,0), [1, 2])]),
     ]
 check(rules, tests, {'errcorr_post':3})
+
+rmdir(testdir)

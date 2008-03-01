@@ -1,2 +1,2 @@
-version 0.1:
-- initial public release
+version 0.1 (2008-03-01):
+- initial public release, only LR(1) parsers are implemented

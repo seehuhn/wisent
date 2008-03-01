@@ -16,7 +16,21 @@ the file COPYING of the source code distribution.
 <voss@seehuhn.de>.  Your message should include the Wisent version
 number, as obtained by the command 'wisent -V'.
 
-   homepage: http://seehuhn.de/pages/wisent
+   The Wisent homepage can be found at http://seehuhn.de/pages/wisent .
+
+
+INSTALLATION
+============
+
+   Generic installation instructions are in the file "INSTALL".  On
+most systems, the following commands should be sufficient:
+
+	./configure
+	make
+	make install
+
+Alternatively you can omit the "make install" and run Wisent directly
+in the build directory.
 
 
 WISENT DOCUMENTATION
@@ -25,7 +39,7 @@ WISENT DOCUMENTATION
    Wisent reads a grammar from a file and emits Python source code to
 stdout.  The program is typically called as follows:
 
-        wisent grammar.wi >parser.py
+	wisent grammar.wi >parser.py
 
    Wisent grammar files, by convention the file names end in ".wi",
 consist of a sequence of rules.  Each rule consists of a non-terminal
@@ -125,9 +139,9 @@ messages.
 Example 2.  For a parser generated from the grammar given in example
 1, the following Python sequence is a valid input:
 
-    [ ( 'token', 'grammar' ),
+    [ ( 'TOKEN', 'grammar' ),
       ( ':', ),
-      ( 'token', 'rule' ),
+      ( 'TOKEN', 'rule' ),
       ( '*', ),
       ( ';', ) ]
 
@@ -152,13 +166,13 @@ tree:
 
 	('grammar',
 	    ('rule',
-		('token', 'grammar'), 
+		('TOKEN', 'grammar'),
 		(':',),
 		('rhs',
 		    ('list',
 			('item',
 			    ('tos',
-				('token', 'rule')),
+				('TOKEN', 'rule')),
 			    ('*',)))),
 		(';',)))
 
@@ -170,15 +184,16 @@ Instead of a sub-tree rooted at the non-terminal the children of the
 non-terminal are directly inserted into the containing tree.  This
 reduces the local nesting level by one.
 
-Example 4.  If we rename the non-terminals "rhs" to "_rhs" and "tos"
-to "_tos" in examples 1 and 2, the parse tree simplifies as follows:
+Example 4.  If we rename the non-terminals "rhs" to "_rhs", "tos" to
+"_tos" and "item" to "_item" in examples 1 and 2, the parse tree
+simplifies as follows:
 
 	('grammar',
-	    ('rule', 
-		('token', 'grammar'), 
-		(':',), 
-		('list', 
-		    ('token', 'rule'),
+	    ('rule',
+		('TOKEN', 'grammar'),
+		(':',),
+		('list',
+		    ('TOKEN', 'rule'),
 		    ('*',)),
 		(';',)))
 
@@ -200,8 +215,8 @@ attributes:
 	consists of the first input token which could not be processed
 	and the list of terminal symbols which were allowed at this
 	point.  The list of allowed symbols might contain the special
-        value 'EOF' to indicate that an end of input was allowed at
-        this point.
+	value 'EOF' to indicate that an end of input was allowed at
+	this point.
 
     tree
 	is a "repaired" parse tree which might be used for further

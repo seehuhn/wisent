@@ -1,3 +1,26 @@
+commit 524ac52cc1be45031702b9bb5d9fdacaa0cc6dd7
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Mar 1 22:45:10 2008 +0000
+
+    Prepare for the first public release.
+    
+    Simplify the format of parse trees, add documentation, assorted
+    cleanups.  Also add a first, simple version of automated tests for the
+    generated parsers.
+
+commit 3c9e626bd1abd6bbe1d5e8519ef460984ce3d190
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Mar 1 15:57:53 2008 +0000
+
+    Start preparations for the first public release.
+    
+    Convert to use automake/autoconf for packaging the source and for
+    installing the applications.
+    
+    Put the template file and the generated parsers under a 3-clause BSD
+    license.  All other files are under the GPL, version 2.  Add license
+    information to all source files.
+
 commit 2522023fc4d03c2ad6a2ea73d36bbe98eeb5c926
 Author: Jochen Voss <voss@seehuhn.de>
 Date:   Sat Mar 1 14:57:48 2008 +0000

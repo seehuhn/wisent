@@ -69,6 +69,7 @@ class LR1Parser(object):
         def __init__(self, errors, tree):
             self.errors = errors
             self.tree = tree
+            self.args = "%d parse errors"%len(errors)
 
     def __init__(self, max_err=None, errcorr_pre=4, errcorr_post=4):
         self.max_err = max_err
