@@ -143,7 +143,7 @@ class LR0(Grammar):
                 if m[1] == 'S':
                     # shift
                     next = m[2]
-                    if X in self.terminal:
+                    if X in self.terminals:
                         stab[(state,X)] = next
                     else:
                         gtab[(state,X)] = next
@@ -213,8 +213,8 @@ class LR0(Grammar):
 
         fd.write("# transition table:\n")
         fd.write("#\n")
-        tt1 = sorted(self.terminal)
-        tt2 = sorted(self.nonterminal-set([self.start]))
+        tt1 = sorted(self.terminals)
+        tt2 = sorted(self.nonterminals-set([self.start]))
         tt = tt1 + tt2
         ttt = [ repr(t) for t in tt ]
         widths = [ len(t) for t in ttt ]
@@ -226,7 +226,7 @@ class LR0(Grammar):
                 X = m[0]
                 line.setdefault(X, [])
                 if m[1] == 'S':
-                    if X in self.terminal:
+                    if X in self.terminals:
                         line[X].append("s%d"%m[2])
                     else:
                         line[X].append("g%d"%m[2])
@@ -289,7 +289,7 @@ class LR0(Grammar):
         write_block(fd, 4, getsource(Parser.ParseErrors))
 
         fd.write('\n')
-        tt = map(repr, sorted(self.terminal-set([self.EOF])))
+        tt = map(repr, sorted(self.terminals-set([self.EOF])))
         for l in split_it(tt, padding="    ", start1="terminal = [ ",
                           end2=" ]"):
             fd.write(l+'\n')

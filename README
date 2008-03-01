@@ -1,48 +1,208 @@
 Wisent - a Parser Generator for Python
 
 
-INTRODUCTION:
+INTRODUCTION
+============
 
-   Wisent is an LR(1) parser generator for Python.
+   Wisent is an LR(1) parser generator for Python: it converts
+context free grammars into Python code.
 
    Wisent comes with NO WARRANTY, to the extent permitted by law.
-You may redistribute copies of wisent under the terms of the GNU
+You may redistribute copies of Wisent under the terms of the GNU
 General Public License.  For more information about these matters, read
 the file COPYING of the source code distribution.
 
-   Please mail any suggestions and bug reports to <voss@seehuhn.de>.
-Your message should include the wisent version number, as obtained
-by the command 'wisent -V'.
+   Please mail any suggestions and bug reports to Jochen Voss
+<voss@seehuhn.de>.  Your message should include the Wisent version
+number, as obtained by the command 'wisent -V'.
 
    homepage: http://seehuhn.de/pages/wisent
 
 
-DOCUMENTATION:
+WISENT DOCUMENTATION
+====================
 
-   The generated parser returns a parse tree of the following form:
-leafes are represented as tuples of the form
+   Wisent reads a grammar from a file and emits Python source code to
+stdout.  The program is typically called as follows:
 
-    (True, x, ...)
+        wisent grammar.wi >parser.py
 
-where 'x' is a terminal symbol and "..." stands for any data attached
-to it (i.e. '(x, ...)' was part of the input data.  Inner nodes are
-represented as tuples of the form
+   Wisent grammar files, by convention the file names end in ".wi",
+consist of a sequence of rules.  Each rule consists of a non-terminal
+symbol, a colon ':', the expansion of the non-terminal given as a
+sequence symbols followed by a semicolon ';'.  If a non-terminal has
+several possible expansions, these can either be given on the right
+hand side of one rule, separated by '|', or they can be written as
+separate rules with identical left hand sides.
 
-    (False, X, ...)
+   On the right hand side you can write 'symbol *' as an abbreviation
+for an arbitrary number of occurrences of 'symbol' and you can write
+'symbol +' as an abbreviation for one or more occurrences of
+'symbol'.  Symbols which contain non-alphanumeric characters should be
+put in quotation marks.  The character '#' can be used for comments in
+the grammar files: everything after a '#', until the next end of line,
+is ignored.
 
-where the non-terminal 'X' is the head of the corresponding production
-and "..." stands for the parse trees for each of the symbols from the
-right hand side of the production.
+   Wisent uses symbol names which start with an underscore character
+'_' to denote "uninteresting" symbols.  These symbols are omitted from
+the generated parse trees (see the more detailed description below).
+
+   Every symbol which occurs on the left hand side of a rule is a
+'non-terminal' symbol.  Every symbol which occurs in the expansion of
+a rule and is not a non-terminal symbol is considered to be 'terminal
+symbol'.  The non-terminal on the left hand side of the first grammar
+rule is used as the 'start symbol'.
+
+Example 1.  A grammar to describe the syntax of the Wisent input files
+could look as follows.
+
+	grammar: rule*;
+	rule: TOKEN ":" rhs ";";
+	rhs: list | rhs "|" list;
+	list: item*;
+	item: tos | tos "+" | tos "*";
+	tos: TOKEN | STRING;
 
 
-TERMINOLOGY:
+PARSER DOCUMENTATION
+====================
 
-rule, production rule, grammar rule    --- r, rule
-rule index    --- k, key
-word, string, sequence
-(terminal, nonterminal) symbol, token    --- X
-symbols have "replacements", "expansions", "derivations"
-input: (type,value), (symbol, value)
-parser state as a set    --- I, U
-item (rule with a dot)    --- item
-parser state as a number    --- state
+   The output of Wisent is a complete Python source file, implementing
+a single Python class 'Parser'.  The generated file can be used
+stand-alone and has no dependency on Wisent any more.
+
+   Assuming you wrote Wisent's output to the file "parser.py", you can
+use the generated parser as illustrated by the following code sniplet:
+
+	#! /usr/bin/env python
+
+	from parser import Parser
+
+	input = ...some iterable...
+
+	p = Parser()
+	try:
+	    tree = p.parse_tree(input)
+	except p.ParseErrors, e:
+	    # handle parse errors
+
+	# now `tree` contains the parse tree
+
+'Parser' objects have the following attributes:
+
+    parse_tree(input)
+	A method to convert a given input into a parse tree.  See the
+	description below.
+
+    terminals
+	A Python list, containing all terminal symbols of the grammar.
+
+    leaves(tree)
+	A generator to iterate over all leaves (corresponding to
+	terminal symbols) of a parse tree.  See the description of
+	parse trees below.
+
+    ParseErrors
+	A Python class, derived from 'Exception', used for error
+	exceptions when reporting parse errors.
+
+    EOF
+	An object used internally to mark the end of input.  You might
+	encounter this in data attached to a ParseErrors exception.
+
+Parser Input
+------------
+
+   The input data to be parsed is given as the argument of the
+'parse_tree' method.  It must be an iterable, consisting of a sequence
+of Python tuples and the first element of each tuple must be a
+terminal symbol of the grammar.  All other elements of the input
+tuples are copied into the output parse tree and are otherwise ignored
+by the parser; you can use them to attach semantic values to the
+symbols or to keep track of input line numbers for use in error
+messages.
+
+Example 2.  For a parser generated from the grammar given in example
+1, the following Python sequence is a valid input:
+
+    [ ( 'token', 'grammar' ),
+      ( ':', ),
+      ( 'token', 'rule' ),
+      ( '*', ),
+      ( ';', ) ]
+
+This input could, for example, occur when the first rule of the above
+grammar file is fed into the parser.
+
+The Returned Parse Tree
+-----------------------
+
+   The 'parse_tree' method of a 'Parser' object returns a parse tree,
+as a collection of nested Python tuples.  A parse tree corresponding
+to a terminal symbol equals the corresponding tuple from the input
+data.  These can be recognised by the fact that the first element of
+the tuple is contained in the list 'terminals'.  All other trees
+correspond to grammar rules: they have a non-terminal symbol as the
+first element and the remaining elements are the parse trees for an
+expansion of this non-terminal.  The first element of the tree
+returned by 'parse_tree' is always the start symbol of the grammar.
+
+Example 3.  The input from example 2 leads to the following parse
+tree:
+
+	('grammar',
+	    ('rule',
+		('token', 'grammar'), 
+		(':',),
+		('rhs',
+		    ('list',
+			('item',
+			    ('tos',
+				('token', 'rule')),
+			    ('*',)))),
+		(';',)))
+
+   In real applications parse trees often become deeply nested,
+because they contain many levels of "uninteresting" symbols like "rhs"
+and "tos" in example 2.  To ease processing of the resulting trees,
+Wisent generated parsers omit non-terminal whose names start with '_'.
+Instead of a sub-tree rooted at the non-terminal the children of the
+non-terminal are directly inserted into the containing tree.  This
+reduces the local nesting level by one.
+
+Example 4.  If we rename the non-terminals "rhs" to "_rhs" and "tos"
+to "_tos" in examples 1 and 2, the parse tree simplifies as follows:
+
+	('grammar',
+	    ('rule', 
+		('token', 'grammar'), 
+		(':',), 
+		('list', 
+		    ('token', 'rule'),
+		    ('*',)),
+		(';',)))
+
+Parse Errors
+------------
+
+   When a parse error is encountered, Wisent tries to "repair" the
+input in order to continue parsing so that as many parse errors as
+possible can be found in one run.  Repairs are attempted by inserting,
+deleting or changing a single token in a neighbourhood of the first
+un-parseable token.
+
+   All parse errors are returned simultaneously by raising a
+ParseErrors exception.  The exception object has the following two
+attributes:
+
+    errors
+	A list of tuples, each describing one error.  Each tuple
+	consists of the first input token which could not be processed
+	and the list of terminal symbols which were allowed at this
+	point.  The list of allowed symbols might contain the special
+        value 'EOF' to indicate that an end of input was allowed at
+        this point.
+
+    tree
+	is a "repaired" parse tree which might be used for further
+	error checking, or None if no repair was possible.

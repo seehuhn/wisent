@@ -60,7 +60,7 @@ def layout_list(prefix, bits, postfix):
 	    break
     yield output
 
-def write_block(fd, indent, str, params={}):
+def write_block(fd, indent, str, params={}, first=False):
     lines = [l.rstrip().expandtabs() for l in str.splitlines()]
     while lines and not lines[0]:
         del lines[0]
@@ -69,7 +69,8 @@ def write_block(fd, indent, str, params={}):
     if not lines:
         return
 
-    fd.write("\n")
+    if not first:
+        fd.write("\n")
     strip = min([len(l)-len(l.lstrip()) for l in lines if l!=""])
     stack = [ True ]
     for l in lines:

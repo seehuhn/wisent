@@ -1,0 +1,18 @@
+- Implement LALR(1) parsers.
+- Extend the format of grammar files to allow for arbitrary
+  (i.e. non-string) symbols in the generated parser.  Or allow for an
+  alternative, Python-based input format.
+
+
+
+TERMINOLOGY:
+
+rule, production rule, grammar rule    --- r, rule
+rule index    --- k, key
+word, string, sequence
+(terminal, nonterminal) symbol, token    --- X
+symbols have "replacements", "expansions", "derivations"
+input: (type,value), (symbol, value)
+parser state as a set    --- I, U
+item (rule with a dot)    --- item
+parser state as a number    --- state

@@ -1,11 +1,13 @@
 ## Process this file with automake to produce Makefile.in
 # Copyright 2008  Jochen Voss
 
-EXTRA_DIST = wisent.py grammar.wi
+EXTRA_DIST = wisent.py check.py grammar.wi
 
 bin_SCRIPTS = wisent
 pkgpython_PYTHON = grammar.py lr1.py scanner.py parser.py text.py	\
 	template.py version.py
+
+TESTS = check.py
 
 version.py: configure.ac Makefile.am
 	cd $(srcdir) && \

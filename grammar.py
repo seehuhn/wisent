@@ -16,7 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from text import split_it
+from time import strftime
+from inspect import getcomments
+
+from text import split_it, write_block
+from version import VERSION
+import template
+
 
 class GrammarError(Exception):
 
@@ -54,8 +60,8 @@ class Grammar(object):
         """
         self.rules = {}
         self.symbols = set()
-        self.terminal = set()
-        self.nonterminal = set()
+        self.terminals = set()
+        self.nonterminals = set()
 
         rules = dict(enumerate(rules))
         if not rules:
@@ -63,7 +69,7 @@ class Grammar(object):
         first = True
         for key, r in rules.iteritems():
             self.rules[key] = r
-            self.nonterminal.add(r[0])
+            self.nonterminals.add(r[0])
             if first:
                 self.start = r[0]
                 first = False
@@ -72,15 +78,15 @@ class Grammar(object):
 
         if "start" in kwargs:
             self.start = kwargs["start"]
-            if self.start not in self.nonterminal:
+            if self.start not in self.nonterminals:
                 msg = "start symbol %s is not a nonterminal"%repr(self.start)
                 raise GrammarError(msg)
 
-        self.terminal = self.symbols - self.nonterminal
+        self.terminals = self.symbols - self.nonterminals
         if cleanup:
             self._cleanup()
-        self.nonterminal = frozenset(self.nonterminal)
-        self.terminal = frozenset(self.terminal)
+        self.nonterminals = frozenset(self.nonterminals)
+        self.terminals = frozenset(self.terminals)
         self.symbols = frozenset(self.symbols)
 
         # precompute the set of all nullable symbols
@@ -89,20 +95,20 @@ class Grammar(object):
         # precompute the table of all possible first symbols in expansions
         fitab = self._compute_fitab()
         self.fitab = {}
-        for s in self.nonterminal|self.terminal:
+        for s in self.nonterminals|self.terminals:
             self.fitab[s] = frozenset(fitab[s])
 
         # precompute the table of all possible follow-up symbols
         fotab = self._compute_fotab()
         self.fotab = {}
-        for s in self.nonterminal|self.terminal:
+        for s in self.nonterminals|self.terminals:
             self.fotab[s] = frozenset(fotab[s])
 
     def _cleanup(self):
         """Remove unnecessary rules and symbols."""
         # remove nonterminal symbols which do not expand into terminals
         N = set()
-        T = self.terminal
+        T = self.terminals
         R = self.rules.keys()
         done = False
         while not done:
@@ -151,8 +157,8 @@ class Grammar(object):
         self.rules[-1] = (s, self.start, self.EOF)
         self.start = s
 
-        self.nonterminal = N
-        self.terminal = T
+        self.nonterminals = N
+        self.terminals = T
         self.symbols = N|T
 
     def _compute_nbtab(self):
@@ -175,9 +181,9 @@ class Grammar(object):
     def _compute_fitab(self):
         """Compute the table of all possible first symbols in expansions."""
         fitab = {}
-        for s in self.nonterminal:
+        for s in self.nonterminals:
             fitab[s] = set()
-        for s in self.terminal:
+        for s in self.terminals:
             fitab[s] = set([s])
         done = False
         while not done:
@@ -195,7 +201,7 @@ class Grammar(object):
 
     def _compute_fotab(self):
         fotab = {}
-        for s in self.nonterminal|self.terminal:
+        for s in self.nonterminals|self.terminals:
             fotab[s] = set()
         done = False
         while not done:
@@ -256,10 +262,10 @@ class Grammar(object):
         themselves.
         """
         res = {}
-        for X in self.terminal:
+        for X in self.terminals:
             res[X] = (X,)
         todo = set()
-        for X in self.nonterminal:
+        for X in self.nonterminals:
             if X in self.nullable:
                 res[X] = ()
             else:
@@ -300,13 +306,13 @@ class Grammar(object):
 
     def write_terminals(self, fd, prefix=""):
         fd.write(prefix+"terminal symbols:\n")
-        tt = map(repr, sorted(self.terminal-set([self.EOF])))
+        tt = map(repr, sorted(self.terminals-set([self.EOF])))
         for l in split_it(tt, padding=prefix+"  "):
             fd.write(l+"\n")
 
     def write_nonterminals(self, fd, prefix=""):
         fd.write(prefix+"nonterminal symbols:\n")
-        tt = map(repr, sorted(self.nonterminal-set([self.start])))
+        tt = map(repr, sorted(self.nonterminals-set([self.start])))
         for l in split_it(tt, padding=prefix+"  "):
             fd.write(l+"\n")
 
@@ -320,3 +326,19 @@ class Grammar(object):
             head = repr(r[0])
             tail = " ".join(map(repr, r[1:]))
             fd.write(prefix+"  %s -> %s\n"%(head, tail))
+
+    def write_parser(self, fd, params):
+        params.setdefault('date', strftime("%Y-%m-%d %H:%M:%S"))
+        params['version'] = VERSION
+        write_block(fd, 0, """#! /usr/bin/env python
+# %(type)s parser, autogenerated on %(date)s
+# generator: wisent %(version)s, http://seehuhn.de/pages/wisent
+        """%params, first=True)
+        if 'fname' in params:
+            fd.write("# source: %(fname)s\n"%params)
+
+        write_block(fd, 0, """
+# All parts of this file which are not taken verbatim from the input grammar
+# are covered by the following notice:
+#""")
+        fd.write(getcomments(template))

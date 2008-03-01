@@ -52,13 +52,13 @@ class LR1Parser(object):
 
         `errors` is a list of tuples, each describing one error.
         #@ IF error_stacks
-        Each tuple consists of the first token which could not
-        be processed, the list of token types which were expected
+        Each tuple consists of the first input token which could not
+        be processed, the list of grammar symbols which were allowed
         at this point, and a list of partial parse trees which
         represent the input parsed so far.
         #@ ELSE
-        Each tuple consists of the first token which could not
-        be processed and the list of token types which were expected
+        Each tuple consists of the first input token which could not
+        be processed and the list of grammar symbols which were allowed
         at this point.
         #@ ENDIF
 
@@ -77,10 +77,10 @@ class LR1Parser(object):
 
     @staticmethod
     def leaves(tree):
-        if tree[0]:
-            yield tree[1:]
+        if tree[0] in Parser.terminals:
+            yield tree
         else:
-            for x in tree[2:]:
+            for x in tree[1:]:
                 for t in Parser.leaves(x):
                     yield t
 
@@ -109,7 +109,7 @@ class LR1Parser(object):
 
             debug = [ ]
             for s in stack:
-                debug.extend([str(s[0]), repr(s[1][1])])
+                debug.extend([str(s[0]), repr(s[1][0])])
             debug.append(str(state))
             print " ".join(debug)+" [%s]"%repr(token)
             #@ ENDIF parser_debugprint
@@ -118,7 +118,7 @@ class LR1Parser(object):
                 #@ IF parser_debugprint
                 print "shift %s"%repr(token)
                 #@ ENDIF
-                stack.append((state,(True,)+lookahead))
+                stack.append((state,lookahead))
                 state = self._shift[(state,token)]
                 read_next = True
                 count += 1
@@ -127,22 +127,22 @@ class LR1Parser(object):
                 if n > 0:
                     state = stack[-n][0]
                     #@ IF transparent_tokens
-                    tree = [ False, X ]
+                    tree = [ X ]
                     for s in stack[-n:]:
-                        if s[1][1] in self._transparent:
-                            tree.extend(s[1][2:])
+                        if s[1][0] in self._transparent:
+                            tree.extend(s[1][1:])
                         else:
                             tree.append(s[1])
                     tree = tuple(tree)
                     #@ ELSE
-                    tree = (False,X) + tuple(s[1] for s in stack[-n:])
+                    tree = (X,) + tuple(s[1] for s in stack[-n:])
                     #@ ENDIF
                     #@ IF parser_debugprint
-                    debug = [ s[1][1] for s in stack[-n:] ]
+                    debug = [ s[1][0] for s in stack[-n:] ]
                     #@ ENDIF
                     del stack[-n:]
                 else:
-                    tree = (False, X)
+                    tree = (X,)
                     #@ IF parser_debugprint
                     debug = [ ]
                     #@ ENDIF
@@ -176,6 +176,12 @@ class LR1Parser(object):
         return count
 
     def parse_tree(self, input):
+        """Parse the tokens from `input` and construct a parse tree.
+
+        `input` must be an interable.  If `input` is valid, a parse
+        tree is returned.  Otherwise a ParseErrors exception is
+        raised.
+        """
         errors = []
         input = chain(input, [(self.EOF,)])
         stack = []
@@ -215,11 +221,11 @@ class LR1Parser(object):
 
             def vary_queue(queue, m):
                 for i in range(m-1, -1, -1):
-                    for t in self.terminal:
+                    for t in self.terminals:
                         yield queue[:i]+[(t,)]+queue[i:]
                     if queue[i][0] == self.EOF:
                         continue
-                    for t in self.terminal:
+                    for t in self.terminals:
                         if t == queue[i]:
                             continue
                         yield queue[:i]+[(t,)]+queue[i+1:]
