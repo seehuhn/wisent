@@ -153,6 +153,9 @@ class LR1Parser(object):
                 stack.append((state,tree))
                 state = self._goto[(state,X)]
             else:
+                #@ IF parser_debugprint
+                print "parse error"
+                #@ ENDIF
                 return (False,count,state,lookahead)
         return (True,count,state,None)
 
@@ -161,17 +164,17 @@ class LR1Parser(object):
         while state != self._halting_state and count < len(input):
             token = input[count][0]
 
-            if (state,token) in self._reduce:
+            if (state,token) in self._shift:
+                stack.append(state)
+                state = self._shift[(state,token)]
+                count += 1
+            elif (state,token) in self._reduce:
                 X,n = self._reduce[(state,token)]
                 if n > 0:
                     state = stack[-n]
                     del stack[-n:]
                 stack.append(state)
                 state = self._goto[(state,X)]
-            elif (state,token) in self._shift:
-                stack.append(state)
-                state = self._shift[(state,token)]
-                count += 1
             else:
                 break
         return count
@@ -202,6 +205,9 @@ class LR1Parser(object):
             if self.max_err is not None and len(errors) >= self.max_err:
                 raise self.ParseErrors(errors, None)
 
+            #@ IF parser_debugprint
+            print "backtrack for error recovery"
+            #@ ENDIF
             queue = []
             def split_input(m, stack, lookahead, input, queue):
                 for s in stack:
@@ -244,6 +250,10 @@ class LR1Parser(object):
             if best_val >= len(queue)-m+1:
                 raise self.ParseErrors(errors, None)
             input = chain(best_queue, input)
+            #@ IF parser_debugprint
+            debug = " ".join(repr(x[0]) for x in best_queue)
+            print "restart with repaired input: "+debug
+            #@ ENDIF
 
         tree = stack[0][1]
         if errors:

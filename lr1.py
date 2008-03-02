@@ -39,8 +39,10 @@ class LR1(Grammar):
             return self.list.iteritems()
 
         def add(self, data, text):
-            if data not in self.list or len(self.list[data]) > len(text):
-                self.list[data] = text
+            if data in self.list:
+                if len("".join(text)) >= len("".join(self.list[data])):
+                    return
+            self.list[data] = text
 
 
     def __init__(self, *args, **kwargs):
@@ -138,7 +140,6 @@ class LR1(Grammar):
         todo = set([0])
         while todo:
             state = todo.pop()
-            word = path[state]
             actions = {}
             for m in self.neighbours(state):
                 X = m[0]
@@ -158,19 +159,22 @@ class LR1(Grammar):
                     actions[X] = []
                 actions[X].append(m[1:])
             for X,mm in actions.iteritems():
-                word += (X,)
+                word = path[state] + (X,)
                 if len(mm) == 1:
                     # no conflicts
                     m = mm[0]
-                    if m[0] == 'R' or m[1] in path:
-                        continue
-                    path[m[1]] = word
-                    todo.add(m[1])
+                    if m[0] == 'S':
+                        if m[1] not in path:
+                            path[m[1]] = word
+                            todo.add(m[1])
                 else:
                     # more than one action possible
                     res = []
                     for m in mm:
                         if m[0] == 'S':
+                            if m[1] not in path:
+                                path[m[1]] = word
+                                todo.add(m[1])
                             for k,l,n,_ in self.state[state]:
                                 if n<l and self.rules[k][n] == X:
                                     if ('S',k,n) not in res:
