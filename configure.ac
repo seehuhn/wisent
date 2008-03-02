@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl Copyright 2008  Jochen Voss
 
-AC_INIT(wisent, 0.1, voss@seehuhn.de)
+AC_INIT(wisent, 0.2, voss@seehuhn.de)
 AM_INIT_AUTOMAKE
 
 dnl Python support

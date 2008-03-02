@@ -1,3 +1,45 @@
+commit 0363a3bb359719167a8564ff62ecc32cf27e7040
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Mar 2 22:19:33 2008 +0000
+
+    Add line-numbers to the error messages for conflicts.
+
+commit 68db0f906854f821afe2a0edf3b4ed06946c2c90
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Mar 2 20:09:27 2008 +0000
+
+    Add the possibility to generate LR(0) parsers.
+    
+    The type of generated parser is chosen using the "-t" option of
+    Wisent.
+
+commit 4f1c6a31606c49ee17b9fe06909c8bfac313bbff
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Mar 2 18:09:54 2008 +0000
+
+    Improved error handling.
+    
+    Check for and report shift-reduce and reduce-reduce conflicts in the
+    grammar.  Also introduce a new function 'error' to print error messages.
+
+commit 7c89fc3ec31434b81f799f53e8efa47ee633223a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Mar 2 17:48:08 2008 +0000
+
+    Fix several bugs related to shift-reduce conflict handling.
+
+commit 8a5bf535a5faca7066116444ad30b89720950ede
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Mar 2 17:25:42 2008 +0000
+
+    fix a typo
+
+commit 9dc301fcfe0c141811474734b7ba36b8777d3b2e
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Mar 1 23:19:32 2008 +0000
+
+    final preparations for the public release
+
 commit 524ac52cc1be45031702b9bb5d9fdacaa0cc6dd7
 Author: Jochen Voss <voss@seehuhn.de>
 Date:   Sat Mar 1 22:45:10 2008 +0000

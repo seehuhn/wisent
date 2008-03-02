@@ -1,2 +1,7 @@
+version 0.2 (2008-03-02):
+- bug fixes and improved error handling
+- add the ability to generate LR(0) parsers (use the -t command line
+  option)
+
 version 0.1 (2008-03-01):
 - initial public release, only LR(1) parsers are implemented
