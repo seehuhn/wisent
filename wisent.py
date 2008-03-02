@@ -89,6 +89,19 @@ if "p" in options.debug:
     params["parser_debugprint"] = True
 
 ######################################################################
+# error messages
+
+def error(msg, fname=fname, lineno=None, offset=None):
+    parts = []
+    parts.append("%s:"%fname)
+    if lineno is not None:
+        parts.append("%d:"%lineno)
+        if offset is not None:
+            parts.append("%d:"%offset)
+    parts.append(" "+str(msg))
+    print >>sys.stderr, "".join(parts)
+
+######################################################################
 # read the grammar file
 
 errors_only = False
@@ -99,12 +112,12 @@ try:
     tree = p.parse_tree(tokens(fd))
     fd.close()
 except SyntaxError, e:
-    print >>sys.stderr, "%s:%d:%d: %s"%(e.filename, e.lineno, e.offset, e.msg)
+    error(e.msg, e.filename, e.lineno, e.offset)
     raise SystemExit(1)
 except p.ParseErrors, e:
     for token,expected in e.errors:
         if token[0] == p.EOF:
-            print >>sys.stderr, "%s: unexpected end of file"%fname
+            error("unexpected end of file")
             continue
 
         def quote(x):
@@ -126,8 +139,8 @@ except p.ParseErrors, e:
             expect_eol = False
         if len(expected) == 1:
             missing = quote(expected[0])
-            tmpl = "%s:%d:%d: missing %s (found %s)"
-            print >>sys.stderr, tmpl%(fname, token[2], token[3], missing, found)
+            error("missing %s (found %s)"%(missing, found),
+                  fname, token[2], token[3])
             continue
 
         msg1 = "parse error before %s"%found
@@ -135,8 +148,7 @@ except p.ParseErrors, e:
         if expect_eol:
             l.append("end of line")
         msg2 = "expected "+", ".join(l[:-1])+" or "+l[-1]
-        tmpl = "%s:%d:%d: %s, %s"
-        print >>sys.stderr, tmpl%(fname, token[2], token[3], msg1, msg2)
+        error(msg1+", "+msg2, fname, token[2], token[3])
     tree = e.tree
     if tree is None:
         raise SystemExit(1)
@@ -197,8 +209,59 @@ aux = set()
 try:
     g = LR1(rules(tree, aux))
 except GrammarError, e:
-    print >>sys.stderr, "%s: %s"%(fname, e)
+    error(e)
     raise SystemExit(1)
+
+try:
+    g.check()
+except g.LR1Errors, e:
+    errors_only = True
+    for res, text in e:
+        ee = []
+
+        shift = []
+        red = []
+        conflict = "reduce-reduce"
+        for m in res:
+            if m[0] == 'S':
+                conflict = "shift-reduce"
+                shift.append(m[1:])
+            else:
+                red.append(m[1])
+
+        # TODO: add a way to ignore/resolve shift-reduce conflicts
+
+        ee.append("%s conflict: the input"%conflict)
+        ee.append("    "+" ".join(text[:-1])+"."+text[-1]+" ...")
+
+        if shift:
+            msg = "  can be shifted using "
+            if len(shift)>1:
+                msg += "one of the production rules"
+            else:
+                msg += "the production rule"
+            ee.append(msg)
+            for k, n in shift:
+                r = [ repr(X) for X in g.rules[k] ]
+                tail = " ".join(r[1:n])+"."+" ".join(r[n:])
+                ee.append("    "+r[0]+": "+tail)
+            cont = "or "
+        else:
+            cont = ""
+
+        for k in red:
+            rule = g.rules[k]
+            n = len(rule)
+            ee.append("  %scan be reduced to"%cont)
+            repl = "".join(x+" " for x in text[:-n])+repr(rule[0])+"."+text[-1]
+            ee.append("    "+repl+" ...")
+            ee.append("  using the production rule")
+            tail = " ".join(repr(X) for X in rule[1:])
+            ee.append("    "+repr(rule[0])+": "+tail+";")
+            cont = "or "
+
+        for e in ee:
+            error(e)
 
 if errors_only:
     raise SystemExit(1)
