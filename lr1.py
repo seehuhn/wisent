@@ -27,7 +27,7 @@ class LR1(Grammar):
 
     """Represent LR(1) grammars and generate parsers."""
 
-    class LR1Errors(Exception):
+    class Errors(Exception):
 
         def __init__(self):
             self.list = {}
@@ -125,10 +125,10 @@ class LR1(Grammar):
     def check(self):
         """Check whether the grammar is LR(1).
 
-        If conflicts are detected, an LR1Error exception is raised,
+        If conflicts are detected, an Error exception is raised,
         listing all detected conflicts.
         """
-        errors = self.LR1Errors()
+        errors = self.Errors()
         shortcuts = self.shortcuts()
 
         rtab = {}
@@ -156,9 +156,10 @@ class LR1(Grammar):
                     rtab[(state,X)] = (r[0],len(r)-1)
 
                 if X not in actions:
-                    actions[X] = []
-                actions[X].append(m[1:])
+                    actions[X] = set()
+                actions[X].add(m[1:])
             for X,mm in actions.iteritems():
+                mm = tuple(sorted(mm))
                 word = path[state] + (X,)
                 if len(mm) == 1:
                     # no conflicts
@@ -196,7 +197,7 @@ class LR1(Grammar):
         if not hasattr(self, "rtab"):
             try:
                 self.check()
-            except self.LR1Errors:
+            except self.Errors:
                 pass
 
     def _write_decorations(self, fd):

@@ -23,7 +23,6 @@ import sys
 from optparse import OptionParser
 
 from grammar import GrammarError
-from lr1 import LR1
 from scanner import tokens
 from parser import Parser
 from text import write_block
@@ -31,10 +30,11 @@ from version import VERSION
 
 
 parser_types = {
-    "ll1": ("LL(1)",),
-    "lr0": ("LR(0)",),
-    "slr": ("SLR",),
-    "lr1": ("LR(1)",),
+    "lr0": ("LR(0)", "lr0", "LR0"),
+    "lr1": ("LR(1)", "lr1", "LR1"),
+#     "ll1": ("LL(1)",),
+#     "slr": ("SLR",),
+#     "lalr1": ("SLR",),
 }
 
 ######################################################################
@@ -78,11 +78,13 @@ fname = args[0]
 
 if options.type not in parser_types:
     getopt.error("invalid parser type %s"%options.type)
-parser_name, = parser_types[options.type]
+parser_name,grammar_module,grammar_class = parser_types[options.type]
+
+Gmodule = __import__(grammar_module)
+G = getattr(Gmodule, grammar_class)
 
 params = {
     'fname': fname,
-    'type': parser_name,
 }
 if "p" in options.debug:
     params["parser_comment"] = True
@@ -207,14 +209,14 @@ def rules(tree, aux):
 
 aux = set()
 try:
-    g = LR1(rules(tree, aux))
+    g = G(rules(tree, aux))
 except GrammarError, e:
     error(e)
     raise SystemExit(1)
 
 try:
     g.check()
-except g.LR1Errors, e:
+except g.Errors, e:
     errors_only = True
     for res, text in e:
         ee = []

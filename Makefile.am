@@ -4,8 +4,8 @@
 EXTRA_DIST = wisent.py check.py grammar.wi
 
 bin_SCRIPTS = wisent
-pkgpython_PYTHON = grammar.py lr1.py scanner.py parser.py text.py	\
-	template.py version.py
+pkgpython_PYTHON = grammar.py lr0.py lr1.py scanner.py parser.py	\
+	text.py template.py version.py
 
 TESTS = check.py
 

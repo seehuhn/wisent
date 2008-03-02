@@ -19,7 +19,7 @@
 from inspect import getsource
 
 from grammar import Grammar, GrammarError, Unique
-from template import LR1Parser as Parser
+from template import LR0Parser as Parser
 from text import split_it, write_block
 
 
@@ -27,7 +27,7 @@ class LR0(Grammar):
 
     """Represent LR(0) grammars and generate parsers."""
 
-    class LR0Errors(Exception):
+    class Errors(Exception):
 
         def __init__(self):
             self.list = {}
@@ -39,8 +39,10 @@ class LR0(Grammar):
             return self.list.iteritems()
 
         def add(self, data, text):
-            if data not in self.list or len(self.list[data]) > len(text):
-                self.list[data] = text
+            if data in self.list:
+                if len("".join(text)) >= len("".join(self.list[data])):
+                    return
+            self.list[data] = text
 
 
     def __init__(self, *args, **kwargs):
@@ -57,13 +59,13 @@ class LR0(Grammar):
                 if n == l:
                     continue
                 r = rules[key]
-
                 for k,l in self.rule_from_head[r[n]]:
                     item = (k,l,1)
                     if item not in U:
                         new.add(item)
             current = new
             U |= new
+        U = frozenset(U)
         try:
             return self.rstate[U]
         except KeyError:
@@ -121,10 +123,10 @@ class LR0(Grammar):
     def check(self):
         """Check whether the grammar is LR(0).
 
-        If conflicts are detected, an LR0Error exception is raised,
+        If conflicts are detected, an Error exception is raised,
         listing all detected conflicts.
         """
-        errors = self.LR1Errors()
+        errors = self.Errors()
         shortcuts = self.shortcuts()
 
         rtab = {}
@@ -136,7 +138,6 @@ class LR0(Grammar):
         todo = set([0])
         while todo:
             state = todo.pop()
-            word = path[state]
             actions = {}
             for m in self.neighbours(state):
                 X = m[0]
@@ -147,29 +148,39 @@ class LR0(Grammar):
                         stab[(state,X)] = next
                     else:
                         gtab[(state,X)] = next
+
+                    if X not in actions:
+                        actions[X] = set()
+                    actions[X].add(m[1:])
                 else:
                     # reduce
                     r = self.rules[m[2]]
-                    rtab[(state,X)] = (r[0],len(r)-1)
+                    rtab[state] = (r[0],len(r)-1)
 
-                if X not in actions:
-                    actions[X] = []
-                actions[X].append(m[1:])
+                    for X in self.terminals:
+                        if X not in actions:
+                            actions[X] = set()
+                        actions[X].add(m[1:])
+
             for X,mm in actions.iteritems():
-                word += (X,)
+                mm = tuple(sorted(mm))
+                word = path[state] + (X,)
                 if len(mm) == 1:
                     # no conflicts
                     m = mm[0]
-                    if m[0] == 'R' or m[1] in path:
-                        continue
-                    path[m[1]] = word
-                    todo.add(m[1])
+                    if m[0] == 'S':
+                        if m[1] not in path:
+                            path[m[1]] = word
+                            todo.add(m[1])
                 else:
                     # more than one action possible
                     res = []
                     for m in mm:
                         if m[0] == 'S':
-                            for k,l,n,_ in self.state[state]:
+                            if m[1] not in path:
+                                path[m[1]] = word
+                                todo.add(m[1])
+                            for k,l,n in self.state[state]:
                                 if n<l and self.rules[k][n] == X:
                                     if ('S',k,n) not in res:
                                         res.append(('S',k,n))
@@ -190,7 +201,7 @@ class LR0(Grammar):
         if not hasattr(self, "rtab"):
             try:
                 self.check()
-            except self.LR0Errors:
+            except self.Errors:
                 pass
 
     def _write_decorations(self, fd):
@@ -202,13 +213,12 @@ class LR0(Grammar):
             U = self.state[n]
             fd.write("#\n")
             fd.write("# state %d:\n"%n)
-            for k,l,n,lookahead in U:
+            for k,l,n in U:
                 r = self.rules[k]
                 head = repr(r[0])
                 tail1 = " ".join(map(repr, r[1:n]))
                 tail2 = " ".join(map(repr, r[n:l]))
-                lookahead = repr(lookahead)
-                fd.write("#   %s -> %s.%s [%s]\n"%(head,tail1,tail2,lookahead))
+                fd.write("#   %s -> %s.%s\n"%(head,tail1,tail2))
         fd.write('\n')
 
         fd.write("# transition table:\n")
@@ -224,17 +234,20 @@ class LR0(Grammar):
             line = {}
             for m in self.neighbours(I):
                 X = m[0]
-                line.setdefault(X, [])
                 if m[1] == 'S':
+                    line.setdefault(X, [])
                     if X in self.terminals:
                         line[X].append("s%d"%m[2])
                     else:
                         line[X].append("g%d"%m[2])
                 else:
-                    if m[2] == -1:
-                        line[X].append("HLT")
-                    else:
-                        line[X].append("r%d"%m[2])
+                    for X in self.terminals:
+                        line.setdefault(X, [])
+                        if m[2] == -1:
+                            if X == self.EOF:
+                                line[X].append("HLT")
+                        else:
+                            line[X].append("r%d"%m[2])
             rest = [ ]
             for t,l in zip(tt,widths):
                 s = ",".join(line.get(t,[]))
@@ -245,9 +258,9 @@ class LR0(Grammar):
         self.generate_tables()
 
         fd.write('\n')
-        r_items = [ (i[0], repr(i[1]), repr(ri[0]), ri[1])
+        r_items = [ (i, repr(ri[0]), ri[1])
                     for i,ri in sorted(self.rtab.items()) ]
-        r_items = [ "(%d,%s): (%s,%d)"%ri for ri in r_items ]
+        r_items = [ "%d: (%s,%d)"%ri for ri in r_items ]
         fd.write("    _reduce = {\n")
         for l in split_it(r_items, padding="        "):
             fd.write(l+'\n')
@@ -270,6 +283,8 @@ class LR0(Grammar):
         fd.write("    }\n")
 
     def write_parser(self, fd, params={}):
+        params.setdefault('type', 'LR(0)')
+        super(LR0, self).write_parser(fd, params)
         fd.write('\n')
         fd.write('from itertools import chain\n')
 
@@ -290,7 +305,7 @@ class LR0(Grammar):
 
         fd.write('\n')
         tt = map(repr, sorted(self.terminals-set([self.EOF])))
-        for l in split_it(tt, padding="    ", start1="terminal = [ ",
+        for l in split_it(tt, padding="    ", start1="terminals = [ ",
                           end2=" ]"):
             fd.write(l+'\n')
         fd.write("    EOF = Unique('EOF')\n")
