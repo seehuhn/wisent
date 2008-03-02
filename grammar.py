@@ -106,8 +106,8 @@ class Grammar(object):
 
     def _cleanup(self):
         """Remove unnecessary rules and symbols."""
-        # remove nonterminal symbols which do not expand into terminals
-        N = set()
+        # remove nonterminal symbols which do generate terminals
+        N = set([r[0] for r in self.rules.values() if len(r) == 1])
         T = self.terminals
         R = self.rules.keys()
         done = False

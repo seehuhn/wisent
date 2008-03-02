@@ -35,6 +35,7 @@ def tokens(source):
     state = None
     line = 1
     for l in source:
+        l = l.expandtabs()
         for col, c in enumerate(l):
             if state == "skip":
                 state = None

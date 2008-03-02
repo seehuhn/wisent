@@ -93,7 +93,7 @@ if "p" in options.debug:
 ######################################################################
 # error messages
 
-def error(msg, fname=fname, lineno=None, offset=None):
+def error(msg, lineno=None, offset=None, fname=fname):
     parts = []
     parts.append("%s:"%fname)
     if lineno is not None:
@@ -114,7 +114,7 @@ try:
     tree = p.parse_tree(tokens(fd))
     fd.close()
 except SyntaxError, e:
-    error(e.msg, e.filename, e.lineno, e.offset)
+    error(e.msg, e.lineno, e.offset, e.filename)
     raise SystemExit(1)
 except p.ParseErrors, e:
     for token,expected in e.errors:
@@ -142,7 +142,7 @@ except p.ParseErrors, e:
         if len(expected) == 1:
             missing = quote(expected[0])
             error("missing %s (found %s)"%(missing, found),
-                  fname, token[2], token[3])
+                  token[2], token[3], fname)
             continue
 
         msg1 = "parse error before %s"%found
@@ -150,13 +150,16 @@ except p.ParseErrors, e:
         if expect_eol:
             l.append("end of line")
         msg2 = "expected "+", ".join(l[:-1])+" or "+l[-1]
-        error(msg1+", "+msg2, fname, token[2], token[3])
+        error(msg1+", "+msg2, token[2], token[3], fname)
     tree = e.tree
     if tree is None:
         raise SystemExit(1)
     else:
         errors_only = True
 del p
+
+######################################################################
+# extract the rules from the parse tree
 
 def rules(tree, aux):
     """Extract the grammar rules from the parse tree.
@@ -165,51 +168,55 @@ def rules(tree, aux):
     "*" and "+" suffix tokens are expanded here.  All transparent
     symbols are added to aux.
     """
-
-    def extract(tree):
-        for rule in tree[1:]:
-            target = rule[1][0:2]
-            for l in rule[3:-1]:
-                if l[0] != "list":
-                    continue
-                yield tuple([target]+[x[0:2] for x in l[1:]])
-
-    for l in extract(tree):
-        if l[0][0] == 'token' and len(l[0])>1 and l[0][1].startswith("_"):
-            aux.add(l[0][1])
-        todo = []
-        ll = []
-        special = ""
-        for token in reversed(l):
-            if special == "+":
-                seq = token[1]+"+"
-                if seq not in aux:
-                    todo.append((seq, token[1]))
-                    todo.append((seq, seq, token[1]))
-                    aux.add(seq)
-                ll.append(seq)
-                special = False
-            elif special == "*":
-                seq = token[1]+"*"
-                if seq not in aux:
-                    todo.append((seq,))
-                    todo.append((seq, seq, token[1]))
-                    aux.add(seq)
-                ll.append(seq)
-                special = False
-            elif token[0] == '*':
-                special = "*"
-            elif token[0] == '+':
-                special = "+"
+    for rule in tree[1:]:
+        # rule[0] == 'rule'
+        head = rule[1]
+        if not head:
+            # repaired trees have no payload
+            head = ('', )+rule[2][2:]
+        # rule[2] == (':', ...)
+        for r in rule[3:]:
+            if r[0] == "list":
+                tail = list(r[1:])
+                for i,x in enumerate(tail):
+                    if not x:
+                        # repaired trees have no payload
+                        tail[i] = ('', )+rule[2][2:]
             else:
-                ll.append(token[1])
-        yield tuple(reversed(ll))
-        while todo:
-            yield todo.pop(0)
+                # at a '|' or ';'
+                res = [ head ]+tail+[ (';',';')+r[2:] ]
+                todo = []
+                for i in range(len(res)-2, 1, -1):
+                    y = res[i]
+                    if y[0] in [ '+', '*' ]:
+                        x = res[i-1]
+                        new = x[1]+y[0]
+                        if new not in aux:
+                            aux.add(new)
+                            todo.append((new,)+x[1:])
+                        res[i-1:i+1] = [ ('token',new)+x[2:] ]
+                yield [ x[1:] for x in res ]
+                for x in todo:
+                    h = x[0]
+                    a = (h,)+x[2:]
+                    b = x[1:]
+                    c = (';',)+x[2:]
+                    if h[-1] == '+':
+                        yield [ a, b, c ]
+                        yield [ a, a, b, c ]
+                    elif h[-1] == '*':
+                        yield [ a, c ]
+                        yield [ a, a, b, c ]
+
+def locate(rr, rule_locations):
+    for k,r in enumerate(rr):
+        rule_locations[k] = tuple(x[1:] for x in r)
+        yield tuple(x[0] for x in r[:-1])
 
 aux = set()
+rule_locations = {}
 try:
-    g = G(rules(tree, aux))
+    g = G(locate(rules(tree, aux), rule_locations))
 except GrammarError, e:
     error(e)
     raise SystemExit(1)
@@ -217,22 +224,32 @@ except GrammarError, e:
 try:
     g.check()
 except g.Errors, e:
-    errors_only = True
     for res, text in e:
-        ee = []
-
         shift = []
         red = []
-        conflict = "reduce-reduce"
         for m in res:
             if m[0] == 'S':
-                conflict = "shift-reduce"
                 shift.append(m[1:])
             else:
                 red.append(m[1])
 
-        # TODO: add a way to ignore/resolve shift-reduce conflicts
+        ee = []
+        def rule_error(k, n):
+            r = [ repr(X) for X in g.rules[k] ]
+            if n < len(r):
+                tail = " ".join(r[1:n])+"."+" ".join(r[n:])
+            else:
+                tail = " ".join(r[1:])
+            ee.append("    "+r[0]+": "+tail+";")
+            loc = rule_locations[k][n]
+            while ee:
+                msg = ee.pop(0)
+                error(msg, loc[0], loc[1])
 
+        if len(red)>1:
+            conflict = "reduce-reduce"
+        else:
+            conflict = "shift-reduce"
         ee.append("%s conflict: the input"%conflict)
         ee.append("    "+" ".join(text[:-1])+"."+text[-1]+" ...")
 
@@ -244,9 +261,7 @@ except g.Errors, e:
                 msg += "the production rule"
             ee.append(msg)
             for k, n in shift:
-                r = [ repr(X) for X in g.rules[k] ]
-                tail = " ".join(r[1:n])+"."+" ".join(r[n:])
-                ee.append("    "+r[0]+": "+tail)
+                rule_error(k, n)
             cont = "or "
         else:
             cont = ""
@@ -258,12 +273,11 @@ except g.Errors, e:
             repl = "".join(x+" " for x in text[:-n])+repr(rule[0])+"."+text[-1]
             ee.append("    "+repl+" ...")
             ee.append("  using the production rule")
-            tail = " ".join(repr(X) for X in rule[1:])
-            ee.append("    "+repr(rule[0])+": "+tail+";")
+            rule_error(k, n)
             cont = "or "
 
-        for e in ee:
-            error(e)
+    error("%d conflicts, aborting ..."%len(e))
+    errors_only = True
 
 if errors_only:
     raise SystemExit(1)
