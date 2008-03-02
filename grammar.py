@@ -121,7 +121,7 @@ class Grammar(object):
                     N.add(r[0])
                     done = False
         if self.start not in N:
-            tmpl = "start symbal %s doesn't generate terminals"
+            tmpl = "start symbol %s doesn't generate terminals"
             raise GrammarError(tmpl%repr(self.start))
         for key in R:
             if not set(self.rules[key]) <= (N|T):
