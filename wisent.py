@@ -174,6 +174,8 @@ def rules(tree, aux):
         if not head:
             # repaired trees have no payload
             head = ('', )+rule[2][2:]
+        if head[0] == "token" and head[1].startswith("_"):
+            aux.add(head[1])
         # rule[2] == (':', ...)
         for r in rule[3:]:
             if r[0] == "list":
@@ -215,8 +217,13 @@ def locate(rr, rule_locations):
 
 aux = set()
 rule_locations = {}
+rr = locate(rules(tree, aux), rule_locations)
+
+######################################################################
+# construct the grammar from the rules
+
 try:
-    g = G(locate(rules(tree, aux), rule_locations))
+    g = G(rr)
 except GrammarError, e:
     error(e)
     raise SystemExit(1)
