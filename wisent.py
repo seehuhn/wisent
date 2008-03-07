@@ -106,57 +106,66 @@ def error(msg, lineno=None, offset=None, fname=fname):
 ######################################################################
 # read the grammar file
 
-errors_only = False
+def read_grammar(fname):
+    """Read a grammar file and return the resulting parse tree.
 
-p = Parser()
-try:
-    fd = open(fname)
-    tree = p.parse_tree(tokens(fd))
-    fd.close()
-except SyntaxError, e:
-    error(e.msg, e.lineno, e.offset, e.filename)
+    The return value of this function is a tuple, consisting of the
+    parse tree (or None in case of an unrecoverable error) and a
+    boolean indicating whether errors (recoverable or unrecoverable)
+    were found.
+    """
+    p = Parser()
+    try:
+        fd = open(fname)
+        tree = p.parse_tree(tokens(fd))
+        fd.close()
+        has_errors = False
+    except SyntaxError, e:
+        error(e.msg, e.lineno, e.offset, e.filename)
+        tree = None
+        has_errors = True
+    except p.ParseErrors, e:
+        for token,expected in e.errors:
+            if token[0] == p.EOF:
+                error("unexpected end of file")
+                continue
+
+            def quote(x):
+                s = str(x)
+                if not s.isalpha():
+                    s = "'"+s+"'"
+                return s
+            tp = quote(token[0])
+            val = quote(token[1])
+            if val and tp != val:
+                found = "%s %s"%(tp, repr(token[1]))
+            else:
+                found = tp
+
+            if p.EOF in expected:
+                expected.remove(p.EOF)
+                expect_eol = True
+            else:
+                expect_eol = False
+            if len(expected) == 1:
+                missing = quote(expected[0])
+                error("missing %s (found %s)"%(missing, found),
+                      token[2], token[3], fname)
+                continue
+
+            msg1 = "parse error before %s"%found
+            l = sorted([ quote(s) for s in expected ])
+            if expect_eol:
+                l.append("end of line")
+            msg2 = "expected "+", ".join(l[:-1])+" or "+l[-1]
+            error(msg1+", "+msg2, token[2], token[3], fname)
+        tree = e.tree
+        has_errors = True
+    return tree, has_errors
+
+tree, errors_only = read_grammar(fname)
+if tree is None:
     raise SystemExit(1)
-except p.ParseErrors, e:
-    for token,expected in e.errors:
-        if token[0] == p.EOF:
-            error("unexpected end of file")
-            continue
-
-        def quote(x):
-            s = str(x)
-            if not s.isalpha():
-                s = "'"+s+"'"
-            return s
-        tp = quote(token[0])
-        val = quote(token[1])
-        if val and tp != val:
-            found = "%s %s"%(tp, repr(token[1]))
-        else:
-            found = tp
-
-        if p.EOF in expected:
-            expected.remove(p.EOF)
-            expect_eol = True
-        else:
-            expect_eol = False
-        if len(expected) == 1:
-            missing = quote(expected[0])
-            error("missing %s (found %s)"%(missing, found),
-                  token[2], token[3], fname)
-            continue
-
-        msg1 = "parse error before %s"%found
-        l = sorted([ quote(s) for s in expected ])
-        if expect_eol:
-            l.append("end of line")
-        msg2 = "expected "+", ".join(l[:-1])+" or "+l[-1]
-        error(msg1+", "+msg2, token[2], token[3], fname)
-    tree = e.tree
-    if tree is None:
-        raise SystemExit(1)
-    else:
-        errors_only = True
-del p
 
 ######################################################################
 # extract the rules from the parse tree
