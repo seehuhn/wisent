@@ -1,3 +1,7 @@
+version 0.3 (2008-03-07):
+- bug fix: restore the (accidentially lost) ability to exclude symbols
+  from the parse tree.
+
 version 0.2 (2008-03-02):
 - bug fixes and improved error handling
 - add the ability to generate LR(0) parsers (use the -t command line

@@ -1,3 +1,15 @@
+commit d720f94db6ad507f3c50848356ecc5c64cce6136
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Mar 6 20:39:42 2008 +0100
+
+    Restore the accidentially lost ability to generate transparent symbols.
+
+commit 6897c9ca0bcf35a95ca10ea6d791b6543eda5864
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Mar 2 22:23:48 2008 +0000
+
+    prepare for Wisent release 0.2
+
 commit 0363a3bb359719167a8564ff62ecc32cf27e7040
 Author: Jochen Voss <voss@seehuhn.de>
 Date:   Sun Mar 2 22:19:33 2008 +0000
