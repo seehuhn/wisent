@@ -1,4 +1,6 @@
-- Implement LALR(1) parsers.
+- Fix the column width in parser transition tables in the presence of
+  conflicts.
+- Implement LALR(1) parsers or good table compression for LR(1) parsers.
 - Extend the format of grammar files to allow for arbitrary
   (i.e. non-string) symbols in the generated parser.  Or allow for an
   alternative, Python-based input format.

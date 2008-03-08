@@ -91,40 +91,60 @@ class LR0(Grammar):
         self.closure([ (key,l,1) ])
 
     def neighbours(self, state):
+        """Get the neighbours of a node in the automaton's state graph.
+
+        The return value is a set of tuples, where the first element
+        is 'R' for reduce actions and 'S' for shift actions.  In case
+        of a reduce action, the second element of the tuple is None
+        and the third element gives the grammar rule to use for the
+        reduction.  In case of a shift action, the second element is
+        the lookahead symbol and the third element gives the new state
+        of the automaton.
+        """
         try:
             return self.edges[state]
         except:
             rules = self.rules
-            U = self.state[state]
-            red = set()
+            res = set()
+
             shift = {}
-            for key,l,n in U:
+            for key,l,n in self.state[state]:
                 r = rules[key]
                 if n == l:
                     # reduce using rule 'key'
-                    red.add((None,'R',key))
+                    res.add(('R',None,key))
                 else:
                     # shift using rule 'key'
                     X = r[n]
-                    seed = shift.get(X,[])
-                    seed.append((key,l,n+1))
-                    shift[X] = seed
+                    shift.setdefault(X,[]).append((key,l,n+1))
 
-            res = set()
-            for X,seed in shift.iteritems():
+            for readahead,seed in shift.iteritems():
                 nextstate = self.closure(seed)
-                res.add((X,'S',nextstate))
-                if X == self.EOF:
+                res.add(('S',readahead,nextstate))
+                if readahead == self.EOF:
                     self.halting_state = nextstate
-            res.update(red)
+
             self.edges[state] = res
             return res
 
-    def check(self):
+    def _check_overrides(self, state, action, overrides):
+        if action[0] == 'S':
+            for k,l,n,_ in self.state[state]:
+                if n == l or self.rules[k][n] != action[1]:
+                    continue
+                if n not in overrides.get(k, []):
+                    return False
+            return True
+        else:
+            k = action[2]
+            n = len(self.rules[k])
+            return n in overrides.get(k, [])
+
+    def check(self, overrides={}):
         """Check whether the grammar is LR(0).
 
-        If conflicts are detected, an Error exception is raised,
-        listing all detected conflicts.
+        If conflicts are detected, an Error exception listing all
+        conflicts detected is raised.
         """
         errors = self.Errors()
         shortcuts = self.shortcuts()
@@ -138,89 +158,72 @@ class LR0(Grammar):
         todo = set([0])
         while todo:
             state = todo.pop()
+
             actions = {}
-            for m in self.neighbours(state):
-                X = m[0]
-                if m[1] == 'S':
-                    # shift
-                    next = m[2]
-                    if X in self.terminals:
-                        stab[(state,X)] = next
-                    else:
-                        gtab[(state,X)] = next
+            for action in self.neighbours(state):
+                actions.setdefault(action[1], []).append(action)
 
-                    if X not in actions:
-                        actions[X] = set()
-                    actions[X].add(m[1:])
-                else:
-                    # reduce
-                    r = self.rules[m[2]]
-                    rtab[state] = (r[0],len(r)-1)
+            for readahead,aa in actions.iteritems():
+                word = path[state] + (readahead,)
 
-                    for X in self.terminals:
-                        if X not in actions:
-                            actions[X] = set()
-                        actions[X].add(m[1:])
+                # try conflict overrides
+                if len(aa) > 1:
+                    bb = []
+                    for action in aa:
+                        if self._check_overrides(state, action, overrides):
+                            bb.append(action)
+                    if len(bb) == 1:
+                        aa = bb
 
-            for X,mm in actions.iteritems():
-                mm = tuple(sorted(mm))
-                word = path[state] + (X,)
-                if len(mm) == 1:
-                    # no conflicts
-                    m = mm[0]
-                    if m[0] == 'S':
-                        if m[1] not in path:
-                            path[m[1]] = word
-                            todo.add(m[1])
-                else:
-                    # more than one action possible
-                    res = []
-                    for m in mm:
-                        if m[0] == 'S':
-                            if m[1] not in path:
-                                path[m[1]] = word
-                                todo.add(m[1])
+                for action in aa:
+                    if action[0] == 'S':
+                        next = action[2]
+                        if next not in path:
+                            path[next] = word
+                            todo.add(next)
+
+                if len(aa) > 1:
+                    # conflict: more than one action possible
+                    res = set()
+                    for action in aa:
+                        if action[0] == 'S':
                             for k,l,n in self.state[state]:
-                                if n<l and self.rules[k][n] == X:
-                                    if ('S',k,n) not in res:
-                                        res.append(('S',k,n))
+                                if n<l and self.rules[k][n] == readahead:
+                                    res.add(('S',k,n))
                         else:
-                            res.append(('R', m[1]))
-                    res = tuple(res)
+                            res.add(('R', action[2]))
+                    res = tuple(sorted(res))
                     text = tuple(" ".join(repr(Y) for Y in shortcuts[X])
                                  for X in word)
                     errors.add(res, text)
+                    continue
+
+                # no conflicts
+                action = aa[0]
+                if action[0] == 'S':
+                    if readahead in self.terminals:
+                        stab[(state,readahead)] = action[2]
+                    else:
+                        gtab[(state,readahead)] = action[2]
+                else:
+                    rule = self.rules[action[2]]
+                    rtab[state] = (rule[0],len(rule)-1)
+
+        if errors:
+            raise errors
 
         self.rtab = rtab
         self.gtab = gtab
         self.stab = stab
-        if errors:
-            raise errors
 
-    def generate_tables(self):
+    def _generate_tables(self, overrides):
         if not hasattr(self, "rtab"):
-            try:
-                self.check()
-            except self.Errors:
-                pass
+            self.check(overrides)
 
-    def _write_decorations(self, fd):
-        self.generate_tables()
+    def _write_decorations(self, fd, overrides):
+        self._generate_tables(overrides)
 
         fd.write('\n')
-        fd.write("# parser states:\n")
-        for n in range(0, self.nstates):
-            U = self.state[n]
-            fd.write("#\n")
-            fd.write("# state %d:\n"%n)
-            for k,l,n in sorted(U, key=lambda x:self.rules[x[0]]):
-                r = self.rules[k]
-                head = repr(r[0])
-                tail1 = " ".join(map(repr, r[1:n]))
-                tail2 = " ".join(map(repr, r[n:l]))
-                fd.write("#   %s -> %s.%s\n"%(head,tail1,tail2))
-        fd.write('\n')
-
         fd.write("# transition table:\n")
         fd.write("#\n")
         tt1 = sorted(self.terminals)
@@ -230,32 +233,51 @@ class LR0(Grammar):
         widths = [ len(t) for t in ttt ]
         fd.write("# state | "+" ".join(ttt)+'\n')
         fd.write("# %s\n"%("-"*(7+sum(widths)+len(tt))))
-        for I in range(0, self.nstates):
+        for state in range(0, self.nstates):
             line = {}
-            for m in self.neighbours(I):
-                X = m[0]
-                if m[1] == 'S':
-                    line.setdefault(X, [])
-                    if X in self.terminals:
-                        line[X].append("s%d"%m[2])
+            for m in self.neighbours(state):
+                if m[0] == 'S':
+                    readahead = m[1]
+                    line.setdefault(readahead, [])
+                    if readahead in self.terminals:
+                        desc = "s%d"%m[2]
                     else:
-                        line[X].append("g%d"%m[2])
+                        desc = "g%d"%m[2]
+                    if self._check_overrides(state, m, overrides):
+                        desc += "!"
+                    line[readahead].append(desc)
                 else:
-                    for X in self.terminals:
-                        line.setdefault(X, [])
+                    for readahead in self.terminals:
+                        line.setdefault(readahead, [])
                         if m[2] == -1:
-                            if X == self.EOF:
-                                line[X].append("HLT")
+                            if readahead == self.EOF:
+                                desc = "HLT"
                         else:
-                            line[X].append("r%d"%m[2])
+                            desc = "r%d"%m[2]
+                        if self._check_overrides(state, m, overrides):
+                            desc += "!"
+                        line[readahead].append(desc)
             rest = [ ]
             for t,l in zip(tt,widths):
                 s = ",".join(line.get(t,[]))
                 rest.append(s.center(l))
-            fd.write("# %5d | %s\n"%(I," ".join(rest)))
+            fd.write("# %5d | %s\n"%(state," ".join(rest)))
 
-    def _write_tables(self, fd):
-        self.generate_tables()
+        fd.write('\n')
+        fd.write("# parser states:\n")
+        for state in range(0, self.nstates):
+            U = self.state[state]
+            fd.write("#\n")
+            fd.write("# state %d:\n"%state)
+            for k,l,n in sorted(U, key=lambda x:self.rules[x[0]]):
+                r = self.rules[k]
+                head = repr(r[0])
+                tail1 = " ".join(map(repr, r[1:n]))
+                tail2 = " ".join(map(repr, r[n:l]))
+                fd.write("#   %s -> %s.%s\n"%(head,tail1,tail2))
+
+    def _write_tables(self, fd, overrides):
+        self._generate_tables(overrides)
 
         fd.write('\n')
         r_items = [ (i, repr(ri[0]), ri[1])
@@ -284,6 +306,7 @@ class LR0(Grammar):
 
     def write_parser(self, fd, params={}):
         params.setdefault('type', 'LR(0)')
+        overrides = params.setdefault('overrides', {})
         super(LR0, self).write_parser(fd, params)
         fd.write('\n')
         fd.write('from itertools import chain\n')
@@ -301,6 +324,9 @@ class LR0(Grammar):
         self.write_productions(fd, "    ")
         fd.write('    """\n')
 
+        if "parser_comment" in params:
+            self._write_decorations(fd, overrides)
+
         write_block(fd, 4, getsource(Parser.ParseErrors))
 
         fd.write('\n')
@@ -317,10 +343,7 @@ class LR0(Grammar):
                               end2=" ]"):
                 fd.write(l+'\n')
 
-        if "parser_comment" in params:
-            self._write_decorations(fd)
-
-        self._write_tables(fd)
+        self._write_tables(fd, overrides)
 
         fd.write('\n')
         fd.write("    _halting_state = %d\n"%self.halting_state)
