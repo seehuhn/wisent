@@ -196,6 +196,7 @@ def rules(tree, aux):
             else:
                 # at a '|' or ';'
                 res = [ head ]+tail+[ (';',';')+r[2:] ]
+
                 todo = []
                 for i in range(len(res)-2, 1, -1):
                     y = res[i]
@@ -206,27 +207,46 @@ def rules(tree, aux):
                             aux.add(new)
                             todo.append((new,)+x[1:])
                         res[i-1:i+1] = [ ('token',new)+x[2:] ]
-                yield [ x[1:] for x in res ]
+
+                force = []
+                i = 0
+                while i < len(res):
+                    x = res[i]
+                    if x[0] == "!":
+                        force.append(i)
+                        del(res[i])
+                    else:
+                        i += 1
+
+                yield [ x[1:] for x in res ], force
                 for x in todo:
                     h = x[0]
                     a = (h,)+x[2:]
                     b = x[1:]
                     c = (';',)+x[2:]
                     if h[-1] == '+':
-                        yield [ a, b, c ]
-                        yield [ a, a, b, c ]
+                        yield [ a, b, c ], []
+                        yield [ a, a, b, c ], []
                     elif h[-1] == '*':
-                        yield [ a, c ]
-                        yield [ a, a, b, c ]
+                        yield [ a, c ], []
+                        yield [ a, a, b, c ], []
 
-def locate(rr, rule_locations):
-    for k,r in enumerate(rr):
+def postprocess(rr, rule_locations, overrides):
+    """Postprocess the output of `rules`
+
+    This removes trailing semi-colons and extracts the line number
+    information and the conflict override information.
+    """
+    for k,r_f in enumerate(rr):
+        r,force = r_f
         rule_locations[k] = tuple(x[1:] for x in r)
+        overrides[k] = frozenset(force)
         yield tuple(x[0] for x in r[:-1])
 
 aux = set()
 rule_locations = {}
-rr = locate(rules(tree, aux), rule_locations)
+overrides = {}
+rr = postprocess(rules(tree, aux), rule_locations, overrides)
 
 ######################################################################
 # construct the grammar from the rules
@@ -238,7 +258,7 @@ except GrammarError, e:
     raise SystemExit(1)
 
 try:
-    g.check()
+    g.check(overrides)
 except g.Errors, e:
     for res, text in e:
         shift = []
@@ -304,4 +324,5 @@ if errors_only:
 fd = sys.stdout
 
 params['transparent_tokens'] = aux
+params['overrides'] = overrides
 g.write_parser(fd, params)
