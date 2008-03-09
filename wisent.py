@@ -287,7 +287,8 @@ except g.Errors, e:
         else:
             conflict = "shift-reduce"
         ee.append("%s conflict: the input"%conflict)
-        ee.append("    "+" ".join(text[:-1])+"."+text[-1]+" ...")
+        head = " ".join(x for x in text[:-1] if x)
+        ee.append("    "+head+"."+text[-1]+" ...")
 
         if shift:
             msg = "  can be shifted using "
@@ -306,7 +307,8 @@ except g.Errors, e:
             rule = g.rules[k]
             n = len(rule)
             ee.append("  %scan be reduced to"%cont)
-            repl = "".join(x+" " for x in text[:-n])+repr(rule[0])+"."+text[-1]
+            head = "".join(x+" " for x in text[:-n] if x)
+            repl = head+repr(rule[0])+"."+text[-1]
             ee.append("    "+repl+" ...")
             ee.append("  using the production rule")
             rule_error(k, n)

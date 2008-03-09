@@ -265,7 +265,8 @@ class LR1(Grammar):
             U = self.state[state]
             fd.write("#\n")
             fd.write("# state %d:\n"%state)
-            for k,l,n,lookahead in sorted(U, key=lambda x:self.rules[x[0]]):
+            keyfn = lambda x: (x[2]==1, self.rules[x[0]])
+            for k,l,n,lookahead in sorted(U, key=keyfn):
                 r = self.rules[k]
                 head = repr(r[0])
                 tail1 = " ".join(map(repr, r[1:n]))

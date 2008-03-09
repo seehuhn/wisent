@@ -1,3 +1,4 @@
+- add the ?-Operator (zero or one instances)
 - Fix the column width in parser transition tables in the presence of
   conflicts.
 - Implement LALR(1) parsers or good table compression for LR(1) parsers.

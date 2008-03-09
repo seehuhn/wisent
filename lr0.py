@@ -129,7 +129,7 @@ class LR0(Grammar):
 
     def _check_overrides(self, state, action, overrides):
         if action[0] == 'S':
-            for k,l,n,_ in self.state[state]:
+            for k,l,n in self.state[state]:
                 if n == l or self.rules[k][n] != action[1]:
                     continue
                 if n not in overrides.get(k, []):
@@ -161,7 +161,11 @@ class LR0(Grammar):
 
             actions = {}
             for action in self.neighbours(state):
-                actions.setdefault(action[1], []).append(action)
+                if action[0] == 'S':
+                    actions.setdefault(action[1], []).append(action)
+                else:
+                    for X in self.terminals:
+                        actions.setdefault(X, []).append(action)
 
             for readahead,aa in actions.iteritems():
                 word = path[state] + (readahead,)
@@ -269,7 +273,8 @@ class LR0(Grammar):
             U = self.state[state]
             fd.write("#\n")
             fd.write("# state %d:\n"%state)
-            for k,l,n in sorted(U, key=lambda x:self.rules[x[0]]):
+            keyfn = lambda x: (x[2]==1, self.rules[x[0]])
+            for k,l,n in sorted(U, key=keyfn):
                 r = self.rules[k]
                 head = repr(r[0])
                 tail1 = " ".join(map(repr, r[1:n]))
