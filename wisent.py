@@ -23,19 +23,11 @@ import sys
 from optparse import OptionParser
 
 from grammar import GrammarError
+from lr1 import LR1
 from scanner import tokens
 from parser import Parser
 from text import write_block
 from version import VERSION
-
-
-parser_types = {
-    "lr0": ("LR(0)", "lr0", "LR0"),
-    "lr1": ("LR(1)", "lr1", "LR1"),
-#     "ll1": ("LL(1)",),
-#     "slr": ("SLR",),
-#     "lalr1": ("SLR",),
-}
 
 ######################################################################
 # command line options
@@ -44,10 +36,6 @@ getopt = OptionParser("usage: %prog [options] grammar")
 getopt.remove_option("-h")
 getopt.add_option("-h", "--help", action="store_true", dest="help_flag",
                   help="show this message")
-getopt.add_option("-t", "--type", action="store", type="string",
-                  dest="type", default="lr1",
-                  help="choose parse type (%s)"%", ".join(parser_types.keys()),
-                  metavar="T")
 getopt.add_option("-d", "--debug", action="store", type="string",
                   dest="debug", default="",
                   help="enable debugging (p=parser)",
@@ -75,13 +63,6 @@ if len(args) < 1:
 if len(args) > 1:
     getopt.error("too many command line arguments")
 fname = args[0]
-
-if options.type not in parser_types:
-    getopt.error("invalid parser type %s"%options.type)
-parser_name,grammar_module,grammar_class = parser_types[options.type]
-
-Gmodule = __import__(grammar_module)
-G = getattr(Gmodule, grammar_class)
 
 params = {
     'fname': fname,
@@ -252,7 +233,7 @@ rr = postprocess(rules(tree, aux), rule_locations, overrides)
 # construct the grammar from the rules
 
 try:
-    g = G(rr)
+    g = LR1(rr)
 except GrammarError, e:
     error(e)
     raise SystemExit(1)

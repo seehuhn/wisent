@@ -1,3 +1,7 @@
+- Remove the manual parser type selection (command line option -t) again.
+  Wisent should be able to automatically generate efficient parsers for
+  any LR(1) grammar.
+
 version 0.3 (2008-03-07):
 - bug fix: restore the (accidentially lost) ability to exclude symbols
   from the parse tree.

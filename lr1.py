@@ -314,7 +314,13 @@ class LR1(Grammar):
 
         fd.write('class Parser(object):\n\n')
 
-        fd.write('    """%(type)s parser class.\n\n'%params)
+        fd.write('    """%(type)s parser class.\n'%params)
+        if params.get("parser_debugprint", False):
+            write_block(fd, 4, """
+            Instances of this class print additional debug messages and are
+            not suitable for production use.
+            """)
+        fd.write('\n')
         self.write_terminals(fd, "    ")
         fd.write('\n')
         self.write_nonterminals(fd, "    ")
