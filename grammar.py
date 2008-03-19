@@ -16,21 +16,115 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from time import strftime
-from inspect import getcomments
+import sys
 
-from text import split_it, write_block
-from version import VERSION
-import template
+from text import split_it
+from scanner import tokens
+from parser import Parser
 
 
-class GrammarError(Exception):
+def _print_error(msg, lineno=None, offset=None, fname=None):
+    """Emit error messages to stderr."""
+    parts = []
+    if fname is not None:
+        parts.append("%s:"%fname)
+    if lineno is not None:
+        parts.append("%d:"%lineno)
+        if offset is not None:
+            parts.append("%d:"%offset)
+    prefix = "".join(parts)
+    if prefix:
+        prefix = prefix+" "
+    print >>sys.stderr, prefix+str(msg)
+
+class RulesError(Exception):
+
+    """Error conditions in the set of production rules."""
 
     def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
         return self.msg
+
+class Conflicts(Exception):
+
+    """Lists of conflicts in LR(1) grammars."""
+
+    def __init__(self):
+        self.list = {}
+
+    def __len__(self):
+        return len(self.list)
+
+    def __iter__(self):
+        return self.list.iteritems()
+
+    def add(self, data, text):
+        """Add another conflict to the list."""
+        if data in self.list:
+            if len("".join(text)) >= len("".join(self.list[data])):
+                return
+        self.list[data] = text
+
+    def print_conflicts(self, rules, rule_locations=None, fname=None):
+        """Print error messages to stderr."""
+        ee = []
+        def rule_error(k, n):
+            r = [ repr(X) for X in rules[k] ]
+            if n < len(r):
+                tail = " ".join(r[1:n])+"."+" ".join(r[n:])
+            else:
+                tail = " ".join(r[1:])
+            ee.append("    "+r[0]+": "+tail+";")
+            if rule_locations is None:
+                loc = (None,None)
+            else:
+                loc = rule_locations[k][n]
+            while ee:
+                msg = ee.pop(0)
+                _print_error(msg, loc[0], loc[1], fname=fname)
+
+        for res, text in self:
+            shift = []
+            red = []
+            for m in res:
+                if m[0] == 'S':
+                    shift.append(m[1:])
+                else:
+                    red.append(m[1])
+
+            if len(red)>1:
+                conflict = "reduce-reduce"
+            else:
+                conflict = "shift-reduce"
+            ee.append("%s conflict: the input"%conflict)
+            head = " ".join(x for x in text[:-1] if x)
+            ee.append("    "+head+"."+text[-1]+" ...")
+
+            if shift:
+                msg = "  can be shifted using "
+                if len(shift)>1:
+                    msg += "one of the production rules"
+                else:
+                    msg += "the production rule"
+                ee.append(msg)
+                for k, n in shift:
+                    rule_error(k, n)
+                cont = "or "
+            else:
+                cont = ""
+
+            for k in red:
+                rule = rules[k]
+                n = len(rule)
+                ee.append("  %scan be reduced to"%cont)
+                head = "".join(x+" " for x in text[:-n] if x)
+                repl = head+repr(rule[0])+"."+text[-1]
+                ee.append("    "+repl+" ...")
+                ee.append("  using the production rule")
+                rule_error(k, n)
+                cont = "or "
 
 class Unique(object):
 
@@ -65,7 +159,7 @@ class Grammar(object):
 
         rules = dict(enumerate(rules))
         if not rules:
-            raise GrammarError("empty grammar")
+            raise RulesError("empty grammar")
         first = True
         for key, r in rules.iteritems():
             self.rules[key] = r
@@ -80,7 +174,7 @@ class Grammar(object):
             self.start = kwargs["start"]
             if self.start not in self.nonterminals:
                 msg = "start symbol %s is not a nonterminal"%repr(self.start)
-                raise GrammarError(msg)
+                raise RulesError(msg)
 
         self.terminals = self.symbols - self.nonterminals
         if cleanup:
@@ -88,6 +182,12 @@ class Grammar(object):
         self.nonterminals = frozenset(self.nonterminals)
         self.terminals = frozenset(self.terminals)
         self.symbols = frozenset(self.symbols)
+
+        self.rule_from_head = {}
+        for X in self.symbols:
+            self.rule_from_head[X] = []
+        for k, s in self.rules.iteritems():
+            self.rule_from_head[s[0]].append((k,len(s)))
 
         # precompute the set of all nullable symbols
         self.nullable = frozenset(self._compute_nbtab())
@@ -122,7 +222,7 @@ class Grammar(object):
                     done = False
         if self.start not in N:
             tmpl = "start symbol %s doesn't generate terminals"
-            raise GrammarError(tmpl%repr(self.start))
+            raise RulesError(tmpl%repr(self.start))
         for key in R:
             if not set(self.rules[key]) <= (N|T):
                 del self.rules[key]
@@ -326,19 +426,182 @@ class Grammar(object):
             head = repr(r[0])
             tail = " ".join(map(repr, r[1:]))
             fd.write(prefix+"  %s -> %s\n"%(head, tail))
+
+######################################################################
+# read grammar files
 
-    def write_parser(self, fd, params):
-        params.setdefault('date', strftime("%Y-%m-%d %H:%M:%S"))
-        params['version'] = VERSION
-        write_block(fd, 0, """#! /usr/bin/env python
-# %(type)s parser, autogenerated on %(date)s
-# generator: wisent %(version)s, http://seehuhn.de/pages/wisent
-        """%params, first=True)
-        if 'fname' in params:
-            fd.write("# source: %(fname)s\n"%params)
+def _parse_grammar_file(fname):
+    """Read a grammar file and return the resulting parse tree.
 
-        write_block(fd, 0, """
-# All parts of this file which are not taken verbatim from the input grammar
-# are covered by the following notice:
-#""")
-        fd.write(getcomments(template))
+    The return value of this function is a tuple, consisting of the
+    parse tree (or None in case of an unrecoverable error) and a
+    boolean indicating whether errors (recoverable or unrecoverable)
+    were found.
+
+    If the grammar file contains errors, error messages are printed to
+    stderr.
+    """
+    p = Parser()
+    try:
+        fd = open(fname)
+        tree = p.parse_tree(tokens(fd))
+        fd.close()
+        has_errors = False
+    except SyntaxError, e:
+        _print_error(e.msg, e.lineno, e.offset, e.filename)
+        tree = None
+        has_errors = True
+    except p.ParseErrors, e:
+        for token,expected in e.errors:
+            if token[0] == p.EOF:
+                _print_error("unexpected end of file", fname=fname)
+                continue
+
+            def quote(x):
+                s = str(x)
+                if not s.isalpha():
+                    s = "'"+s+"'"
+                return s
+            tp = quote(token[0])
+            val = quote(token[1])
+            if val and tp != val:
+                found = "%s %s"%(tp, repr(token[1]))
+            else:
+                found = tp
+
+            if p.EOF in expected:
+                expected.remove(p.EOF)
+                expect_eol = True
+            else:
+                expect_eol = False
+            if len(expected) == 1:
+                missing = quote(expected[0])
+                _print_error("missing %s (found %s)"%(missing, found),
+                             token[2], token[3], fname)
+                continue
+
+            msg1 = "parse error before %s"%found
+            l = sorted([ quote(s) for s in expected ])
+            if expect_eol:
+                l.append("end of line")
+            msg2 = "expected "+", ".join(l[:-1])+" or "+l[-1]
+            _print_error(msg1+", "+msg2, token[2], token[3], fname)
+        tree = e.tree
+        has_errors = True
+    return tree, has_errors
+
+def _extract_rules(tree, aux):
+    """Extract the grammar rules from the parse tree.
+
+    This generator yields the grammar rules one by one.  The special
+    "*" and "+" suffix tokens are expanded here.
+
+    As a side-effect, all transparent symbols are added to the set
+    'aux'.
+    """
+    for rule in tree[1:]:
+        # rule[0] == 'rule'
+        head = rule[1]
+        if not head:
+            # repaired trees have no payload
+            head = ('', )+rule[2][2:]
+        if head[0] == "token" and head[1].startswith("_"):
+            aux.add(head[1])
+        # rule[2] == (':', ...)
+        for r in rule[3:]:
+            if r[0] == "list":
+                tail = list(r[1:])
+                for i,x in enumerate(tail):
+                    if not x:
+                        # repaired trees have no payload
+                        tail[i] = ('', )+rule[2][2:]
+            else:
+                # at a '|' or ';'
+                res = [ head ]+tail+[ (';',';')+r[2:] ]
+
+                todo = []
+                for i in range(len(res)-2, 1, -1):
+                    y = res[i]
+                    if y[0] in [ '+', '*' ]:
+                        x = res[i-1]
+                        new = x[1]+y[0]
+                        if new not in aux:
+                            aux.add(new)
+                            todo.append((new,)+x[1:])
+                        res[i-1:i+1] = [ ('token',new)+x[2:] ]
+
+                force = []
+                i = 0
+                while i < len(res):
+                    x = res[i]
+                    if x[0] == "!":
+                        force.append(i)
+                        del(res[i])
+                    else:
+                        i += 1
+
+                yield [ x[1:] for x in res ], force
+                for x in todo:
+                    h = x[0]
+                    a = (h,)+x[2:]
+                    b = x[1:]
+                    c = (';',)+x[2:]
+                    if h[-1] == '+':
+                        yield [ a, b, c ], []
+                        yield [ a, a, b, c ], []
+                    elif h[-1] == '*':
+                        yield [ a, c ], []
+                        yield [ a, a, b, c ], []
+
+def read_grammar(fname, params={}, checkfunc=None):
+    """Convert a textual description of a grammar into a `Grammar` object.
+
+    This function reads the description of a grammar from a text file.
+    If the contents of this file are valid, a `Grammar` object is
+    returned.  Otherwise a list of errors is printed to `stderr` and
+    the program is terminated.
+    """
+    params.setdefault("fname", fname)
+    tree, has_errors = _parse_grammar_file(fname)
+    if tree is None:
+        raise SystemExit(1)
+
+    def postprocess(rr, rule_locations, overrides):
+        """Postprocess the output of `rules`
+
+        This removes trailing semi-colons and extracts the line number
+        information and the conflict override information.
+        """
+        for k,r_f in enumerate(rr):
+            r,force = r_f
+            rule_locations[k] = tuple(x[1:] for x in r)
+            overrides[k] = frozenset(force)
+            yield tuple(x[0] for x in r[:-1])
+
+    aux = set()
+    rule_locations = {}
+    overrides = {}
+    rr = postprocess(_extract_rules(tree, aux), rule_locations, overrides)
+    params['transparent_tokens'] = aux
+    params['overrides'] = overrides
+
+    try:
+        g = Grammar(rr)
+    except RulesError, e:
+        _print_error(e, fname=fname)
+        raise SystemExit(1)
+
+    if checkfunc is not None:
+        try:
+            res = checkfunc(g, params)
+        except Conflicts, e:
+            e.print_conflicts(g.rules, rule_locations, fname)
+            _print_error("%d conflicts, aborting ..."%len(e), fname=fname)
+            has_errors = True
+    else:
+        res = g
+
+    if has_errors:
+        raise SystemExit(1)
+
+    return res

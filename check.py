@@ -22,7 +22,8 @@ from os import remove, rmdir
 from os.path import join
 from tempfile import mkdtemp
 
-from lr1 import LR1
+from grammar import Grammar
+from lr1 import Automaton
 
 
 testdir = mkdtemp()
@@ -46,11 +47,12 @@ ignore = object()
 
 def check(rules, tests, parser_args={}):
     print "-"*70
-    g = LR1(rules)
+    g = Grammar(rules)
+    a = Automaton(g)
     fd = open(join(testdir,"tmp.py"), "w")
-    g.write_parser(fd)
+    a.write_parser(fd)
     fd.close()
-    del g
+    del a, g
 
     import tmp
     reload(tmp)

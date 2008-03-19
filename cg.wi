@@ -164,7 +164,7 @@ statement_list:		statement
 			| statement_list statement
 			;
 selection_statement:	"if" '(' expression ')' statement
-			| "if" '(' expression ')' statement "else" statement
+			| "if" '(' expression ')' statement ! "else" statement
 			| "switch" '(' expression ')' statement
 			;
 iteration_statement:	"while" '(' expression ')' statement

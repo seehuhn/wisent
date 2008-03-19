@@ -30,7 +30,7 @@
 # otherwise) arising in any way out of the use of this software, even
 # if advised of the possibility of such damage.
 
-class LR1Parser(object):
+class Parser(object):
 
     """LR(1) parser class template.
 
