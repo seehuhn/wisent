@@ -60,7 +60,8 @@ class Parser(object):
         """
 
         def __init__(self, errors, tree):
-            super(ParseErrors, self).__init__("%d parse errors"%len(errors))
+            msg = "%d parse errors"%len(errors)
+            super(Parser.ParseErrors, self).__init__(msg)
             self.errors = errors
             self.tree = tree
 

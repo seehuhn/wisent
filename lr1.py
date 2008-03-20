@@ -32,14 +32,21 @@ class Automaton(object):
         """Construct a parser automaton from the grammar `g`.
 
         If `params["overrides"]` exists, it can be used to override
-
         LR(1) conflicts in the grammar.  The value should be a
         dictionary with production rule indices as keys and lists of
         overrides as values.
         """
-
         self.g = g
-        self.overrides = params.get("overrides",{})
+        self.overrides = params.get("overrides", {})
+
+        self.replace_nonterminals = params.get("replace_nonterminals", False)
+        nonterminals = sorted(self.g.nonterminals-set([self.g.start]))
+        if self.replace_nonterminals:
+            self.nt_tab = dict((X,k) for k,X in enumerate(nonterminals))
+        else:
+            self.nt_tab = dict((X,X) for X in nonterminals)
+        self.nt_tab[self.g.start] = self.g.start
+
         self.tables_generated = False
         self.checked = False
 
@@ -248,6 +255,7 @@ class Automaton(object):
 
         conflicts = Conflicts()
         shortcuts = self.g.shortcuts()
+        nt_tab = self.nt_tab
 
         rtab = {}
         gtab = {}
@@ -298,10 +306,12 @@ class Automaton(object):
                     if X in self.g.terminals:
                         stab[(int(state),X)] = action[1]
                     else:
-                        gtab[(int(state),X)] = action[1]
-                else:
+                        gtab[(int(state),nt_tab[X])] = action[1]
+                elif state != self.halting_state:
                     rule = self.g.rules[action[1]]
-                    rtab[(int(state),X)] = (rule[0],len(rule)-1)
+                    if X in nt_tab:
+                        X = nt_tab[X]
+                    rtab[(int(state),X)] = (nt_tab[rule[0]],len(rule)-1)
 
         if conflicts:
             raise conflicts
@@ -449,6 +459,13 @@ class Automaton(object):
         self.g.write_nonterminals(fd, "    ")
         fd.write('\n')
         self.g.write_productions(fd, "    ")
+        if self.replace_nonterminals:
+            write_block(fd, 4, """
+            In the returned parse trees, nonterminal symbols are
+            replaced by numbers.  You can use the dictionary
+            `Parser.nonterminals` to map back the numeric codes to the
+            corresponding symbols.
+            """)
         fd.write('    """\n')
 
         if "parser_comment" in params:
@@ -464,21 +481,29 @@ class Automaton(object):
         for l in split_it(tt, padding="    ", start1="terminals = [ ",
                           end2=" ]"):
             fd.write(l+'\n')
+        nt_tab = self.nt_tab
+        transparent = params.get("transparent_tokens", set())
+        if self.replace_nonterminals:
+            symbols = self.g.nonterminals-set([self.g.start])-transparent
+            nonterminals = sorted(symbols)
+            tt = [ "%d: %s"%(nt_tab[X],repr(X)) for X in nonterminals ]
+            for l in split_it(tt, padding="    ",
+                              start1="nonterminals = { ", end2=" }"):
+                fd.write(l+'\n')
+        if transparent:
+            tt = [ repr(nt_tab[X]) for X in sorted(transparent) ]
+            for l in split_it(tt, padding="    ",
+                              start1="_transparent = [ ", end2=" ]"):
+                fd.write(l+'\n')
+
         fd.write("    EOF = Unique('EOF')\n")
         fd.write("    S = Unique('S')\n")
-        transparent = params.get("transparent_tokens", False)
-        if transparent:
-            tt = map(repr, transparent)
-            for l in split_it(tt, padding="    ", start1="_transparent = [ ",
-                              end2=" ]"):
-                fd.write(l+'\n')
 
         # halting state
         fd.write('\n')
         fd.write("    _halting_state = %s\n"%self.halting_state)
 
         # reduce actions
-        fd.write('\n')
         rtab = self.rtab
         r_items = [ "%s: %s"%(repr(key),repr(rtab[key]))
                     for key in sorted(self.rtab) ]
@@ -488,7 +513,6 @@ class Automaton(object):
         fd.write("    }\n")
 
         # goto table
-        fd.write('\n')
         gtab = self.gtab
         g_items = [ "%s: %s"%(repr(key),repr(gtab[key]))
                     for key in sorted(self.gtab) ]
@@ -498,7 +522,6 @@ class Automaton(object):
         fd.write("    }\n")
 
         # shift table
-        fd.write('\n')
         stab = self.stab
         s_items = [ "%s: %s"%(repr(key),repr(stab[key]))
                     for key in sorted(self.stab) ]

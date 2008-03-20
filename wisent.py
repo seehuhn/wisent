@@ -31,12 +31,14 @@ from version import VERSION
 
 getopt = OptionParser("usage: %prog [options] grammar")
 getopt.remove_option("-h")
-getopt.add_option("-h", "--help", action="store_true", dest="help_flag",
-                  help="show this message")
 getopt.add_option("-d", "--debug", action="store", type="string",
                   dest="debug", default="",
                   help="enable debugging (p=parser)",
                   metavar="CHARS")
+getopt.add_option("-h", "--help", action="store_true", dest="help_flag",
+                  help="show this message")
+getopt.add_option("-r", "--replace", action="store_true", dest="replace_flag",
+                  help="replace nonterminals by numbers")
 getopt.add_option("-V","--version",action="store_true",dest="version_flag",
                   help="show version information")
 (options,args)=getopt.parse_args()
@@ -65,6 +67,7 @@ params = {}
 if "p" in options.debug:
     params["parser_comment"] = True
     params["parser_debugprint"] = True
+params["replace_nonterminals"] = options.replace_flag
 
 ######################################################################
 # emit the parser
