@@ -44,7 +44,6 @@ class Parser(object):
         """Exception class to represent a collection of parse errors.
 
         Instances of this class have two attributes, `errors` and `tree`.
-
         `errors` is a list of tuples, each describing one error.
         #@ IF error_stacks
         Each tuple consists of the first input token which could not
@@ -56,23 +55,37 @@ class Parser(object):
         be processed and the list of grammar symbols which were allowed
         at this point.
         #@ ENDIF
-
         `tree` is a "repaired" parse tree which might be used for further
         error checking, or `None` if no repair was possible.
         """
 
         def __init__(self, errors, tree):
+            super(ParseErrors, self).__init__("%d parse errors"%len(errors))
             self.errors = errors
             self.tree = tree
-            self.args = "%d parse errors"%len(errors)
 
     def __init__(self, max_err=None, errcorr_pre=4, errcorr_post=4):
+        """Create a new parser instance.
+
+        The constructor arguments control the handling of parse
+        errors: `max_err` can be given to bound the number of errors
+        reported during one run of the parser.  `errcorr_pre` controls
+        how many tokens before an invalid token the parser considers
+        when trying to repair the input.  `errcorr_post` controls how
+        far beyond an invalid token the parser reads when evaluating
+        the quality of an attempted repair.
+        """
         self.max_err = max_err
         self.m = errcorr_pre
         self.n = errcorr_post
 
     @staticmethod
     def leaves(tree):
+        """Iterate over the leaves of a parse tree.
+
+        This function can be used to reconstruct the input from a
+        parse tree.
+        """
         if tree[0] in Parser.terminals:
             yield tree
         else:
@@ -177,9 +190,13 @@ class Parser(object):
     def parse_tree(self, input):
         """Parse the tokens from `input` and construct a parse tree.
 
-        `input` must be an interable.  If `input` is valid, a parse
-        tree is returned.  Otherwise a ParseErrors exception is
-        raised.
+        `input` must be an interable over tuples.  The first element
+        of each tuple must be a terminal symbol of the grammar which
+        is used for parsing.  All other element of the tuple are just
+        copied into the constructed parse tree.
+
+        If `input` is invalid, a ParseErrors exception is raised.
+        Otherwise the function returns the parse tree.
         """
         errors = []
         input = chain(input, [(self.EOF,)])

@@ -26,9 +26,18 @@ from version import VERSION
 
 class Automaton(object):
 
-    """LR(1) parsing automatons"""
+    """LR(1) parsing automatons."""
 
     def __init__(self, g, params={}):
+        """Construct a parser automaton from the grammar `g`.
+
+        If `params["overrides"]` exists, it can be used to override
+
+        LR(1) conflicts in the grammar.  The value should be a
+        dictionary with production rule indices as keys and lists of
+        overrides as values.
+        """
+
         self.g = g
         self.overrides = params.get("overrides",{})
         self.tables_generated = False
@@ -304,6 +313,15 @@ class Automaton(object):
         self.checked = True
 
     def write_transition_table(self, fd, prefix="# "):
+        """Emit a textual description of the automaton's transition table.
+
+        The human-readable table is written to the file-like object
+        `fd`, each line of the output is prefixed with the string
+        `prefix`.
+
+        The output of this function will be only useful to persons
+        with a good understanding of LR(1) parsing.
+        """
         self._generate_tables()
 
         def write(str):
@@ -350,6 +368,16 @@ class Automaton(object):
             write(fmt_line(line))
 
     def write_parser_states(self, fd, prefix="# "):
+        """Emit a textual description of the automaton's state.
+
+        The human-readable description of states (as "dotted"
+        productions with context sets) is written to the file-like
+        object `fd`, each line of the output is prefixed with the
+        string `prefix`.
+
+        The output of this function will be only useful to persons
+        with a good understanding of LR(1) parsing.
+        """
         self._generate_tables()
 
         def write(str):
@@ -376,6 +404,12 @@ class Automaton(object):
                 write("  "+rulestr+" "+ctxstr)
 
     def write_parser(self, fd, params={}):
+        """Emit Python code implementing the parser.
+
+        A complete, stand-alone Python source file implementing the
+        parser is written to the file-like object `fd`, each line of
+        the output is prefixed with the string `prefix`.
+        """
         self.check()
 
         from time import strftime

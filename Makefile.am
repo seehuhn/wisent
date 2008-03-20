@@ -2,6 +2,7 @@
 # Copyright 2008  Jochen Voss
 
 EXTRA_DIST = wisent.py check.py grammar.wi
+BUILT_SOURCES = version.py
 
 bin_SCRIPTS = wisent
 pkgpython_PYTHON = grammar.py lr1.py scanner.py parser.py text.py	\

@@ -19,14 +19,13 @@
 def tokens(source):
     """Generator to read input and break it into tokens.
 
-    'Source' must iterate over the lines of input, it could, for
-    example, be a file-like object.  The generator then yields
+    'Source' must iterate over the lines of input (it could for
+    example be a file-like object).  The generator then yields
     4-tuples consisting of a type string, a value, the line number
     (starting with 1) and the column number (starting with 1): if the
     type string is one of "token" or "string", the value is the
     corresponding input character sequence.  Otherwise both the type
-    string and the value are the same, single input character.  The
-    third element of the tuple is the input line number.
+    string and the value are the same, single input character.
 
     If the input ends in an unterminated string or comment, a
     SyntaxError exception is raised.

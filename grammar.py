@@ -42,33 +42,72 @@ class RulesError(Exception):
     """Error conditions in the set of production rules."""
 
     def __init__(self, msg):
-        self.msg = msg
+        """Create an exception describing an error in a rule set.
 
-    def __str__(self):
-        return self.msg
+        `msg` should be a human-readable description of the problem
+        for use in an error message.
+        """
+        super(RulesError, self).__init__(msg)
 
 class Conflicts(Exception):
 
-    """Lists of conflicts in LR(1) grammars."""
+    """Lists of conflicts in LR(1) grammars.
+
+    In order to allow Wisent to report all discovered conflicts in one
+    run, this exception represents lists of grammar conflicts.
+    """
 
     def __init__(self):
+        """Create a new Conflicts exception.
+
+        At creation time, the exception object contains no information
+        about conflicts.  All errors should be added using the `add`
+        method before the exception is raised.
+
+        Iterating over the exception object returns the recorded
+        conflicts one by one.
+        """
         self.list = {}
 
     def __len__(self):
+        """The number of conflicts recorded in the exception."""
         return len(self.list)
 
     def __iter__(self):
         return self.list.iteritems()
 
     def add(self, data, text):
-        """Add another conflict to the list."""
+        """Add another conflict to the list.
+
+        `data` is a list of tuples describing the conflict, each tuple
+        encoding information about one of the conflicting actions.
+        For shift actions the first element of the tuple is the string
+        'S', the second element is the index of the corresponding
+        production rule and the third element is the position of the
+        shifted element within the rule.  For reduce actions the first
+        element of the tuple is the string 'R' and the second element
+        is the index of the production rule involved.
+
+        `text` is a string of terminal symbols which illustrates the
+        conflict: after the tokens from `text[:-1]` are read and with
+        lookahead symbol `text[-1]`, each of the actions described by
+        `data` can be applied.
+        """
         if data in self.list:
             if len("".join(text)) >= len("".join(self.list[data])):
                 return
         self.list[data] = text
 
     def print_conflicts(self, rules, rule_locations=None, fname=None):
-        """Print error messages to stderr."""
+        """Print a human-readable description of the errors to stderr.
+
+        `rules` must be a dictionary mapping rule indices to
+        production rules.  The optional argument `rule_locations`, if
+        present, must be a dictionary such that `rule_locations[k][n]`
+        is a tuple giving the line and column of the `n`th token of
+        the `k`th grammar rule in the source file.  `fname`, if given,
+        should be the input file name.
+        """
         ee = []
         def rule_error(k, n):
             r = [ repr(X) for X in rules[k] ]
@@ -128,12 +167,22 @@ class Conflicts(Exception):
 
 class Unique(object):
 
-    """Unique objects for use as markers."""
+    """Unique objects for use as markers.
+
+    These objects are internally used to represent the start symbol
+    and the end-of-input marker of the grammar.
+    """
 
     def __init__(self, label):
+        """Create a new unique object.
+
+        `label` is a string which is used as a textual representation
+        of the object.
+        """
         self.label = label
 
     def __repr__(self):
+        """Return the `label` given at object construction."""
         return self.label
 
 class Grammar(object):
@@ -441,7 +490,8 @@ def _parse_grammar_file(fname):
     If the grammar file contains errors, error messages are printed to
     stderr.
     """
-    p = Parser()
+    max_err = 100
+    p = Parser(max_err=max_err)
     try:
         fd = open(fname)
         tree = p.parse_tree(tokens(fd))
@@ -488,6 +538,8 @@ def _parse_grammar_file(fname):
             _print_error(msg1+", "+msg2, token[2], token[3], fname)
         tree = e.tree
         has_errors = True
+        if len(e.errors) == max_err and tree is None:
+            _print_error("too many errors, giving up ...", fname=fname)
     return tree, has_errors
 
 def _extract_rules(tree, aux):
@@ -596,7 +648,12 @@ def read_grammar(fname, params={}, checkfunc=None):
             res = checkfunc(g, params)
         except Conflicts, e:
             e.print_conflicts(g.rules, rule_locations, fname)
-            _print_error("%d conflicts, aborting ..."%len(e), fname=fname)
+            n = len(e)
+            if n == 1:
+                msg = "1 conflict"
+            else:
+                msg = "%d conflicts"%n
+            _print_error("%s, aborting ..."%msg, fname=fname)
             has_errors = True
     else:
         res = g
