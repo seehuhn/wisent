@@ -72,22 +72,30 @@ class Automaton(object):
 
     def _closure(self, U):
         rules = self.g.rules
+        first_tokens = self.g.first_tokens
+        rule_from_head = self.g.rule_from_head
+
         todo = U.copy()
         res = {}
+        for prod in todo:
+            res[prod] = todo[prod].copy()
         while todo:
             prod,ctx = todo.popitem()
-            res.setdefault(prod, set()).update(ctx)
             key,l,n = prod
             if n == l:
                 continue
             rule = rules[key]
+            tail = list(rule[n+1:])
+            new_rules = [ ((k,l,1),res.setdefault((k,l,1), set()))
+                          for k,l in rule_from_head[rule[n]] ]
             for X in ctx:
-                lookahead = self.g.first_tokens(list(rule[n+1:])+[X])
-                for k,l in self.g.rule_from_head[rule[n]]:
-                    res_ctx = res.setdefault((k,l,1), set())
-                    for Z in lookahead:
-                        if Z not in res_ctx:
-                            todo.setdefault((k,l,1), set()).add(Z)
+                lookahead = first_tokens(tail+[X])
+                for prod,res_ctx in new_rules:
+                    new = lookahead - res_ctx
+                    if new:
+                        todo_ctx = todo.setdefault(prod, set())
+                        todo_ctx |= new
+                        res_ctx |= new
         return res
 
     def _generate_tables(self):
@@ -113,6 +121,10 @@ class Automaton(object):
         key, l = self.g.rule_from_head[self.g.start][0]
         state_tab[self.initial_state] = { (key,l,1): set([self.g.EOF]) }
 
+        maybe_compatible = {}
+        for X in self.g.symbols:
+            maybe_compatible[X] = set()
+
         todo = set([self.initial_state])
         done = set()
 
@@ -121,13 +133,12 @@ class Automaton(object):
 
         while todo:
             state_no = todo.pop()
-            state = state_tab[state_no]
             done.add(state_no)
 
             rtab = reduce_tab.setdefault(state_no,{})
             stab = shift_tab.setdefault(state_no,{})
 
-            state = self._closure(state)
+            state = self._closure(state_tab[state_no])
             shift = {}
             for prod,ctx in state.iteritems():
                 key,l,n = prod
@@ -145,7 +156,8 @@ class Automaton(object):
                     neighbour_ctx.update(ctx)
 
             for X,S in shift.iteritems():
-                for Tn, T in state_tab.iteritems():
+                for Tn in maybe_compatible[X]:
+                    T = state_tab[Tn]
                     if not self._is_compatible(S, T):
                         continue
                     # merge S into T
@@ -168,6 +180,7 @@ class Automaton(object):
                     next_state = StateIndex()
                     stab[X] = next_state
                     state_tab[next_state] = S
+                    maybe_compatible[X].add(next_state)
                     todo.add(next_state)
                     if X == self.g.EOF:
                         self.halting_state = next_state
@@ -196,7 +209,11 @@ class Automaton(object):
         self.reduce_tab = reduce_tab
         self.shift_tab = shift_tab
 
-        self.tables_generated = False
+        self.closure_tab = {}
+        for state in states:
+            self.closure_tab[state] = self._closure(self.state_tab[state])
+
+        self.tables_generated = True
 
     def _get_actions(self, state, X):
         """Get the neighbours of a node in the automaton's state graph.
@@ -233,7 +250,7 @@ class Automaton(object):
     def _check_overrides(self, state, X, action):
         rules = self.g.rules
         if action[0] == 'S':
-            for k,l,n in self._closure(self.state_tab[state]):
+            for k,l,n in self.closure_tab[state]:
                 if n == l or rules[k][n] != X:
                     continue
                 if n not in self.overrides.get(k, []):
@@ -289,7 +306,7 @@ class Automaton(object):
                     res = set()
                     for action in actions:
                         if action[0] == 'S':
-                            for k,l,n in self._closure(self.state_tab[state]):
+                            for k,l,n in self.closure_tab[state]:
                                 if n<l and self.g.rules[k][n] == X:
                                     res.add(('S',k,n))
                         else:
@@ -394,7 +411,7 @@ class Automaton(object):
             fd.write((prefix+str).rstrip()+'\n')
         write("parser states:")
         for state in self.states:
-            U = self._closure(self.state_tab[state])
+            U = self.closure_tab[state]
             write("")
             msg = ""
             if state == self.initial_state:

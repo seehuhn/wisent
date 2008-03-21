@@ -35,16 +35,18 @@ def split_it(args, padding="", start1="", start2=None, sep=", ",
     args = [ str(arg) for arg in args[:-1] ] + [ str(args[-1])+end2 ]
 
     line = padding + start1 + args.pop(0)
+    seplen = len(sep)
+    argslen = sum(len(a) for a in args)
     while args:
-        test = sep.join([line]+args)
-        if len(test) <= maxwidth:
-            line = test
+        if len(line)+argslen+len(args)*seplen <= maxwidth:
+            line = sep.join([line]+args)
             break
 
         arg = args.pop(0)
+        argslen -= len(arg)
         if len(line+sep+arg+end1) > maxwidth:
             yield line+end1
-            line = padding + start2 + arg
+            line = padding+start2+arg
         else:
             line += sep+arg
     yield line
