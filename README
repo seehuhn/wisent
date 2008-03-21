@@ -12,7 +12,7 @@ You may redistribute copies of Wisent under the terms of the GNU
 General Public License.  For more information about these matters, read
 the file COPYING of the source code distribution.
 
-   Please mail any suggestions and bug reports to Jochen Voss
+   Please email any suggestions and bug reports to Jochen Voss
 <voss@seehuhn.de>.  Your message should include the Wisent version
 number, as obtained by the command 'wisent -V'.
 
@@ -40,6 +40,9 @@ WISENT DOCUMENTATION
 stdout.  The program is typically called as follows:
 
 	wisent grammar.wi >parser.py
+
+Wisent Grammar Files
+--------------------
 
    Wisent grammar files, by convention the file names end in ".wi",
 consist of a sequence of rules.  Each rule consists of a non-terminal
@@ -76,6 +79,47 @@ could look as follows.
 	list: item*;
 	item: tos | tos "+" | tos "*";
 	tos: TOKEN | STRING;
+
+Conflicts
+---------
+
+   If the input grammar contains shift-reduce or reduce-reduce
+conflicts, Wisent generates an example input string to illustrate the
+problem in the error message.
+
+Example 2.  Consider the following grammar file.
+
+	ABC: a X Y c;
+	X: b | ;
+	Y: b | ;
+
+In the language described by this grammar for the input "a b c" the
+symbol "b" could be either interpreted as "X" or as "Y".  The
+corresponding Wisent error message is as follows.
+
+	test.wi:2:4: shift-reduce conflict: the input
+	test.wi:2:4:     'a'.'b' ...
+	test.wi:2:4:   can be shifted using the production rule
+	test.wi:2:4:     'X': .'b';
+	test.wi:2:8:   or can be reduced to
+	test.wi:2:8:     'a' 'X'.'b' ...
+	test.wi:2:8:   using the production rule
+	test.wi:2:8:     'X': ;
+	test.wi: 1 conflict, aborting ...
+
+   Conflicts should normally be resolved by rewriting the grammar to
+make it unambiguous.  Since this is sometimes difficult or cumbersome,
+Wisent provides an alternative mechanism to to select which one of the
+conflicting actions the generated parser should choose.  These
+conflict overrides are selected by placing additional exclamation
+marks '!' in the grammar file: placing the exclamation mark before a
+symbol (at the position given by the "can be shifted" part of the
+error message) gives precedence to the shift action whereas placing
+the exclamation mark at the end of the rule (at the position given by
+the corresponding "can be reduced" message, just before the semicolon)
+gives precedence to the reduce action.  In example 2 above we could
+write "X: ! b | ;" to have the "b" interpreted as an "X" and we could
+write "X: b | ! ;" to get "Y".
 
 
 PARSER DOCUMENTATION
@@ -136,7 +180,7 @@ by the parser; you can use them to attach semantic values to the
 symbols or to keep track of input line numbers for use in error
 messages.
 
-Example 2.  For a parser generated from the grammar given in example
+Example 3.  For a parser generated from the grammar given in example
 1, the following Python sequence is a valid input:
 
     [ ( 'TOKEN', 'grammar' ),
@@ -161,7 +205,7 @@ first element and the remaining elements are the parse trees for an
 expansion of this non-terminal.  The first element of the tree
 returned by 'parse' is always the start symbol of the grammar.
 
-Example 3.  The input from example 2 leads to the following parse
+Example 4.  The input from example 3 leads to the following parse
 tree:
 
 	('grammar',
@@ -178,14 +222,14 @@ tree:
 
    In real applications parse trees often become deeply nested,
 because they contain many levels of "uninteresting" symbols like "rhs"
-and "tos" in example 2.  To ease processing of the resulting trees,
+and "tos" in example 3.  To ease processing of the resulting trees,
 Wisent generated parsers omit non-terminal whose names start with '_'.
 Instead of a sub-tree rooted at the non-terminal the children of the
 non-terminal are directly inserted into the containing tree.  This
 reduces the local nesting level by one.
 
-Example 4.  If we rename the non-terminals "rhs" to "_rhs", "tos" to
-"_tos" and "item" to "_item" in examples 1 and 2, the parse tree
+Example 5.  If we rename the non-terminals "rhs" to "_rhs", "tos" to
+"_tos" and "item" to "_item" in examples 1 and 3, the parse tree
 simplifies as follows:
 
 	('grammar',
@@ -221,3 +265,13 @@ attributes:
     tree
 	is a "repaired" parse tree which might be used for further
 	error checking, or None if no repair was possible.
+
+
+REFERENCES
+==========
+
+   The algorithm to generated the parser is based on the method
+described in the following article.
+
+    * David Pager, A practical general method for constructing LR(k) parsers.
+      Acta Informatica, volume 7 (1977), number 3, pages 249

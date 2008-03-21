@@ -1,8 +1,13 @@
-- Allow to replace nonterminal symbols by numbers in the parser output
-  (command line option -r)
+version 0.4 (2008-03-21):
+- efficiency improvements, both for the parser generator and for the
+  generated parsers
 - Remove the manual parser type selection (was command line option -t)
   again.  Wisent is now able to automatically generate efficient
   parsers for any LR(1) grammar.
+- add conflict overrides
+- allow to replace nonterminal symbols by numbers in the parser output
+  (command line option -r)
+- rename the old 'Parser.parse_tree' method to new 'Parser.parse'
 
 version 0.3 (2008-03-07):
 - bug fix: restore the (accidentially lost) ability to exclude symbols
@@ -14,4 +19,4 @@ version 0.2 (2008-03-02):
   option)
 
 version 0.1 (2008-03-01):
-- initial public release, only LR(1) parsers are implemented
+- initial public release

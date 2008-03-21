@@ -1,5 +1,4 @@
-translation_unit:	external_declaration
-			| translation_unit external_declaration
+translation_unit:	external_declaration*
 			;
 external_declaration:	function_definition
 			| declaration
@@ -39,7 +38,7 @@ type_specifier:		"void"
 			| "unsigned"
 			| struct_or_union_specifier
 			| enum_specifier
-			| typedef_name
+			| TYPEDEF_NAME
 			;
 type_qualifier:		"const"
 			| "volatile"
@@ -138,8 +137,6 @@ direct_abstract_declarator: '(' abstract_declarator ')'
 			| '[' constant_expression ']'
 			| direct_abstract_declarator '[' ']'
 			| direct_abstract_declarator '[' constant_expression ']'
-			;
-typedef_name:		IDENTIFIER2
 			;
 statement:		labeled_statement
 			| expression_statement

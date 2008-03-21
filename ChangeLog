@@ -1,3 +1,97 @@
+commit 81928b6430f4dbcafe7e6e081773bd3bd3628153
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 21 20:32:57 2008 +0000
+
+    rename the old 'parse_tree' method to 'parse'
+
+commit adf515420f048ee82d98f05440e2239331d7fc3e
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 21 20:17:03 2008 +0000
+
+    minor fixes
+
+commit 6e21b91ce6d103e85e50135dd2677719ff55f732
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 21 15:00:57 2008 +0000
+
+    text.py: Remove the unused function 'layout_list'
+
+commit 5a828d6585bb7cae75a882dcca82332972490995
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 21 14:35:21 2008 +0000
+
+    speed improvements in the parser generator
+
+commit e18978961317cedad8d42d5aceb03e3eaac8d6ee
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Mar 20 01:46:48 2008 +0000
+
+    Allow to replace nonterminal symbols by numbers in the parser output.
+    
+    If the new command line option '-r' is given, the generated parser
+    uses numeric codes instead of the full nonterminal symbols in the
+    parse tree.  This reduces the size of the parsing tables and also may
+    allow for faster parsing.  A new class attribute 'nonterminals'
+    contains a dictionary mapping numeric codes to the corresponding
+    symbols.
+
+commit 6130721b8db7495f7e328d3c49ccbb33478b818d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Mar 20 00:49:39 2008 +0000
+
+    Cosmetic fixes and docstring improvements.
+
+commit 343a1132a94b696b53a5aea4a0c86b142a023461
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Mar 19 22:13:36 2008 +0000
+
+    Implement the LR(1) parser generator suggested by Pager (1975).
+    
+    Since this method is an efficient way to generate parsers for general
+    LR(1) grammars, remove all code to select different parser types.
+
+commit 606b7a186f6a5a64d7e88cbfdb4c0abafe2386a8
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Mar 16 17:41:14 2008 +0000
+
+    Remove the manual parser type selection.
+
+commit 6888f3b8040d9ad6db2e771799cdb693e3169d28
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Mar 9 13:01:32 2008 +0000
+
+    assorted fixes for the grammar conflict handling
+
+commit 3629ae319d54b8f41e2511896dd18ca059eb2288
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Mar 8 13:08:00 2008 +0000
+
+    First version of grammar conflict overrides.
+
+commit 1d95a6067b57a2185097bb6414125be3ebf905f2
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Mar 8 12:40:45 2008 +0000
+
+    Start preparations for grammar conflict overrides.
+
+commit 23fd4d3d434f42a436bb0727696ec61e7ad34a27
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 7 17:35:16 2008 +0100
+
+    Move the grammar reading code into a new function 'read_grammar'.
+
+commit 24c3e0ba3594574993a6797ced7e0c15e4d07fca
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 7 17:28:20 2008 +0100
+
+    cosmetic fix: make the output of LR(k) states a bit nicer
+
+commit 37436116fb2171c91536ad577c12dbf29e88c3d3
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 7 11:40:46 2008 +0000
+
+    prepare for Wisent release 0.3
+
 commit d720f94db6ad507f3c50848356ecc5c64cce6136
 Author: Jochen Voss <voss@seehuhn.de>
 Date:   Thu Mar 6 20:39:42 2008 +0100
