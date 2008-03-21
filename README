@@ -66,9 +66,9 @@ the generated parse trees (see the more detailed description below).
 
    Every symbol which occurs on the left hand side of a rule is a
 'non-terminal' symbol.  Every symbol which occurs in the expansion of
-a rule and is not a non-terminal symbol is considered to be 'terminal
-symbol'.  The non-terminal on the left hand side of the first grammar
-rule is used as the 'start symbol'.
+a rule and is not a non-terminal symbol is considered to be a
+'terminal symbol'.  The non-terminal on the left hand side of the
+first grammar rule is used as the 'start symbol'.
 
 Example 1.  A grammar to describe the syntax of the Wisent input files
 could look as follows.
@@ -93,7 +93,7 @@ Example 2.  Consider the following grammar file.
 	X: b | ;
 	Y: b | ;
 
-In the language described by this grammar for the input "a b c" the
+In the language described by this grammar, for the input "a b c" the
 symbol "b" could be either interpreted as "X" or as "Y".  The
 corresponding Wisent error message is as follows.
 
@@ -270,8 +270,8 @@ attributes:
 REFERENCES
 ==========
 
-   The algorithm to generated the parser is based on the method
-described in the following article.
+   The algorithm used in Wisent to generate the parser is based on the
+following article:
 
     * David Pager, A practical general method for constructing LR(k) parsers.
       Acta Informatica, volume 7 (1977), number 3, pages 249

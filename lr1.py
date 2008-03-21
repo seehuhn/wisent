@@ -54,7 +54,7 @@ class Automaton(object):
     def _is_compatible(S, T):
         """Check whether S and T can be merged.
 
-        This implements definition 1 (p. 254) from Pager, 1975."""
+        This implements definition 1 (p. 254) from Pager, 1977."""
         core = S.keys()
         if set(T.keys()) != set(core):
             return False
@@ -99,7 +99,7 @@ class Automaton(object):
         return res
 
     def _generate_tables(self):
-        """This implements the algorithm of Pager, 1975."""
+        """This implements the algorithm of Pager, 1977."""
         if self.tables_generated:
             return
 

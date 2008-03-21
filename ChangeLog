@@ -45,7 +45,7 @@ commit 343a1132a94b696b53a5aea4a0c86b142a023461
 Author: Jochen Voss <voss@seehuhn.de>
 Date:   Wed Mar 19 22:13:36 2008 +0000
 
-    Implement the LR(1) parser generator suggested by Pager (1975).
+    Implement the LR(1) parser generator suggested by Pager (1977).
     
     Since this method is an efficient way to generate parsers for general
     LR(1) grammars, remove all code to select different parser types.
