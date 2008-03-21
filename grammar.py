@@ -494,7 +494,7 @@ def _parse_grammar_file(fname):
     p = Parser(max_err=max_err)
     try:
         fd = open(fname)
-        tree = p.parse_tree(tokens(fd))
+        tree = p.parse(tokens(fd))
         fd.close()
         has_errors = False
     except SyntaxError, e:

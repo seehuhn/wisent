@@ -63,7 +63,7 @@ def check(rules, tests, parser_args={}):
     for input,e_tree,e_err in tests:
         print "input: "+repr(input)
         try:
-            tree = p.parse_tree((x,k) for k,x in enumerate(input))
+            tree = p.parse((x,k) for k,x in enumerate(input))
             err = []
         except p.ParseErrors, e:
             tree = e.tree

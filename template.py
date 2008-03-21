@@ -94,7 +94,7 @@ class Parser(object):
                 for t in Parser.leaves(x):
                     yield t
 
-    def _parse_tree(self, input, stack, state):
+    def _parse(self, input, stack, state):
         """Internal function to construct a parse tree.
 
         'Input' is the input token stream, 'stack' is the inital stack
@@ -188,7 +188,7 @@ class Parser(object):
                 break
         return count
 
-    def parse_tree(self, input):
+    def parse(self, input):
         """Parse the tokens from `input` and construct a parse tree.
 
         `input` must be an interable over tuples.  The first element
@@ -204,7 +204,7 @@ class Parser(object):
         stack = []
         state = 0
         while True:
-            done,_,state,lookahead = self._parse_tree(input, stack, state)
+            done,_,state,lookahead = self._parse(input, stack, state)
             if done:
                 break
 
@@ -231,7 +231,7 @@ class Parser(object):
                 queue.append(lookahead)
             in2 = split_input(self.m, stack, lookahead, input, queue)
             stack = []
-            done,_,state,lookahead = self._parse_tree(in2, stack, 0)
+            done,_,state,lookahead = self._parse(in2, stack, 0)
             m = len(queue)
             for i in range(0, self.n):
                 try:

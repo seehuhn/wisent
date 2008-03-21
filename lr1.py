@@ -550,6 +550,6 @@ class Automaton(object):
 
         write_block(fd, 4, getsource(template.Parser.__init__), params)
         write_block(fd, 4, getsource(template.Parser.leaves), params)
-        write_block(fd, 4, getsource(template.Parser._parse_tree), params)
+        write_block(fd, 4, getsource(template.Parser._parse), params)
         write_block(fd, 4, getsource(template.Parser._try_parse), params)
-        write_block(fd, 4, getsource(template.Parser.parse_tree), params)
+        write_block(fd, 4, getsource(template.Parser.parse), params)

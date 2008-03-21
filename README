@@ -96,7 +96,7 @@ use the generated parser as illustrated by the following code sniplet:
 
 	p = Parser()
 	try:
-	    tree = p.parse_tree(input)
+	    tree = p.parse(input)
 	except p.ParseErrors, e:
 	    # handle parse errors
 
@@ -104,7 +104,7 @@ use the generated parser as illustrated by the following code sniplet:
 
 'Parser' objects have the following attributes:
 
-    parse_tree(input)
+    parse(input)
 	A method to convert a given input into a parse tree.  See the
 	description below.
 
@@ -128,7 +128,7 @@ Parser Input
 ------------
 
    The input data to be parsed is given as the argument of the
-'parse_tree' method.  It must be an iterable, consisting of a sequence
+'parse' method.  It must be an iterable, consisting of a sequence
 of Python tuples and the first element of each tuple must be a
 terminal symbol of the grammar.  All other elements of the input
 tuples are copied into the output parse tree and are otherwise ignored
@@ -151,15 +151,15 @@ grammar file is fed into the parser.
 The Returned Parse Tree
 -----------------------
 
-   The 'parse_tree' method of a 'Parser' object returns a parse tree,
-as a collection of nested Python tuples.  A parse tree corresponding
-to a terminal symbol equals the corresponding tuple from the input
-data.  These can be recognised by the fact that the first element of
-the tuple is contained in the list 'terminals'.  All other trees
+   The 'parse' method of a 'Parser' object returns a parse tree, as a
+collection of nested Python tuples.  A parse tree corresponding to a
+terminal symbol equals the corresponding tuple from the input data.
+These can be recognised by the fact that the first element of the
+tuple is contained in the list 'terminals'.  All other trees
 correspond to grammar rules: they have a non-terminal symbol as the
 first element and the remaining elements are the parse trees for an
 expansion of this non-terminal.  The first element of the tree
-returned by 'parse_tree' is always the start symbol of the grammar.
+returned by 'parse' is always the start symbol of the grammar.
 
 Example 3.  The input from example 2 leads to the following parse
 tree:
