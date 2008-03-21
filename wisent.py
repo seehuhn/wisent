@@ -22,7 +22,7 @@ import sys
 
 from optparse import OptionParser
 
-from grammar import read_grammar, Conflicts
+from grammar import read_grammar
 from lr1 import Automaton
 from version import VERSION
 

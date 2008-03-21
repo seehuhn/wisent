@@ -500,6 +500,7 @@ class Automaton(object):
             fd.write(l+'\n')
         nt_tab = self.nt_tab
         transparent = params.get("transparent_tokens", set())
+        transparent &= self.g.nonterminals
         if self.replace_nonterminals:
             symbols = self.g.nonterminals-set([self.g.start])-transparent
             nonterminals = sorted(symbols)

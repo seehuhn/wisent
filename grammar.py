@@ -98,7 +98,7 @@ class Conflicts(Exception):
                 return
         self.list[data] = text
 
-    def print_conflicts(self, rules, rule_locations=None, fname=None):
+    def print_conflicts(self, rules, rule_locations={}, fname=None):
         """Print a human-readable description of the errors to stderr.
 
         `rules` must be a dictionary mapping rule indices to
@@ -116,10 +116,10 @@ class Conflicts(Exception):
             else:
                 tail = " ".join(r[1:])
             ee.append("    "+r[0]+": "+tail+";")
-            if rule_locations is None:
-                loc = (None,None)
-            else:
+            try:
                 loc = rule_locations[k][n]
+            except KeyError:
+                loc = (None,None)
             while ee:
                 msg = ee.pop(0)
                 _print_error(msg, loc[0], loc[1], fname=fname)
@@ -235,8 +235,8 @@ class Grammar(object):
         self.rule_from_head = {}
         for X in self.symbols:
             self.rule_from_head[X] = []
-        for k, s in self.rules.iteritems():
-            self.rule_from_head[s[0]].append((k,len(s)))
+        for k, rule in self.rules.iteritems():
+            self.rule_from_head[rule[0]].append((k,len(rule)))
 
         # precompute the set of all nullable symbols
         self.nullable = frozenset(self._compute_nbtab())
@@ -453,19 +453,19 @@ class Grammar(object):
             todo = still_todo
         return res
 
-    def write_terminals(self, fd, prefix=""):
+    def write_terminals(self, fd=sys.stdout, prefix=""):
         fd.write(prefix+"terminal symbols:\n")
         tt = map(repr, sorted(self.terminals-set([self.EOF])))
         for l in split_it(tt, padding=prefix+"  "):
             fd.write(l+"\n")
 
-    def write_nonterminals(self, fd, prefix=""):
+    def write_nonterminals(self, fd=sys.stdout, prefix=""):
         fd.write(prefix+"nonterminal symbols:\n")
         tt = map(repr, sorted(self.nonterminals-set([self.start])))
         for l in split_it(tt, padding=prefix+"  "):
             fd.write(l+"\n")
 
-    def write_productions(self, fd, prefix=""):
+    def write_productions(self, fd=sys.stdout, prefix=""):
         fd.write(prefix+"production rules:\n")
         keys = sorted(self.rules.keys())
         for key in keys:
@@ -542,7 +542,7 @@ def _parse_grammar_file(fname):
             _print_error("too many errors, giving up ...", fname=fname)
     return tree, has_errors
 
-def _extract_rules(tree, aux):
+def _extract_rules(tree, aux={}):
     """Extract the grammar rules from the parse tree.
 
     This generator yields the grammar rules one by one.  The special
@@ -554,12 +554,13 @@ def _extract_rules(tree, aux):
     for rule in tree[1:]:
         # rule[0] == 'rule'
         head = rule[1]
-        if not head:
-            # repaired trees have no payload
-            head = ('', )+rule[2][2:]
+        # rule[2] == (':', ...)
+        # repaired trees have no payload
+        if len(head)<2:
+            head = ('token', '')+rule[2][2:]
+
         if head[0] == "token" and head[1].startswith("_"):
             aux.add(head[1])
-        # rule[2] == (':', ...)
         for r in rule[3:]:
             if r[0] == "list":
                 tail = list(r[1:])
