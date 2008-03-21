@@ -51,18 +51,18 @@ def split_it(args, padding="", start1="", start2=None, sep=", ",
             line += sep+arg
     yield line
 
-def layout_list(prefix, bits, postfix):
-    output = prefix+", ".join(bits)+postfix
-    while len(output)>79:
-	try:
-	    i = output[:80].rindex(", ")
-	    yield output[:i+1]
-	    output = " "*len(prefix)+output[i+2:]
-	except:
-	    break
-    yield output
-
 def write_block(fd, indent, str, params={}, first=False):
+    """Write a multi-line string into a file.
+
+    This function re-indents `str` to level `indent`, removes leading
+    and trailing empty lines and white-space at the end of line,
+    expands all tabs, and writes the result to `fd`.
+
+    If `first` is False, a leading empty line is added.
+
+    Blocks between lines of the form '#@ IF cond' and '#@ ENDIF' are
+    removed if 'params[cond]' is not True.
+    """
     lines = [l.rstrip().expandtabs() for l in str.splitlines()]
     while lines and not lines[0]:
         del lines[0]
