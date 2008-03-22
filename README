@@ -41,6 +41,14 @@ stdout.  The program is typically called as follows:
 
 	wisent grammar.wi >parser.py
 
+Command Line Options
+--------------------
+
+  -o NAME       store output in NAME instead of printing to stdout
+  -e NAME       store example source code into NAME
+  -h            show a help message
+  -V            show version information
+
 Wisent Grammar Files
 --------------------
 

@@ -1,7 +1,8 @@
 ## Process this file with automake to produce Makefile.in
 # Copyright 2008  Jochen Voss
 
-EXTRA_DIST = wisent.py check.py grammar.wi cg.wi
+EXTRA_DIST = wisent.py check.py grammar.wi shift-reduce.wi	\
+	reduce-reduce.wi cg.wi
 BUILT_SOURCES = version.py
 
 bin_SCRIPTS = wisent

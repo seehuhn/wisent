@@ -1,3 +1,7 @@
+- new command line option -o to specify an output file (instead of stdout)
+- Wisent can now optionally generate example source code to illustrate use
+  of the generated parser (command line option -e).
+
 version 0.4 (2008-03-21):
 - efficiency improvements, both for the parser generator and for the
   generated parsers

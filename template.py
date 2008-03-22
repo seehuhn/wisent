@@ -30,6 +30,16 @@
 # otherwise) arising in any way out of the use of this software, even
 # if advised of the possibility of such damage.
 
+def print_tree(tree, terminals, indent=0):
+    """Print a parse tree to stdout."""
+    prefix = "    "*indent
+    if tree[0] in terminals:
+        print prefix+repr(tree)
+    else:
+        print prefix+tree[0]
+        for x in tree[1:]:
+            print_tree(x, terminals, indent+1)
+
 class Parser(object):
 
     """LR(1) parser class template.
