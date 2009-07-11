@@ -629,6 +629,117 @@ def _parse_grammar_file(fd, params={}):
                          fname=params.get("fname", None))
     return tree, has_errors
 
+def _fixup(tokens):
+    """Fix up the payload for repaired trees."""
+    terminals = [ 'token', 'string', ':', '|', ';', '*', '+', '!' ]
+
+    # find data for use in an initial stretch of damaged tokens
+    for i,r in enumerate(tokens):
+        if i == 0 or r[0] not in terminals:
+            continue
+        if len(r) > 1:
+            data = r[2:]
+            break
+    else:
+        data = ()
+
+    res = [ ]
+    for i,r in enumerate(tokens):
+        if i == 0 or r[0] not in terminals:
+            res.append(r)
+        elif len(r) > 1:
+            res.append(r)
+            data = r[2:]
+        else:
+            res.append((r[0], '['+r[0]+']')+data)
+    return tuple(res)
+
+class NameInventor(object):
+
+    def __init__(self):
+        self.idx = 0
+
+    def __call__(self, op):
+        if op == "(":
+            res = "_(%d)"%self.idx
+        elif op.isalnum():
+            res = "_%d%s."%(self.idx, op)
+        else:
+            res = "_%d%s"%(self.idx, op)
+        self.idx += 1
+        return res
+
+_invent = NameInventor()
+
+def _expand_globbing(head, tail, aux):
+    todo = []
+    force = []
+    i = 0
+    while i < len(tail):
+        x = tail[i]
+        if x[0] == 'group':
+            op = '('
+            newname = _invent(op)
+            aux.add(newname)
+            newhead = ('token',newname)+x[1][2:]
+            terminator = (';',';')+x[-1][2:]
+            todo.append((op,newhead)+x[2:-1]+(terminator,))
+            tail[i:i+1] = [ newhead ]
+
+        x = tail[i]
+        if i+1 < len(tail) and tail[i+1][0] in [ '?', '*', '+' ]:
+            op = tail[i+1][0]
+            newname = _invent(op)
+            aux.add(newname)
+            newhead = ('token',newname)+x[2:]
+            terminator = (';',';')+tail[i+1][2:]
+            todo.append((op,newhead,x)+(terminator,))
+            tail[i:i+2] = [ newhead ]
+
+        x = tail[i]
+        if x[0] == "!":
+            force.append(i)
+            del(tail[i])
+        else:
+            i += 1
+
+    yield [ x[1:] for x in [head]+tail ], force
+
+    for item in todo:
+        op = item[0]
+        head = item[1]
+        tail = item[2:]
+        if op == '(':
+            for r,force in _expand_alternatives(head, tail, aux):
+                yield r,force
+        elif op == '?':
+            assert len(tail) == 2
+            yield [ x[1:] for x in (head, tail[1]) ], []
+            yield [ x[1:] for x in (head, tail[0], tail[1]) ], []
+        elif op == '*':
+            assert len(tail) == 2
+            yield [ x[1:] for x in (head, tail[1]) ], []
+            yield [ x[1:] for x in (head, head, tail[0], tail[1]) ], []
+        elif op == '+':
+            assert len(tail) == 2
+            yield [ x[1:] for x in (head, tail[0], tail[1]) ], []
+            yield [ x[1:] for x in (head, head, tail[0], tail[1]) ], []
+
+def _expand_alternatives(head, tail, aux):
+    """Expand the "|" operator.
+
+    The value 'tail' must be of the form "list | ... | list ;".
+    """
+    for t in tail:
+        if t[0] == "list":
+            t = _fixup(t)
+            tail = list(t[1:])
+        else:
+            assert t[0] in [ '|', ';' ]
+            terminator = [ (';',';')+t[2:] ]
+            for r,force in _expand_globbing(head, tail+terminator, aux):
+                yield r,force
+
 def _extract_rules(tree, aux={}):
     """Extract the grammar rules from the parse tree.
 
@@ -639,59 +750,16 @@ def _extract_rules(tree, aux={}):
     'aux'.
     """
     for rule in tree[1:]:
-        # rule[0] == 'rule'
-        head = rule[1]
-        # rule[2] == (':', ...)
-        # repaired trees have no payload
-        if len(head)<2:
-            head = ('token', '')+rule[2][2:]
+        rule = _fixup(rule)
 
+        assert rule[0] == 'rule'
+        head = rule[1]
         if head[0] == "token" and head[1].startswith("_"):
             aux.add(head[1])
-        for r in rule[3:]:
-            if r[0] == "list":
-                tail = list(r[1:])
-                for i,x in enumerate(tail):
-                    if not x:
-                        # repaired trees have no payload
-                        tail[i] = ('', )+rule[2][2:]
-            else:
-                # at a '|' or ';'
-                res = [ head ]+tail+[ (';',';')+r[2:] ]
+        assert rule[2][0] == ':'
 
-                todo = []
-                for i in range(len(res)-2, 1, -1):
-                    y = res[i]
-                    if y[0] in [ '+', '*' ]:
-                        x = res[i-1]
-                        new = x[1]+y[0]
-                        if new not in aux:
-                            aux.add(new)
-                            todo.append((new,)+x[1:])
-                        res[i-1:i+1] = [ ('token',new)+x[2:] ]
-
-                force = []
-                i = 0
-                while i < len(res):
-                    x = res[i]
-                    if x[0] == "!":
-                        force.append(i)
-                        del(res[i])
-                    else:
-                        i += 1
-
-                yield [ x[1:] for x in res ], force
-                for x in todo:
-                    h = x[0]
-                    a = (h,)+x[2:]
-                    b = x[1:]
-                    c = (';',)+x[2:]
-                    if h[-1] == '+':
-                        yield [ a, b, c ], []
-                        yield [ a, a, b, c ], []
-                    elif h[-1] == '*':
-                        yield [ a, c ], []
-                        yield [ a, a, b, c ], []
+        for r, force in _expand_alternatives(head, rule[3:], aux):
+            yield r, force
 
 def read_grammar(fd, params={}, checkfunc=None):
     """Convert a grammar file into a `Grammar` object.
@@ -706,22 +774,149 @@ def read_grammar(fd, params={}, checkfunc=None):
     if tree is None:
         raise SystemExit(1)
 
-    def postprocess(rr, rule_locations, overrides):
+    def rules_by_head(rules):
+        A = {}
+        for r,f in rules:
+            head = r[0][0]
+            if head[0] != "_":
+                # no optimisations possible for user-visible symbols
+                continue
+            rhs = []
+            for x in r[1:]:
+                sym = x[0]
+                if sym == head:
+                    rhs.append(".")
+                else:
+                    rhs.append(sym)
+            A[head] = A.get(head,[]) + [tuple(rhs)]
+        return A
+
+    def substitute(rules, old_set, new):
+        res = []
+        for r,f in rules:
+            head = r[0]
+            if head[0] in old_set:
+                continue
+            tail = [ head ]
+            for x in r[1:]:
+                if x[0] in old_set:
+                    tail.append((new,)+x[1:])
+                else:
+                    tail.append(x)
+            res.append((tail,f))
+        return res
+
+    def splice(rules, old, new_seqences):
+        res = []
+        for r,f in rules:
+            head = r[0]
+            if head[0] == old:
+                continue
+
+            changed = False
+            for new_seq in new_seqences:
+                tail = [ head ]
+                for x in r[1:]:
+                    if x[0] == old:
+                        tail.extend(new_seq)
+                        changed = True
+                    else:
+                        tail.append(x)
+                res.append((tail,f))
+                if not changed:
+                    break
+        return res
+
+    def postprocess(rules, rule_locations, overrides):
         """Postprocess the output of `rules`
 
-        This removes trailing semi-colons and extracts the line number
+        This removes trailing semi-colons, removes duplicate rules,
+        optimises the ruleset, and extracts the line number
         information and the conflict override information.
         """
-        for k,r_f in enumerate(rr):
+
+        # remove semi-colons
+        rules = [ (r[:-1],f) for r,f in rules ]
+
+        changed = True
+        while changed:
+            changed = False
+
+            # step 1: remove duplicate rules
+            A = rules_by_head(rules)
+            B = {}
+            for head,rr in A.iteritems():
+                rr = frozenset(rr)
+                B[rr] = B.get(rr,[]) + [head]
+            for hh in B.itervalues():
+                if len(hh) < 2:
+                    continue
+                head = hh.pop()
+                rules = substitute(rules, hh, head)
+                changed = True
+
+            # step 2: expand rules which only occur once
+            # Expanding a rule changes the length of the ruleset
+            # as follows.
+            # 1) Removing a rule of length l removes l+1 tokens,
+            #    i.e. in total R = l1+...+lk+k tokens are removed.
+            # 2) Each replacement in a rule of length l adds
+            #    l+l1 + ... + l+lk - (l+1) = (k-1)*l + R-k - 1
+            #    tokens, i.e. in total
+            #    A = (k-1)*(l1+...+ln) + (R-k-1)*n tokens are added.
+            # 3) If the symbol occurs several times on the rhs of the
+            #    same rule, "many" new tokens appear.
+            repl = {}
+            for r,f in rules:
+                sym = r[0][0]
+                if sym[0] != "_":
+                    continue
+                if sym in repl:
+                    repl[sym].append(r[1:])
+                else:
+                    repl[sym] = [ r[1:] ]
+            rlength = {}
+            for r,f in rules:
+                seen = set()
+                for x in r[1:]:
+                    sym = x[0]
+                    if sym not in repl:
+                        continue
+                    if sym in seen or sym == r[0][0]:
+                        del repl[sym]
+                    seen.add(sym)
+                    if sym in rlength:
+                        rlength[sym].append(len(r[1:]))
+                    else:
+                        rlength[sym] = [ len(r[1:]) ]
+            savings = []
+            for sym,rr in repl.iteritems():
+                n = len(rlength[sym])
+                sn = sum(rlength[sym])
+                k = len(rr)
+                sk = sum(len(r) for r in rr)
+                n_remove = sk+k
+                n_add = (k-1)*sn + (sk-1)*n
+                if n_remove > n_add:
+                    savings.append((n_remove-n_add, sym))
+            if savings:
+                savings.sort()
+                delta,sym = savings[-1]
+                rules = splice(rules, sym, repl[sym])
+                changed = True
+
+        for k,r_f in enumerate(rules):
             r,force = r_f
             rule_locations[k] = tuple(x[1:] for x in r)
             overrides[k] = frozenset(force)
-            yield tuple(x[0] for x in r[:-1])
+            yield tuple(x[0] for x in r)
 
     aux = set()
+    rules = list(_extract_rules(tree, aux))
+
     rule_locations = {}
     overrides = {}
-    rr = postprocess(_extract_rules(tree, aux), rule_locations, overrides)
+    rr = postprocess(rules, rule_locations, overrides)
     params['transparent_tokens'] = aux
     params['overrides'] = overrides
 
