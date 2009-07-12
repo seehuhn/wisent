@@ -1,5 +1,5 @@
+- test the ! operator
 - write a proper manual page
-- add the ?-Operator (zero or one instances)
 - Extend the format of grammar files to allow for arbitrary
   (i.e. non-string) symbols in the generated parser.  Or allow for an
   alternative, Python-based input format.
@@ -13,7 +13,8 @@ rule index    --- k, key
 word, string, sequence
 (terminal, nonterminal) symbol, token    --- X
 symbols have "replacements", "expansions", "derivations"
-input: (type,value), (symbol, value)
+tranparent symbol: name starts with '_', doesn't appear in parse tree
+input: (type,value,data)    --- x
 parser state as a set    --- I, U
 item (rule with a dot)    --- item
 parser state as a number    --- state
