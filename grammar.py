@@ -32,13 +32,13 @@ def _print_error(msg, lineno=None, offset=None, fname=None):
     parts = []
     if fname is not None:
         parts.append("%s:"%fname)
-        if lineno is not None:
-            parts.append("%d:"%lineno)
-            if offset is not None:
-                parts.append("%d:"%offset)
-        prefix = "".join(parts)
     else:
-        prefix = "error:"
+        parts.append("error:")
+    if lineno is not None:
+        parts.append("%d:"%lineno)
+        if offset is not None:
+            parts.append("%d:"%offset)
+    prefix = "".join(parts)
     if prefix:
         prefix = prefix+" "
     print >>sys.stderr, prefix+str(msg)
@@ -456,6 +456,7 @@ class Grammar(object):
                     res[X] = word
                 else:
                     still_todo.add(X)
+            assert still_todo < todo
             todo = still_todo
         return res
 
@@ -739,18 +740,6 @@ def extract_rules(tree):
             res.append(r)
     return res
 
-def print_rules(rules, fd=None, prefix=""):
-    if fd is None:
-        fd = sys.stdout
-    for r in rules:
-        s = []
-        for x in r[:-1]:
-            if x[0] == 'token':
-                s.append(x[1])
-            else:
-                s.append('"%s"'%x[1])
-        fd.write(prefix+s[0]+': '+' '.join(s[1:])+'\n')
-
 def _rules_by_head(rules):
     A = {}
     head_repl = Unique("HEAD")
@@ -909,7 +898,7 @@ def read_grammar(fd, params={}, checkfunc=None):
     and the program is terminated.
     """
     fname = params.get("fname", None)
-    tree, has_errors = _parse_grammar_file(fd)
+    tree, has_errors = _parse_grammar_file(fd, params)
     if tree is None:
         raise SystemExit(1)
 
