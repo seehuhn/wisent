@@ -1,0 +1,177 @@
+.. _ch:parser:
+
+**************************************
+Documentation for the Generated Parser
+**************************************
+
+This chapter describes the python module emitted by Wisent.  See the
+:ref:`previous chapter <ch:wisent>` for information to about how to
+generate this output.
+
+
+The Parser class
+================
+
+The output of Wisent is a complete Python source file, implementing
+a single Python class :class:`Parser`.  The generated file can be used
+stand-alone and has no dependency on Wisent any more.
+
+Assuming you wrote Wisent's output to the file "parser.py", you can
+use the generated parser as illustrated by the following code sniplet::
+
+    from parser import Parser
+
+    input_data = some_iterable
+
+    p = Parser()
+    try:
+        tree = p.parse(input_data)
+    except p.ParseErrors, e:
+        handle_parse_errors(e.errors)
+
+    # now `tree` contains the parse tree
+
+:class:`Parser` objects have the following attributes:
+
+.. class:: Parser(max_err=None, errcorr_pre=4, errcorr_post=4)
+
+    This class implements the parser for input data in the form
+    described by the Wisent input grammar.
+
+    The constructor arguments control the handling of parse
+    errors: `max_err` can be given to bound the number of errors
+    reported during one run of the parser.  `errcorr_pre` controls
+    how many tokens before an invalid token the parser considers
+    when trying to repair the input.  `errcorr_post` controls how
+    far beyond an invalid token the parser reads when evaluating
+    the quality of an attempted repair.
+
+    .. method:: parse(input)
+
+        A method to convert a given input into a parse tree.  See the
+        description below.
+
+    .. attribute:: terminals
+
+        A Python list, containing all terminal symbols of the grammar.
+
+    .. method:: leaves(tree)
+
+        A generator to iterate over all leaves (corresponding to
+        terminal symbols) of a parse tree.  See the description of
+        parse trees below.
+
+    .. attribute:: ParseErrors
+
+        A reference to the :class:`ParseErrors` exception class.  This
+	allows you to use ``except Parser.ParseErrors`` clauses for
+	error handling.
+
+    .. attribute:: EOF
+
+        An object used internally to mark the end of input.  You might
+        encounter this in data attached to a :class:`ParseErrors`
+        exception.
+
+Parser Input
+============
+
+The input data to be parsed is given as the argument of the
+:meth:`Parser.parse` method.  It must be an iterable, consisting of a
+sequence of Python tuples and the first element of each tuple must be
+a terminal symbol of the grammar.  All other elements of the input
+tuples are copied into the output parse tree and are otherwise ignored
+by the parser; you can use them to attach semantic values to the
+symbols or to keep track of input line numbers for use in error
+messages.
+
+**Example 3.**  For a parser generated from the grammar given in example
+1, the following Python sequence is a valid input::
+
+    [ ( 'TOKEN', 'grammar' ),
+      ( ':', ),
+      ( 'TOKEN', 'rule' ),
+      ( '*', ),
+      ( ';', ) ]
+
+This input could, for example, occur when the first rule of the above
+grammar file is fed into the parser.
+
+Parse Trees
+===========
+
+The :meth:`Parser.parse` method returns a parse tree, as a collection
+of nested Python tuples.  A parse tree corresponding to a terminal
+symbol equals the corresponding tuple from the input data.  These can
+be recognised by the fact that the first element of the tuple is
+contained in the list 'terminals'.  All other trees correspond to
+grammar rules: they have a non-terminal symbol as the first element
+and the remaining elements are the parse trees for an expansion of
+this non-terminal.  The first element of the tree returned by
+:meth:`parse` is always the start symbol of the grammar.
+
+**Example 4.**  The input from example 3 leads to the following parse
+tree::
+
+    ('grammar',
+        ('rule',
+            ('TOKEN', 'grammar'),
+            (':',),
+            ('rhs',
+                ('list',
+                    ('item',
+                        ('tos',
+                            ('TOKEN', 'rule')),
+                        ('*',)))),
+            (';',)))
+
+In real applications parse trees often become deeply nested,
+because they contain many levels of "uninteresting" symbols like "rhs"
+and "tos" in example 3.  To ease processing of the resulting trees,
+Wisent generated parsers omit non-terminal whose names start with '_'.
+Instead of a sub-tree rooted at the non-terminal the children of the
+non-terminal are directly inserted into the containing tree.  This
+reduces the local nesting level by one.
+
+**Example 5.**  If we rename the non-terminals "rhs" to "_rhs", "tos" to
+"_tos" and "item" to "_item" in examples 1 and 3, the parse tree
+simplifies as follows::
+
+    ('grammar',
+        ('rule',
+            ('TOKEN', 'grammar'),
+            (':',),
+            ('list',
+                ('TOKEN', 'rule'),
+                ('*',)),
+            (';',)))
+
+Parse Errors
+============
+
+When a parse error is encountered, Wisent tries to "repair" the
+input in order to continue parsing so that as many parse errors as
+possible can be found in one run.  Repairs are attempted by inserting,
+deleting or changing a single token in a neighbourhood of the first
+un-parseable token.
+
+All parse errors are returned simultaneously by raising a
+:class:`ParseErrors` exception.
+
+.. exception:: ParseErrors
+
+    The exception object has the following two attributes:
+
+    .. attribute:: errors
+
+        A list of tuples, each describing one error.  Each tuple
+        consists of the first input token which could not be processed
+        and the list of terminal symbols which were allowed at this
+        point.  The list of allowed symbols might contain the special
+        value 'EOF' to indicate that an end of input was allowed at
+        this point.
+
+    .. attribute:: tree
+
+        is a "repaired" parse tree which might be used for further
+        error checking, or None if no repair was possible.

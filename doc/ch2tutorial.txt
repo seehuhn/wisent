@@ -1,0 +1,10 @@
+.. _ch:tutorial:
+
+********
+Tutorial
+********
+
+This chapter gives a complete example of a project implemented using
+the Wisent parser generator.
+
+.. literalinclude:: ../examples/calculator.wi

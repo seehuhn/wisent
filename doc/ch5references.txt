@@ -1,0 +1,18 @@
+**********
+References
+**********
+
+The algorithm used in Wisent to generate the parser is based on the
+following article:
+
+    * David Pager, A practical general method for constructing LR(k) parsers.
+      Acta Informatica, volume 7 (1977), number 3, pages 249
+
+More references are:
+
+    * Wikipedia has pages about `context free grammars`_, `LR parsers`_
+      and Wisents.
+
+.. _context free grammars: http://en.wikipedia.org/wiki/Context-free_grammar
+.. _LR parsers: http://en.wikipedia.org/wiki/LR_parser
+.. Wisents: http://en.wikipedia.org/wiki/Wisent

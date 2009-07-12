@@ -1,0 +1,38 @@
+Wisent Users' Manual
+====================
+
+When writing a computer program, implementing methods to read data
+from input files with a complex structure can be surprisingly
+difficult.  For example, if the input data comes from an untrusted
+source, errors in the input file often need to be dealt with very
+carefully.  If your program is written in Python and if the input data
+is sufficiently structured (i.e., if the format can be described by a
+`context free grammar`_, Wisent [#wisent]_ can help you to implement
+parts of the input processing of your program.
+
+.. _context free grammar: http://en.wikipedia.org/wiki/Context-free_grammar
+
+.. image:: wisent1500.jpg
+   :width: 100%
+
+This manual documents both the Wisent program and the Python code
+Wisent generates for your project.  The manual is structured as
+follows:
+
+.. toctree::
+   :numbered:
+
+   ch1intro
+   ch2tutorial
+   ch3wisent
+   ch4parser
+   ch5references
+
+
+
+
+.. [#wisent]
+  The photo shows a cave painting of a wisent in the cave of Altamira
+  in spain.  The image was taken from the `Wikimedia Commons
+  <http://commons.wikimedia.org/wiki/File:AltamiraBison.jpg>`_ and is
+  in the public domain.

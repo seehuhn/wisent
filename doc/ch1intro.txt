@@ -1,0 +1,94 @@
+************
+Introduction
+************
+
+Wisent is a parser generator for Python: Its input is a description of
+a data format in form of a context free grammar, its output is Python
+code to parse such data.
+
+
+Features
+========
+
+The parser generator (see :ref:`ch:wisent`) has the following
+features:
+
+  * Wisent can deal with general `LR(1) grammars`_.
+
+  * Provides helpful error messages: if there is a problem with the
+    input grammar, Wisent generates an example input string to
+    illustrate the problem.
+    
+  * The language to specify grammars allows use of the '?' (optional
+    elements) '*' (zero or more copies) and '+' (one or more copies)
+    operators.
+
+  * Written in Python.
+
+  * Wisent is distributed under the terms of the GNU General Public
+    License (GPL) version 2.
+
+.. _LR(1) grammars: http://en.wikipedia.org/wiki/LR_parser
+
+The generated parsers (see :ref:`ch:parser`) have the following
+features:
+
+  * The generated parser is stand-alone, i.e. you can add the
+    generated parser to your project without adding Wisent to the
+    project dependencies.
+
+  * The generated parser is implemented as a Python class.
+
+  * Automatic error repair and good error reporting: on invalid
+    input, the generated parser tries to fix the problem to allow
+    continuing the parsing process. At the end of parsing, all
+    detected errors are reported together.
+
+  * A call to the parser returns a parse tree. Wisent can create
+    parsers which omit "uninteresting" nodes from the generated
+    tree.
+
+  * The generated parsers can be distributed under the `3-clause BSD
+    license`_. Since this license is compatible with the GPL, you can
+    of course use the generated parsers in GPL projects.
+
+.. _3-clause BSD license: http://www.fsf.org/licensing/licenses/#ModifiedBSD
+
+
+About the Name
+==============
+
+I called the program "Wisent" because the first parser generator I
+encountered was Bison_ and the Wisent_ is the
+European variant of the Bison.  Unfortunately, I learned later that
+there are at least two other parser generators which use the name
+"Wisent":
+
+  * `Wisent by Thomas B. Preußer
+    <http://sourceforge.net/projects/wisent/>`_: a Parser Generator
+    for C++ and Java implemented in C++.
+
+  * `Wisent by David Ponce
+    <http://cedet.sourceforge.net/semantic.shtml>`_: one of the
+    components of the "Semantic" package for emacs.
+
+.. _Bison: http://www.gnu.org/software/bison/
+.. _Wisent: http://en.wikipedia.org/wiki/Wisent
+
+
+Download and Copying
+====================
+
+You can download Wisent freely from the `Wisent homepage
+<http://seehuhn.de/pages/wisent>`_.  Wisent comes with *no warranty*,
+to the extent permitted by law.  You may redistribute copies of Wisent
+under the terms of the GNU General Public License.  For more
+information about these matters, read the file COPYING of the source
+code distribution.
+
+Contact
+=======
+
+Please email any suggestions and bug reports to `Jochen Voss
+<voss@seehuhn.de>`_.  Your message should include the Wisent version
+number, as obtained by the command :command:`wisent -V`.
