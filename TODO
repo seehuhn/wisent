@@ -1,4 +1,5 @@
 - test the ! operator
+- fix wisent to deal with "examples/crash.wi"
 - write a proper manual page
 - Extend the format of grammar files to allow for arbitrary
   (i.e. non-string) symbols in the generated parser.  Or allow for an
