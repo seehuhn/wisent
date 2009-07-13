@@ -36,7 +36,7 @@ def print_tree(tree, terminals, indent=0):
     if tree[0] in terminals:
         print prefix + repr(tree)
     else:
-        print prefix + tree[0]
+        print prefix + str(tree[0])
         for x in tree[1:]:
             print_tree(x, terminals, indent+1)
 

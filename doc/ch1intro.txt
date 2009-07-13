@@ -2,23 +2,47 @@
 Introduction
 ************
 
-Wisent is a parser generator for Python: Its input is a description of
-a data format in form of a context free grammar, its output is Python
-code to parse such data.
+When writing a computer program, implementing methods to read data
+from input files with a complex structure can be surprisingly
+difficult.  For example, if the input data comes from an untrusted
+source, errors in the input file often need to be dealt with very
+carefully.  If your program is written in Python and if the input data
+is sufficiently structured (*i.e.*, if the format can be described by
+a `context free grammar`_, Wisent\ [#wisentpic]_ can help you to
+implement parts of the input processing of your program.  This manual
+documents both Wisent release |release|, and the Python code this
+Wisent release can generate for your project.
+
+.. _context free grammar: http://en.wikipedia.org/wiki/Context-free_grammar
+
+.. index::
+   single: Wisent
+
+.. image:: wisent1500.jpg
+   :width: 100%
+
+.. [#wisentpic]
+   The photo shows a cave painting of a wisent in the cave of Altamira
+   in spain.  The image was taken from the `Wikimedia Commons
+   <http://commons.wikimedia.org/wiki/File:AltamiraBison.jpg>`_ and is
+   in the public domain.
 
 
-Features
-========
 
-The parser generator (see :ref:`ch:wisent`) has the following
-features:
+What is Wisent?
+===============
+
+Wisent is a parser generator for Python.  Its input is a description
+of a data format in form of a context free grammar, its output is
+Python code to parse such data.  The parser generator (see
+:ref:`ch:wisent`) has the following features:
 
   * Wisent can deal with general `LR(1) grammars`_.
 
   * Provides helpful error messages: if there is a problem with the
     input grammar, Wisent generates an example input string to
     illustrate the problem.
-    
+
   * The language to specify grammars allows use of the '?' (optional
     elements) '*' (zero or more copies) and '+' (one or more copies)
     operators.
@@ -76,6 +100,9 @@ there are at least two other parser generators which use the name
 .. _Wisent: http://en.wikipedia.org/wiki/Wisent
 
 
+.. index::
+   single: download
+
 Download and Copying
 ====================
 
@@ -86,9 +113,11 @@ under the terms of the GNU General Public License.  For more
 information about these matters, read the file COPYING of the source
 code distribution.
 
+
 Contact
 =======
 
-Please email any suggestions and bug reports to `Jochen Voss
-<voss@seehuhn.de>`_.  Your message should include the Wisent version
-number, as obtained by the command :command:`wisent -V`.
+Please email any suggestions and bug reports to the program's author,
+`Jochen Voss <voss@seehuhn.de>`_.  Your message should include the
+Wisent version number, as obtained by the command :command:`wisent
+-V`.

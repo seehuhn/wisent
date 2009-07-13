@@ -75,6 +75,14 @@ use the generated parser as illustrated by the following code sniplet::
         encounter this in data attached to a :class:`ParseErrors`
         exception.
 
+The parser class is always called :class:`Parser`.  In order to use
+parsers for several different grammars in one project, you should
+write the parsers to different files and then import then as in the
+following example::
+
+    from parser1 import Parser as Parser1
+    from parser2 import Parser as Parser2
+
 
 Parser Input
 ============
@@ -88,17 +96,23 @@ by the parser; you can use them to attach semantic values to the
 symbols or to keep track of input line numbers for use in error
 messages.
 
-**Example 3.**  For a parser generated from the grammar given in example
-1, the following Python sequence is a valid input::
 
-    [ ( 'TOKEN', 'grammar' ),
+**Example 4.** For a parser generated from the grammar given in
+:ref:`example 1 <ex:1>`, the following Python sequence is a valid
+input::
+
+    [ ( 'token', 'grammar' ),
       ( ':', ),
-      ( 'TOKEN', 'rule' ),
+      ( 'token', 'rule' ),
       ( '*', ),
       ( ';', ) ]
 
-This input could, for example, occur when the first rule of the above
-grammar file is fed into the parser.
+
+Normally, the parser input is obtained by "tokenizing" a string.  You
+can either use a generator function, or you can store the result of
+tokenization in a list and then pass this list to
+:meth:`Parser.parse`.  See the section :ref:`sec:tokenizer` in the
+tutorial for an example of the second approach.
 
 
 .. _sec:tree:
@@ -106,51 +120,73 @@ grammar file is fed into the parser.
 Parse Trees
 ===========
 
-The :meth:`Parser.parse` method returns a parse tree, as a collection
-of nested Python tuples.  A parse tree corresponding to a terminal
-symbol equals the corresponding tuple from the input data.  These can
-be recognised by the fact that the first element of the tuple is
-contained in the list 'terminals'.  All other trees correspond to
-grammar rules: they have a non-terminal symbol as the first element
-and the remaining elements are the parse trees for an expansion of
-this non-terminal.  The first element of the tree returned by
-:meth:`parse` is always the start symbol of the grammar.
+The :meth:`Parser.parse` method returns a parse tree.  The definition
+of the tree is recursive, using tuples to represent sub-trees.
+There are two cases:
 
-**Example 4.**  The input from example 3 leads to the following parse
+  * A parse tree corresponding to a terminal symbol equals the
+    corresponding tuple from the input data.  These nodes form the
+    leaves of the parse tree; they can be recognised by the fact that
+    the first element of the tuple is contained in the list
+    :attr:`Parser.terminals`.
+
+  * All other tuples are inner nodes of the tree, they correspond to
+    grammar rules.  These tuples have a non-terminal symbol as the
+    first element.  The remaining elements, are the sub-trees
+    corresponding to the items on the right-hand side of the
+    corresponding rule.
+
+The complete tree is thus a collection of nested Python tuples.  The
+first element of the tree returned by :meth:`Parser.parse` is always
+the start symbol of the grammar.  Following these recursive rules, the
+function ``print_tree`` from the example code in section
+:ref:`sec:examplerun` of the tutorial can be used to display a parse
+tree.
+
+
+**Example 5.** The input from example 4 (we ignore the special role of
+symbols starting with ``_`` for a moment) leads to the following parse
 tree::
 
     ('grammar',
         ('rule',
-            ('TOKEN', 'grammar'),
+            ('token', 'grammar'),
             (':',),
-            ('rhs',
+            ('_alternatives',
                 ('list',
-                    ('item',
-                        ('tos',
-                            ('TOKEN', 'rule')),
-                        ('*',)))),
+                    ('_item',
+                        ('token', 'rule')),
+                    ('*',))),
             (';',)))
 
-In real applications parse trees often become deeply nested,
-because they contain many levels of "uninteresting" symbols like "rhs"
-and "tos" in example 3.  To ease processing of the resulting trees,
-Wisent generated parsers omit non-terminal whose names start with '_'.
-Instead of a sub-tree rooted at the non-terminal the children of the
-non-terminal are directly inserted into the containing tree.  This
-reduces the local nesting level by one.
 
-**Example 5.**  If we rename the non-terminals "rhs" to "_rhs", "tos" to
-"_tos" and "item" to "_item" in examples 1 and 3, the parse tree
-simplifies as follows::
+.. _sec:transparent:
+
+Transparent Symbols
+===================
+
+In real applications, parse trees often are deeply nested because they
+contain many levels of "uninteresting" symbols like ``_alternatives``
+in example 5.  To ease processing of the resulting trees, Wisent
+generated parsers omit non-terminal symbols whose names start with an
+underscore '_'.  The children of the non-terminal are directly
+inserted into the containing tree, replacing the sub-tree.  Each such
+substitution reduces the local nesting level by one.  Since these
+special symbols cannot be seen in the resulting parse tree, they are
+called *transparent symbols*.
+
+Following these rules, the "real" parse tree generated in example 5
+will be as follows::
 
     ('grammar',
         ('rule',
-            ('TOKEN', 'grammar'),
+            ('token', 'grammar'),
             (':',),
             ('list',
-                ('TOKEN', 'rule'),
+                ('token', 'rule'),
                 ('*',)),
             (';',)))
+
 
 Parse Errors
 ============
@@ -174,10 +210,10 @@ All parse errors are returned simultaneously by raising a
         consists of the first input token which could not be processed
         and the list of terminal symbols which were allowed at this
         point.  The list of allowed symbols might contain the special
-        value 'EOF' to indicate that an end of input was allowed at
-        this point.
+        value :attr:`Parser.EOF` to indicate that an end of input was
+        allowed at this point.
 
     .. attribute:: tree
 
-        is a "repaired" parse tree which might be used for further
+        A "repaired" parse tree which might be used for further
         error checking, or None if no repair was possible.

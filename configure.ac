@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl Copyright 2008  Jochen Voss
+dnl Copyright 2008, 2009  Jochen Voss
 
 AC_INIT(wisent, 0.4, voss@seehuhn.de)
 AM_INIT_AUTOMAKE

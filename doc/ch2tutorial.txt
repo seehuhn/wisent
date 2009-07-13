@@ -9,6 +9,9 @@ the Wisent parser generator.  Here we will implement a simple
 calculator.
 
 
+.. index::
+   single: grammar file
+
 Creating The Grammar File
 =========================
 
@@ -20,8 +23,12 @@ grammar.
 
 This file describes the structure of the input for our calculator.
 The format of grammar files is describes in the section
-:ref:`sec:grammar`.
+:ref:`sec:grammar`.  The reason for the fact that some symbol names
+are prefixed by ``_`` is explained in the section about
+:ref:`sec:transparent`.
 
+
+.. _sec:examplerun:
 
 Running Wisent
 ==============
@@ -38,6 +45,9 @@ use pythons introspection abilities, *e.g.* by calling :command:`pydoc
 parser` on the command line.  The generated parser is described in
 more detail in the section :ref:`sec:parser`.
 
+.. index::
+   single: print_tree()
+
 The ``-e`` option instructs Wisent to generate example code in the
 file :file:`calc.py`.  This code will not be useful in itself, but
 it serves as an illustration of how to use the generated parser.
@@ -53,7 +63,7 @@ It looks as follows::
         if tree[0] in terminals:
             print prefix + repr(tree)
         else:
-            print prefix + tree[0]
+            print prefix + str(tree[0])
             for x in tree[1:]:
                 print_tree(x, terminals, indent+1)
 
@@ -106,6 +116,8 @@ The program just outputs the parse tree returned by ``p.parse``::
 		('/',)
 		('NUMBER',)
 
+
+.. _sec:tokenizer:
 
 Adding a Tokenizer
 ==================

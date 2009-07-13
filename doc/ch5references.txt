@@ -5,18 +5,39 @@ References
 The algorithm used in Wisent to generate the parser is based on the
 following article:
 
-    * David Pager, A practical general method for constructing LR(k) parsers.
-      Acta Informatica, volume 7 (1977), number 3, pages 249
+  * David Pager, *A practical general method for constructing LR(k)
+    parsers*.  Acta Informatica, volume 7 (1977), number 3, pages 249-268,
+    DOI `10.1007/BF00290336`_.
+
+    .. _10.1007/BF00290336: http://dx.doi.org/10.1007/BF00290336
 
 More references are:
 
-    * Wikipedia has pages about `context free grammars`_, `LR parsers`_
-      and Wisents.
+  * Wikipedia has articles about `context free grammars`_, `LR
+    parsers`_ and Wisents_.
 
     .. _context free grammars: http://en.wikipedia.org/wiki/Context-free_grammar
     .. _LR parsers: http://en.wikipedia.org/wiki/LR_parser
-    .. Wisents: http://en.wikipedia.org/wiki/Wisent
+    .. _Wisents: http://en.wikipedia.org/wiki/Wisent
 
-    * The Bison_ parser generator.
+  * The first edition of the book *Parsing Techniques --- A
+    Practical Guide* by Dick Grune and Ceriel J.H. Jacobs is
+    `available online`_.
+
+    .. _available online: http://www.cs.vu.nl/~dick/PTAPG.html
+
+  * The Bison_ parser generator is a good parser generator for C and
+    C++ projects.  Bison comes with an excellent manual.
 
     .. _Bison: http://www.gnu.org/software/bison/
+
+  * The LanguageParsing_ entry on wiki.python.org_ lists other
+    Python parser generators.
+
+    .. _LanguageParsing: http://wiki.python.org/moin/LanguageParsing
+    .. _wiki.python.org: http://wiki.python.org/
+
+  * Xkcd `knows regular expressions`_.
+
+    .. _knows regular expressions: http://xkcd.com/208/
+
