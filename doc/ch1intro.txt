@@ -33,7 +33,7 @@ features:
 The generated parsers (see :ref:`ch:parser`) have the following
 features:
 
-  * The generated parser is stand-alone, i.e. you can add the
+  * The generated parser is stand-alone, *i.e.* you can add the
     generated parser to your project without adding Wisent to the
     project dependencies.
 

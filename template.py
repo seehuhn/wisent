@@ -34,9 +34,9 @@ def print_tree(tree, terminals, indent=0):
     """Print a parse tree to stdout."""
     prefix = "    "*indent
     if tree[0] in terminals:
-        print prefix+repr(tree)
+        print prefix + repr(tree)
     else:
-        print prefix+tree[0]
+        print prefix + tree[0]
         for x in tree[1:]:
             print_tree(x, terminals, indent+1)
 

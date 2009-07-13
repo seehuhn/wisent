@@ -1,9 +1,0 @@
-expr: additive ;
-additive: additive '+' multiplicative
-        | additive '-' multiplicative ;
-multiplicative: multiplicative '*' primary
-	      | multiplicative '/' primary ;
-primary: NUMBER
-       | '(' expr ')' ;
-       | function ;
-function: SYMBOL '(' expr ')' ;

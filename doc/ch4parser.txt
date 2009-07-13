@@ -9,6 +9,8 @@ This chapter describes the python module emitted by Wisent.  See the
 generate this output.
 
 
+.. _sec:parser:
+
 The Parser class
 ================
 
@@ -73,6 +75,7 @@ use the generated parser as illustrated by the following code sniplet::
         encounter this in data attached to a :class:`ParseErrors`
         exception.
 
+
 Parser Input
 ============
 
@@ -96,6 +99,9 @@ messages.
 
 This input could, for example, occur when the first rule of the above
 grammar file is fed into the parser.
+
+
+.. _sec:tree:
 
 Parse Trees
 ===========

@@ -6,7 +6,7 @@ from input files with a complex structure can be surprisingly
 difficult.  For example, if the input data comes from an untrusted
 source, errors in the input file often need to be dealt with very
 carefully.  If your program is written in Python and if the input data
-is sufficiently structured (i.e., if the format can be described by a
+is sufficiently structured (*i.e.*, if the format can be described by a
 `context free grammar`_, Wisent [#wisent]_ can help you to implement
 parts of the input processing of your program.
 

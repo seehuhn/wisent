@@ -227,9 +227,14 @@ class Grammar(object):
 
         if "start" in kwargs:
             self.start = kwargs["start"]
-            if self.start not in self.nonterminals:
-                msg = "start symbol %s is not a nonterminal"%repr(self.start)
-                raise RulesError(msg)
+
+        if self.start[0] == "_":
+            msg = "start symbol '%s' is transparent"%repr(self.start)
+            raise RulesError(msg)
+
+        if self.start not in self.nonterminals:
+            msg = "start symbol '%s' is not a nonterminal"%repr(self.start)
+            raise RulesError(msg)
 
         self.terminals = self.symbols - self.nonterminals
         if cleanup:
@@ -468,7 +473,9 @@ class Grammar(object):
 
     def write_nonterminals(self, fd=sys.stdout, prefix=""):
         fd.write(prefix+"nonterminal symbols:\n")
-        tt = map(repr, sorted(self.nonterminals-set([self.start])))
+        all = self.nonterminals
+        symbols = [ x for x in all-set([self.start]) if str(x)[0] != '_' ]
+        tt = map(repr, sorted(symbols))
         for l in split_it(tt, padding=prefix+"  "):
             fd.write(l+"\n")
 
@@ -529,6 +536,8 @@ class Grammar(object):
         if 'fname' in params:
             fd.write("# source: %(fname)s\n"%params)
 
+        fd.write('\n')
+        fd.write('from sys import stderr\n')
         fd.write('\n')
         fd.write('from %s import Parser\n'%parser)
 
@@ -903,6 +912,15 @@ def read_grammar(fd, params={}, checkfunc=None):
         raise SystemExit(1)
 
     rules = extract_rules(tree)
+    if not rules:
+        _print_error("no rules found", fname=fname)
+        raise SystemExit(1)
+    start = rules[0][0]
+    if start[1].startswith("_"):
+        _print_error("start symbol '%s' is transparent"%start[1],
+                     start[2], start[3], fname=fname)
+        raise SystemExit(1)
+
     rules = optimise_rules(rules)
 
     rule_locations = {}

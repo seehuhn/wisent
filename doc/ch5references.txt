@@ -13,6 +13,10 @@ More references are:
     * Wikipedia has pages about `context free grammars`_, `LR parsers`_
       and Wisents.
 
-.. _context free grammars: http://en.wikipedia.org/wiki/Context-free_grammar
-.. _LR parsers: http://en.wikipedia.org/wiki/LR_parser
-.. Wisents: http://en.wikipedia.org/wiki/Wisent
+    .. _context free grammars: http://en.wikipedia.org/wiki/Context-free_grammar
+    .. _LR parsers: http://en.wikipedia.org/wiki/LR_parser
+    .. Wisents: http://en.wikipedia.org/wiki/Wisent
+
+    * The Bison_ parser generator.
+
+    .. _Bison: http://www.gnu.org/software/bison/
