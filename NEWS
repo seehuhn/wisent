@@ -1,3 +1,5 @@
+version 0.5:
+- add a user manual
 - allow brackets "(" ... ")" for grouping in grammar files
 - new operator "?" (zero or one copy of an expression) in grammar files
 - new command line option -o to specify an output file (instead of stdout)

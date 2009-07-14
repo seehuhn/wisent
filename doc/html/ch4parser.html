@@ -1,0 +1,318 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Documentation for the Generated Parser &mdash; Wisent Users&#39; Manual</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.4',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Wisent Users&#39; Manual" href="index.html" />
+    <link rel="next" title="References" href="ch5references.html" />
+    <link rel="prev" title="Documentation for Wisent" href="ch3wisent.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="ch5references.html" title="References"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ch3wisent.html" title="Documentation for Wisent"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Wisent Users&#39; Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="documentation-for-the-generated-parser">
+<span id="ch-parser"></span><h1>Documentation for the Generated Parser<a class="headerlink" href="#documentation-for-the-generated-parser" title="Permalink to this headline">¶</a></h1>
+<p>This chapter describes the python module emitted by Wisent.  See the
+<a class="reference" href="ch3wisent.html#ch-wisent"><em>previous chapter</em></a> for information to about how to
+generate this output.</p>
+<div class="section" id="the-parser-class">
+<span id="sec-parser"></span><h2>The Parser class<a class="headerlink" href="#the-parser-class" title="Permalink to this headline">¶</a></h2>
+<p>The output of Wisent is a complete Python source file, implementing
+a single Python class <a title="Parser" class="reference" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a>.  The generated file can be used
+stand-alone and has no dependency on Wisent any more.</p>
+<p>Assuming you wrote Wisent&#8217;s output to the file <tt class="docutils literal"><span class="pre">parser.py</span></tt>, you
+can use the generated parser as illustrated by the following code
+sniplet:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">parser</span> <span class="k">import</span> <span class="n">Parser</span>
+
+<span class="n">input_data</span> <span class="o">=</span> <span class="n">some_iterable</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">Parser</span><span class="p">()</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">p</span><span class="o">.</span><span class="n">ParseErrors</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">handle_parse_errors</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
+
+<span class="c"># now `tree` contains the parse tree</span>
+</pre></div>
+</div>
+<p><a title="Parser" class="reference" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a> objects have the following attributes:</p>
+<dl class="class">
+<dt id="Parser">
+<em class="property">
+class </em><tt class="descname">Parser</tt><big>(</big><em>max_err=None</em>, <em>errcorr_pre=4</em>, <em>errcorr_post=4</em><big>)</big><a class="headerlink" href="#Parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class implements the parser for input data in the form
+described by the Wisent input grammar.</p>
+<p>The constructor arguments control the handling of parse
+errors: <cite>max_err</cite> can be given to bound the number of errors
+reported during one run of the parser.  <cite>errcorr_pre</cite> controls
+how many tokens before an invalid token the parser considers
+when trying to repair the input.  <cite>errcorr_post</cite> controls how
+far beyond an invalid token the parser reads when evaluating
+the quality of an attempted repair.</p>
+<dl class="method">
+<dt id="Parser.parse">
+<tt class="descname">parse</tt><big>(</big><em>input</em><big>)</big><a class="headerlink" href="#Parser.parse" title="Permalink to this definition">¶</a></dt>
+<dd>A method to convert a given input into a parse tree.  See the
+description below.</dd></dl>
+
+<dl class="attribute">
+<dt id="Parser.terminals">
+<tt class="descname">terminals</tt><a class="headerlink" href="#Parser.terminals" title="Permalink to this definition">¶</a></dt>
+<dd>A Python list, containing all terminal symbols of the grammar.</dd></dl>
+
+<dl class="method">
+<dt id="Parser.leaves">
+<tt class="descname">leaves</tt><big>(</big><em>tree</em><big>)</big><a class="headerlink" href="#Parser.leaves" title="Permalink to this definition">¶</a></dt>
+<dd>A generator to iterate over all leaves (corresponding to
+terminal symbols) of a parse tree.  See the description of
+parse trees below.</dd></dl>
+
+<dl class="attribute">
+<dt id="Parser.ParseErrors">
+<tt class="descname">ParseErrors</tt><a class="headerlink" href="#Parser.ParseErrors" title="Permalink to this definition">¶</a></dt>
+<dd>A reference to the <a title="ParseErrors" class="reference" href="#ParseErrors"><tt class="xref docutils literal"><span class="pre">ParseErrors</span></tt></a> exception class.  This
+allows you to use <tt class="docutils literal"><span class="pre">except</span> <span class="pre">Parser.ParseErrors</span></tt> clauses for
+error handling.</dd></dl>
+
+<dl class="attribute">
+<dt id="Parser.EOF">
+<tt class="descname">EOF</tt><a class="headerlink" href="#Parser.EOF" title="Permalink to this definition">¶</a></dt>
+<dd>An object used internally to mark the end of input.  You might
+encounter this in data attached to a <a title="ParseErrors" class="reference" href="#ParseErrors"><tt class="xref docutils literal"><span class="pre">ParseErrors</span></tt></a>
+exception.</dd></dl>
+
+</dd></dl>
+
+<p>The parser class is always called <a title="Parser" class="reference" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a>.  In order to use
+parsers for several different grammars in one project, you should
+write the parsers to different files and then import then as in the
+following example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">parser1</span> <span class="k">import</span> <span class="n">Parser</span> <span class="k">as</span> <span class="n">Parser1</span>
+<span class="k">from</span> <span class="nn">parser2</span> <span class="k">import</span> <span class="n">Parser</span> <span class="k">as</span> <span class="n">Parser2</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="parser-input">
+<h2>Parser Input<a class="headerlink" href="#parser-input" title="Permalink to this headline">¶</a></h2>
+<p>The input data to be parsed is given as the argument of the
+<a title="Parser.parse" class="reference" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a> method.  It must be an iterable, consisting of a
+sequence of Python tuples and the first element of each tuple must be
+a terminal symbol of the grammar.  All other elements of the input
+tuples are copied into the output parse tree and are otherwise ignored
+by the parser; you can use them to attach semantic values to the
+symbols or to keep track of input line numbers for use in error
+messages.</p>
+<p><strong>Example 4.</strong> For a parser generated from the grammar given in
+<a class="reference" href="ch3wisent.html#ex-1"><em>example 1</em></a>, the following Python sequence is a valid
+input:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span> <span class="p">(</span> <span class="s">&#39;token&#39;</span><span class="p">,</span> <span class="s">&#39;grammar&#39;</span> <span class="p">),</span>
+  <span class="p">(</span> <span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="p">),</span>
+  <span class="p">(</span> <span class="s">&#39;token&#39;</span><span class="p">,</span> <span class="s">&#39;rule&#39;</span> <span class="p">),</span>
+  <span class="p">(</span> <span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="p">),</span>
+  <span class="p">(</span> <span class="s">&#39;;&#39;</span><span class="p">,</span> <span class="p">)</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>Normally, the parser input is obtained by &#8220;tokenizing&#8221; a string.  You
+can either use a generator function, or you can store the result of
+tokenization in a list and then pass this list to
+<a title="Parser.parse" class="reference" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a>.  See the section <a class="reference" href="ch2tutorial.html#sec-tokenizer"><em>Adding a Tokenizer</em></a> in the
+tutorial for an example of the second approach.</p>
+</div>
+<div class="section" id="parse-trees">
+<span id="sec-tree"></span><h2>Parse Trees<a class="headerlink" href="#parse-trees" title="Permalink to this headline">¶</a></h2>
+<p>The <a title="Parser.parse" class="reference" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a> method returns a parse tree.  The definition
+of the tree is recursive, using tuples to represent sub-trees.
+There are two cases:</p>
+<blockquote>
+<ul class="simple">
+<li>A parse tree corresponding to a terminal symbol equals the
+corresponding tuple from the input data.  These nodes form the
+leaves of the parse tree; they can be recognised by the fact that
+the first element of the tuple is contained in the list
+<a title="Parser.terminals" class="reference" href="#Parser.terminals"><tt class="xref docutils literal"><span class="pre">Parser.terminals</span></tt></a>.</li>
+<li>All other tuples are inner nodes of the tree, they correspond to
+grammar rules.  These tuples have a non-terminal symbol as the
+first element.  The remaining elements, are the sub-trees
+corresponding to the items on the right-hand side of the
+corresponding rule.</li>
+</ul>
+</blockquote>
+<p>The complete tree is thus a collection of nested Python tuples.  The
+first element of the tree returned by <a title="Parser.parse" class="reference" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a> is always
+the start symbol of the grammar.  Following these recursive rules, the
+function <tt class="docutils literal"><span class="pre">print_tree</span></tt> from the example code in section
+<a class="reference" href="ch2tutorial.html#sec-examplerun"><em>Running Wisent</em></a> of the tutorial can be used to display a parse
+tree.</p>
+<p><strong>Example 5.</strong> The input from example 4 (we ignore the special role of
+symbols starting with <tt class="docutils literal"><span class="pre">_</span></tt> for a moment) leads to the following parse
+tree:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="s">&#39;grammar&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="s">&#39;rule&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s">&#39;token&#39;</span><span class="p">,</span> <span class="s">&#39;grammar&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">,),</span>
+        <span class="p">(</span><span class="s">&#39;_alternatives&#39;</span><span class="p">,</span>
+            <span class="p">(</span><span class="s">&#39;list&#39;</span><span class="p">,</span>
+                <span class="p">(</span><span class="s">&#39;_item&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s">&#39;token&#39;</span><span class="p">,</span> <span class="s">&#39;rule&#39;</span><span class="p">)),</span>
+                <span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">,))),</span>
+        <span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">,)))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="transparent-symbols">
+<span id="sec-transparent"></span><h2>Transparent Symbols<a class="headerlink" href="#transparent-symbols" title="Permalink to this headline">¶</a></h2>
+<p>In real applications, parse trees often are deeply nested because they
+contain many levels of &#8220;uninteresting&#8221; symbols like <tt class="docutils literal"><span class="pre">_alternatives</span></tt>
+in example 5.  To ease processing of the resulting trees, Wisent
+generated parsers omit non-terminal symbols whose names start with an
+underscore &#8216;_&#8217;.  The children of the non-terminal are directly
+inserted into the containing tree, replacing the sub-tree.  Each such
+substitution reduces the local nesting level by one.  Since these
+special symbols cannot be seen in the resulting parse tree, they are
+called <em>transparent symbols</em>.</p>
+<p>Following these rules, the &#8220;real&#8221; parse tree generated in example 5
+will be as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="s">&#39;grammar&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="s">&#39;rule&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s">&#39;token&#39;</span><span class="p">,</span> <span class="s">&#39;grammar&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">,),</span>
+        <span class="p">(</span><span class="s">&#39;list&#39;</span><span class="p">,</span>
+            <span class="p">(</span><span class="s">&#39;token&#39;</span><span class="p">,</span> <span class="s">&#39;rule&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">,)),</span>
+        <span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">,)))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="parse-errors">
+<h2>Parse Errors<a class="headerlink" href="#parse-errors" title="Permalink to this headline">¶</a></h2>
+<p>When a parse error is encountered, Wisent tries to &#8220;repair&#8221; the
+input in order to continue parsing so that as many parse errors as
+possible can be found in one run.  Repairs are attempted by inserting,
+deleting or changing a single token in a neighbourhood of the first
+un-parseable token.</p>
+<p>All parse errors are returned simultaneously by raising a
+<a title="ParseErrors" class="reference" href="#ParseErrors"><tt class="xref docutils literal"><span class="pre">ParseErrors</span></tt></a> exception.</p>
+<dl class="exception">
+<dt id="ParseErrors">
+<em class="property">
+exception </em><tt class="descname">ParseErrors</tt><a class="headerlink" href="#ParseErrors" title="Permalink to this definition">¶</a></dt>
+<dd><p>The exception object has the following two attributes:</p>
+<dl class="attribute">
+<dt id="ParseErrors.errors">
+<tt class="descname">errors</tt><a class="headerlink" href="#ParseErrors.errors" title="Permalink to this definition">¶</a></dt>
+<dd>A list of tuples, each describing one error.  Each tuple
+consists of the first input token which could not be processed
+and the list of terminal symbols which were allowed at this
+point.  The list of allowed symbols might contain the special
+value <a title="Parser.EOF" class="reference" href="#Parser.EOF"><tt class="xref docutils literal"><span class="pre">Parser.EOF</span></tt></a> to indicate that an end of input was
+allowed at this point.</dd></dl>
+
+<dl class="attribute">
+<dt id="ParseErrors.tree">
+<tt class="descname">tree</tt><a class="headerlink" href="#ParseErrors.tree" title="Permalink to this definition">¶</a></dt>
+<dd>A &#8220;repaired&#8221; parse tree which might be used for further
+error checking, or None if no repair was possible.</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference" href="">Documentation for the Generated Parser</a><ul>
+<li><a class="reference" href="#the-parser-class">The Parser class</a></li>
+<li><a class="reference" href="#parser-input">Parser Input</a></li>
+<li><a class="reference" href="#parse-trees">Parse Trees</a></li>
+<li><a class="reference" href="#transparent-symbols">Transparent Symbols</a></li>
+<li><a class="reference" href="#parse-errors">Parse Errors</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="ch3wisent.html"
+                                  title="previous chapter">Documentation for Wisent</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="ch5references.html"
+                                  title="next chapter">References</a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="ch5references.html" title="References"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ch3wisent.html" title="Documentation for Wisent"
+             >previous</a> |</li>
+        <li><a href="index.html">Wisent Users&#39; Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009, Jochen Voss.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.2.
+    </div>
+  </body>
+</html>

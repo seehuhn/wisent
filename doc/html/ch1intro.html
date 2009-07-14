@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; Wisent Users&#39; Manual</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.4',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Wisent Users&#39; Manual" href="index.html" />
+    <link rel="next" title="Tutorial" href="ch2tutorial.html" />
+    <link rel="prev" title="Contents" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="ch2tutorial.html" title="Tutorial"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Contents"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Wisent Users&#39; Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>When writing a computer program, implementing methods to read data
+from input files with a complex structure can be surprisingly
+difficult.  For example, if the input data comes from an untrusted
+source, errors in the input file often need to be dealt with very
+carefully.  If your program is written in Python and if the input data
+is sufficiently structured (<em>i.e.</em>, if the format can be described by
+a <a class="reference" href="http://en.wikipedia.org/wiki/Context-free_grammar">context free grammar</a>, Wisent<a class="footnote-reference" href="#wisentpic" id="id1" name="id1">[1]</a> can help you to
+implement parts of the input processing of your program.  This manual
+documents both Wisent release 0.4, and the Python code this
+Wisent release can generate for your project.</p>
+<img alt="_images/wisent1500.jpg" id="index-0" name="index-0" src="_images/wisent1500.jpg" style="width: 100%;" />
+<table class="docutils footnote" frame="void" id="wisentpic" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1" name="wisentpic">[1]</a></td><td>The photo shows a cave painting of a wisent in the cave of Altamira
+in spain.  The image was taken from the <a class="reference" href="http://commons.wikimedia.org/wiki/File:AltamiraBison.jpg">Wikimedia Commons</a> and is
+in the public domain.</td></tr>
+</tbody>
+</table>
+<div class="section" id="what-is-wisent">
+<h2>What is Wisent?<a class="headerlink" href="#what-is-wisent" title="Permalink to this headline">¶</a></h2>
+<p>Wisent is a parser generator for Python.  Its input is a description
+of a data format in form of a context free grammar, its output is
+Python code to parse such data.  The parser generator (see
+<a class="reference" href="ch3wisent.html#ch-wisent"><em>Documentation for Wisent</em></a>) has the following features:</p>
+<blockquote>
+<ul class="simple">
+<li>Wisent can deal with general <a class="reference" href="http://en.wikipedia.org/wiki/LR_parser">LR(1) grammars</a>.</li>
+<li>Provides helpful error messages: if there is a problem with the
+input grammar, Wisent generates an example input string to
+illustrate the problem.</li>
+<li>The language to specify grammars allows use of the &#8216;?&#8217; (optional
+elements) &#8216;*&#8217; (zero or more copies) and &#8216;+&#8217; (one or more copies)
+operators.</li>
+<li>Written in Python.</li>
+<li>Wisent is distributed under the terms of the GNU General Public
+License (GPL) version 2.</li>
+</ul>
+</blockquote>
+<p>The generated parsers (see <a class="reference" href="ch4parser.html#ch-parser"><em>Documentation for the Generated Parser</em></a>) have the following
+features:</p>
+<blockquote>
+<ul class="simple">
+<li>The generated parser is stand-alone, <em>i.e.</em> you can add the
+generated parser to your project without adding Wisent to the
+project dependencies.</li>
+<li>The generated parser is implemented as a Python class.</li>
+<li>Automatic error repair and good error reporting: on invalid
+input, the generated parser tries to fix the problem to allow
+continuing the parsing process. At the end of parsing, all
+detected errors are reported together.</li>
+<li>A call to the parser returns a parse tree. Wisent can create
+parsers which omit &#8220;uninteresting&#8221; nodes from the generated
+tree.</li>
+<li>The generated parsers can be distributed under the <a class="reference" href="http://www.fsf.org/licensing/licenses/#ModifiedBSD">3-clause BSD
+license</a>. Since this license is compatible with the GPL, you can
+of course use the generated parsers in GPL projects.</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="about-the-name">
+<h2>About the Name<a class="headerlink" href="#about-the-name" title="Permalink to this headline">¶</a></h2>
+<p>I called the program &#8220;Wisent&#8221; because the first parser generator I
+encountered was <a class="reference" href="http://www.gnu.org/software/bison/">Bison</a> and the <a class="reference" href="http://en.wikipedia.org/wiki/Wisent">Wisent</a> is the
+European variant of the Bison.  Unfortunately, I learned later that
+there are at least two other parser generators which use the name
+&#8220;Wisent&#8221;:</p>
+<blockquote>
+<ul class="simple">
+<li><a class="reference" href="http://sourceforge.net/projects/wisent/">Wisent by Thomas B. Preußer</a>: a Parser Generator
+for C++ and Java implemented in C++.</li>
+<li><a class="reference" href="http://cedet.sourceforge.net/semantic.shtml">Wisent by David Ponce</a>: one of the
+components of the &#8220;Semantic&#8221; package for emacs.</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="download-and-copying">
+<span id="index-1"></span><h2>Download and Copying<a class="headerlink" href="#download-and-copying" title="Permalink to this headline">¶</a></h2>
+<p>You can download Wisent freely from the <a class="reference" href="http://seehuhn.de/pages/wisent">Wisent homepage</a>.  Wisent comes with <em>no warranty</em>,
+to the extent permitted by law.  You may redistribute copies of Wisent
+under the terms of the GNU General Public License.  For more
+information about these matters, read the file COPYING of the source
+code distribution.</p>
+</div>
+<div class="section" id="contact">
+<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
+<p>Please email any suggestions and bug reports to the program&#8217;s author,
+<a class="reference" href="mailto:voss&#37;&#52;&#48;seehuhn&#46;de">Jochen Voss</a>.  Your message should include the
+Wisent version number, as obtained by the command <strong>wisent
+-V</strong>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference" href="">Introduction</a><ul>
+<li><a class="reference" href="#what-is-wisent">What is Wisent?</a></li>
+<li><a class="reference" href="#about-the-name">About the Name</a></li>
+<li><a class="reference" href="#download-and-copying">Download and Copying</a></li>
+<li><a class="reference" href="#contact">Contact</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="index.html"
+                                  title="previous chapter">Contents</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="ch2tutorial.html"
+                                  title="next chapter">Tutorial</a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="ch2tutorial.html" title="Tutorial"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Contents"
+             >previous</a> |</li>
+        <li><a href="index.html">Wisent Users&#39; Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009, Jochen Voss.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.2.
+    </div>
+  </body>
+</html>

@@ -29,6 +29,8 @@ from lr1 import Automaton
 testdir = mkdtemp()
 sys.path = [testdir] + sys.path
 
+errors = 0
+
 
 class FakeEOF(object):
 
@@ -37,6 +39,9 @@ class FakeEOF(object):
 
     def __eq__(self, other):
         return other == self.EOF
+
+    def __hash__(self):
+        return hash(self.EOF)
 
     def __repr__(self):
         return "EOF"
@@ -61,6 +66,8 @@ def check(rules, tests, parser_args={}):
     EOF.set_real_eof(p.EOF)
 
     for input,e_tree,e_err in tests:
+        e_err = [ (x[0], frozenset(x[1])) for x in e_err ]
+
         print "input: "+repr(input)
         try:
             tree = p.parse((x,k) for k,x in enumerate(input))
@@ -68,6 +75,7 @@ def check(rules, tests, parser_args={}):
         except p.ParseErrors, e:
             tree = e.tree
             err = e.errors
+            err = [ (x[0], frozenset(x[1])) for x in err ]
 
         success = True
         for e in e_err:
@@ -84,7 +92,12 @@ def check(rules, tests, parser_args={}):
             print "    got: "+repr(tree)
             success = False
 
-        print success and "  success" or "  failure"
+        if success:
+            print "  success"
+        else:
+            print "  failure"
+            global errors
+            errors += 1
     try:
         remove(join(testdir,"tmp.py"))
         remove(join(testdir,"tmp.pyc"))
@@ -173,3 +186,6 @@ tests = [
 check(rules, tests, {'errcorr_post':3})
 
 rmdir(testdir)
+
+if errors:
+    raise SystemExit(1)

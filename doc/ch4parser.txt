@@ -18,8 +18,9 @@ The output of Wisent is a complete Python source file, implementing
 a single Python class :class:`Parser`.  The generated file can be used
 stand-alone and has no dependency on Wisent any more.
 
-Assuming you wrote Wisent's output to the file "parser.py", you can
-use the generated parser as illustrated by the following code sniplet::
+Assuming you wrote Wisent's output to the file :file:`parser.py`, you
+can use the generated parser as illustrated by the following code
+sniplet::
 
     from parser import Parser
 
