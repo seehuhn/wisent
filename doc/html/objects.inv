@@ -1,6 +1,6 @@
 # Sphinx inventory version 1
 # Project: wisent
-# Version: 0.4
+# Version: 0.5
 ParseErrors.tree attribute ch4parser.html
 Parser.parse method ch4parser.html
 ParseErrors.errors attribute ch4parser.html

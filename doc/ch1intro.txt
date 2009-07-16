@@ -44,7 +44,7 @@ Python code to parse such data.  The parser generator (see
     illustrate the problem.
 
   * The language to specify grammars allows use of the '?' (optional
-    elements) '*' (zero or more copies) and '+' (one or more copies)
+    elements), '*' (zero or more copies) and '+' (one or more copies)
     operators.
 
   * Written in Python.
