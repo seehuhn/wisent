@@ -74,7 +74,7 @@ term
   | STRING S* | IDENT S* | URI S* | hexcolor | function
   ;
 function
-  : IDENT '(' S* expr ')' S*
+  : FUNCTION S* expr ')' S*
   ;
 hexcolor
   : HASH S*

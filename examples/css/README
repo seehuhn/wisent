@@ -1,0 +1,26 @@
+A parser for CSS files
+======================
+
+FILES
+-----
+
+    css.wi:     the CSS grammar, a slightly modified version of the grammar
+                found at
+                http://www.w3.org/TR/CSS2/grammar.html
+
+    scanner.py: a naive (not very efficient) implementation
+                of the tokenizing rules from
+                http://www.w3.org/TR/CSS2/grammar.html
+
+    readcss.py: sligthly edited version of the "wisent -e" output
+
+USAGE
+-----
+
+To run this example, first generate the parser:
+
+    wisent -o parser.py css.wi
+
+and then run the main program as follows:
+
+    ./readcss <somefile.css>
