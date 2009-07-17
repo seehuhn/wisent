@@ -8,7 +8,7 @@ BUILT_SOURCES = version.py
 
 bin_SCRIPTS = wisent
 pkgpython_PYTHON = grammar.py lr1.py scanner.py parser.py text.py	\
-	template.py version.py
+	helpers.py template.py version.py
 
 TESTS = check.py
 

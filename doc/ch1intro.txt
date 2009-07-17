@@ -44,7 +44,7 @@ Python code to parse such data.  The parser generator (see
     illustrate the problem.
 
   * The language to specify grammars allows use of the ``?`` (optional
-    elements) ``*`` (zero or more copies) and ``+`` (one or more
+    elements), ``*`` (zero or more copies) and ``+`` (one or more
     copies) operators.
 
   * Wisent is distributed under the terms of the GNU General Public

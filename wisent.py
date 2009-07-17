@@ -25,6 +25,7 @@ from optparse import OptionParser
 
 from grammar import read_grammar
 from lr1 import Automaton
+from helpers import open_executable
 from version import VERSION
 
 ######################################################################
@@ -129,7 +130,7 @@ else:
 if f_ex is not None:
     params.setdefault("example_name", f_ex)
     try:
-        fd = open(f_ex, "w")
+        fd = open_executable(f_ex, "w")
         a.g.write_example(fd, params)
         fd.close()
     except IOError, e:
