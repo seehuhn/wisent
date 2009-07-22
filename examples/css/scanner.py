@@ -119,7 +119,9 @@ def tokens(text):
             best_val = text[0]
             best_len = 1
         s, text = text[:best_len], text[best_len:]
-        yield (best_val, s, line, pos)
+
+        if best_val is not None:
+            yield (best_val, s, line, pos)
 
         if '\n' in s:
             for c in s:

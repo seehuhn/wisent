@@ -8,7 +8,7 @@ difficult.  For example, if the input data comes from an untrusted
 source, errors in the input file often need to be dealt with very
 carefully.  If your program is written in Python and if the input data
 is sufficiently structured (*i.e.*, if the format can be described by
-a `context free grammar`_, Wisent\ [#wisentpic]_ can help you to
+a `context free grammar`_), Wisent\ [#wisentpic]_ can help you to
 implement parts of the input processing of your program.  This manual
 documents both Wisent release |release|, and the Python code this
 Wisent release can generate for your project.
