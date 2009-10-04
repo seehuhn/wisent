@@ -58,7 +58,7 @@ stand-alone and has no dependency on Wisent any more.</p>
 <p>Assuming you wrote Wisent&#8217;s output to the file <tt class="docutils literal"><span class="pre">parser.py</span></tt>, you
 can use the generated parser as illustrated by the following code
 sniplet:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">parser</span> <span class="k">import</span> <span class="n">Parser</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">parser</span> <span class="kn">import</span> <span class="n">Parser</span>
 
 <span class="n">input_data</span> <span class="o">=</span> <span class="n">some_iterable</span>
 
@@ -78,13 +78,13 @@ sniplet:</p>
 class </em><tt class="descname">Parser</tt><big>(</big><em>max_err=None</em>, <em>errcorr_pre=4</em>, <em>errcorr_post=4</em><big>)</big><a class="headerlink" href="#Parser" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class implements the parser for input data in the form
 described by the Wisent input grammar.</p>
-<p>The constructor arguments control the handling of parse
-errors: <cite>max_err</cite> can be given to bound the number of errors
-reported during one run of the parser.  <cite>errcorr_pre</cite> controls
-how many tokens before an invalid token the parser considers
-when trying to repair the input.  <cite>errcorr_post</cite> controls how
-far beyond an invalid token the parser reads when evaluating
-the quality of an attempted repair.</p>
+<p>The constructor arguments are all optional, they control the
+handling of parse errors: <cite>max_err</cite> can be given to bound the
+number of errors reported during one run of the parser.
+<cite>errcorr_pre</cite> controls how many tokens before an invalid token the
+parser considers when trying to repair the input.  <cite>errcorr_post</cite>
+controls how far beyond an invalid token the parser reads when
+evaluating the quality of an attempted repair.</p>
 <dl class="method">
 <dt id="Parser.parse">
 <tt class="descname">parse</tt><big>(</big><em>input</em><big>)</big><a class="headerlink" href="#Parser.parse" title="Permalink to this definition">¶</a></dt>
@@ -121,10 +121,10 @@ exception.</dd></dl>
 
 <p>The parser class is always called <a title="Parser" class="reference" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a>.  In order to use
 parsers for several different grammars in one project, you should
-write the parsers to different files and then import then as in the
+write the parsers to different files and then import them as in the
 following example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">parser1</span> <span class="k">import</span> <span class="n">Parser</span> <span class="k">as</span> <span class="n">Parser1</span>
-<span class="k">from</span> <span class="nn">parser2</span> <span class="k">import</span> <span class="n">Parser</span> <span class="k">as</span> <span class="n">Parser2</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">parser1</span> <span class="kn">import</span> <span class="n">Parser</span> <span class="k">as</span> <span class="n">Parser1</span>
+<span class="kn">from</span> <span class="nn">parser2</span> <span class="kn">import</span> <span class="n">Parser</span> <span class="k">as</span> <span class="n">Parser2</span>
 </pre></div>
 </div>
 </div>
@@ -168,7 +168,7 @@ the first element of the tuple is contained in the list
 <a title="Parser.terminals" class="reference" href="#Parser.terminals"><tt class="xref docutils literal"><span class="pre">Parser.terminals</span></tt></a>.</li>
 <li>All other tuples are inner nodes of the tree, they correspond to
 grammar rules.  These tuples have a non-terminal symbol as the
-first element.  The remaining elements, are the sub-trees
+first element.  The remaining elements are the sub-trees
 corresponding to the items on the right-hand side of the
 corresponding rule.</li>
 </ul>
