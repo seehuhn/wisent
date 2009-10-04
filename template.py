@@ -78,13 +78,14 @@ class Parser(object):
     def __init__(self, max_err=None, errcorr_pre=4, errcorr_post=4):
         """Create a new parser instance.
 
-        The constructor arguments control the handling of parse
-        errors: `max_err` can be given to bound the number of errors
-        reported during one run of the parser.  `errcorr_pre` controls
-        how many tokens before an invalid token the parser considers
-        when trying to repair the input.  `errcorr_post` controls how
-        far beyond an invalid token the parser reads when evaluating
-        the quality of an attempted repair.
+        The constructor arguments are all optional, they control the
+        handling of parse errors: `max_err` can be given to bound the
+        number of errors reported during one run of the parser.
+        `errcorr_pre` controls how many tokens before an invalid token
+        the parser considers when trying to repair the input.
+        `errcorr_post` controls how far beyond an invalid token the
+        parser reads when evaluating the quality of an attempted
+        repair.
         """
         self.max_err = max_err
         self.m = errcorr_pre

@@ -41,13 +41,13 @@ sniplet::
     This class implements the parser for input data in the form
     described by the Wisent input grammar.
 
-    The constructor arguments control the handling of parse
-    errors: `max_err` can be given to bound the number of errors
-    reported during one run of the parser.  `errcorr_pre` controls
-    how many tokens before an invalid token the parser considers
-    when trying to repair the input.  `errcorr_post` controls how
-    far beyond an invalid token the parser reads when evaluating
-    the quality of an attempted repair.
+    The constructor arguments are all optional, they control the
+    handling of parse errors: `max_err` can be given to bound the
+    number of errors reported during one run of the parser.
+    `errcorr_pre` controls how many tokens before an invalid token the
+    parser considers when trying to repair the input.  `errcorr_post`
+    controls how far beyond an invalid token the parser reads when
+    evaluating the quality of an attempted repair.
 
     .. method:: parse(input)
 
@@ -78,7 +78,7 @@ sniplet::
 
 The parser class is always called :class:`Parser`.  In order to use
 parsers for several different grammars in one project, you should
-write the parsers to different files and then import then as in the
+write the parsers to different files and then import them as in the
 following example::
 
     from parser1 import Parser as Parser1
@@ -133,7 +133,7 @@ There are two cases:
 
   * All other tuples are inner nodes of the tree, they correspond to
     grammar rules.  These tuples have a non-terminal symbol as the
-    first element.  The remaining elements, are the sub-trees
+    first element.  The remaining elements are the sub-trees
     corresponding to the items on the right-hand side of the
     corresponding rule.
 
