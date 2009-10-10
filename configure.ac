@@ -7,5 +7,5 @@ AM_INIT_AUTOMAKE
 dnl Python support
 AM_PATH_PYTHON
 
-AC_CONFIG_FILES([Makefile doc/Makefile examples/Makefile])
+AC_CONFIG_FILES([Makefile doc/Makefile examples/Makefile examples/css/Makefile])
 AC_OUTPUT

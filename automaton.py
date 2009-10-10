@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# automaton.py - the Automaton class
 #
 # Copyright (C) 2008  Jochen Voss <voss@seehuhn.de>
 #

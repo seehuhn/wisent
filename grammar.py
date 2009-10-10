@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# grammar.py - the Grammar class and related code
 #
 # Copyright (C) 2008  Jochen Voss <voss@seehuhn.de>
 #

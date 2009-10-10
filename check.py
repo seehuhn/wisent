@@ -23,7 +23,7 @@ from os.path import join
 from tempfile import mkdtemp
 
 from grammar import Grammar
-from lr1 import Automaton
+from automaton import Automaton
 
 
 testdir = mkdtemp()

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# text.py - utilities for text handling
 #
 # Copyright (C) 2008  Jochen Voss <voss@seehuhn.de>
 #

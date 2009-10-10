@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# scanner.py - tokenize Wisent's input
 #
 # Copyright (C) 2008  Jochen Voss <voss@seehuhn.de>
 #

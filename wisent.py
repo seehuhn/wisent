@@ -24,7 +24,7 @@ from os.path import basename
 from optparse import OptionParser
 
 from grammar import read_grammar
-from lr1 import Automaton
+from automaton import Automaton
 from helpers import open_executable
 from version import VERSION
 

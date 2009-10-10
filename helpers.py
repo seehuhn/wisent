@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# helpers.py - Wisent helper functions
 #
 # Copyright (C) 2009  Jochen Voss <voss@seehuhn.de>
 #
