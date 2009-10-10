@@ -32,5 +32,7 @@ def open_executable(fname, mode='r', bufsize=-1):
         flags |= os.O_RDONLY
     if "a" in mode:
         flags |= os.O_APPEND
+    else:
+        flags |= os.O_TRUNC
     fd = os.open(fname, flags, 0777)
     return os.fdopen(fd, mode, bufsize)
