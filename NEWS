@@ -1,4 +1,9 @@
-version 0.5:
+version 0.6 (2009-10-11):
+- allow UTF-8 encoded grammar files
+- add a new example (a CSS parser in examples/css/)
+- minor bug fixes
+
+version 0.5 (2009-07-14):
 - add a user manual
 - allow brackets "(" ... ")" for grouping in grammar files
 - new operator "?" (zero or one copy of an expression) in grammar files

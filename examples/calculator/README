@@ -1,0 +1,11 @@
+A Simple Calculator
+===================
+
+This is the example which is discussed in the tutorial section of the
+Wisent manual.  To run this example, first generate the parser:
+
+    wisent -o parser.py calculator.wi
+
+and then run the main program as follows:
+
+    ./calc.py

@@ -63,12 +63,14 @@ It looks as follows::
         if tree[0] in terminals:
             print prefix + repr(tree)
         else:
-            print prefix + str(tree[0])
+            print prefix + unicode(tree[0])
             for x in tree[1:]:
                 print_tree(x, terminals, indent+1)
 
-    input = [ ('NUMBER',), ('-',), ('SYMBOL',), ('(',), ('NUMBER',), (')',),
-              ('/',), ('NUMBER',) ]
+    input = [ ('NUMBER',), ('/',), ('SYMBOL',), ('(',), ('NUMBER',), ('*',),
+              ('NUMBER',), ('+',), ('NUMBER',), ('/',), ('NUMBER',), (')',),
+              ('*',), ('SYMBOL',), ('(',), ('NUMBER',), ('-',), ('NUMBER',),
+              ('-',), ('NUMBER',), (')',) ]
 
     p = Parser()
     try:

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2008  Jochen Voss <voss@seehuhn.de>
+# Copyright (C) 2008, 2009  Jochen Voss <voss@seehuhn.de>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
