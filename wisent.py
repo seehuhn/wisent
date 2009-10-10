@@ -58,7 +58,7 @@ if options.help_flag:
     raise SystemExit(0)
 if options.version_flag:
     print """wisent %s
-Copyright (C) 2008 Jochen Voss <voss@seehuhn.de>
+Copyright (C) 2008, 2009 Jochen Voss <voss@seehuhn.de>
 Wisent comes with ABSOLUTELY NO WARRANTY, to the extent
 permitted by law.  You may redistribute copies of Wisent under
 the terms of the GNU General Public License.  For more
