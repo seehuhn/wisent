@@ -41,7 +41,7 @@ def _print_error(msg, lineno=None, offset=None, fname=None):
     prefix = "".join(parts)
     if prefix:
         prefix = prefix+" "
-    print >>sys.stderr, prefix+str(msg)
+    print >>sys.stderr, prefix+unicode(msg)
 
 class RulesError(Exception):
 
@@ -602,7 +602,7 @@ def _parse_grammar_file(fd, params={}):
                 continue
 
             def quote(x):
-                s = str(x)
+                s = unicode(x)
                 if not s.isalpha():
                     s = "'"+s+"'"
                 return s

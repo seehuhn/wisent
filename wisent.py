@@ -90,23 +90,26 @@ params["replace_nonterminals"] = options.replace_flag
 ######################################################################
 # read the grammar
 
-def check(g, params):
-    a = Automaton(g, params)
-    a.check()
-    return a
-
 if f_in is None:
-    a = read_grammar(sys.stdin, params, check)
+    text = sys.stdin.read()
 else:
     params.setdefault("fname", f_in)
     try:
-        fd = open(f_in, "r")
-        a = read_grammar(fd, params, check)
+        fd = open(f_in, "rb")
+        text = fd.read()
         fd.close()
     except IOError, e:
         msg = '%s: error while reading "%s": %s'%(f_in, f_in, e.strerror)
         print >>sys.stderr, msg
         raise SystemExit(1)
+
+def check(g, params):
+    a = Automaton(g, params)
+    a.check()
+    return a
+
+a = read_grammar(unicode(text, "utf-8").splitlines(), params, check)
+del text
 
 ######################################################################
 # emit the parser

@@ -19,7 +19,8 @@ Describing the Format of your Input
 
 Wisent grammar files are used to describe the format of the input your
 program has to read.  By convention these files have names ending in
-".wi".
+".wi".  If the grammar file contains non-ASCII characters, it must be
+UTF-8 encoded.
 
   * A grammar file consist of a sequence of rules.
 

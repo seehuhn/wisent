@@ -16,6 +16,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+def isascii(s):
+    return all(ord(c)<128 for c in s)
+
+def conv(s):
+    if isinstance(s, unicode) and isascii(s):
+        return str(s)
+    else:
+        return s
+
 def tokens(source):
     """Generator to read input and break it into tokens.
 
@@ -42,13 +51,13 @@ def tokens(source):
                 if c.isalnum() or c == "_":
                     s += c
                 else:
-                    yield ("token", s, line0, col0)
+                    yield ("token", conv(s), line0, col0)
                     state = None
             elif state == "string":
                 if c == '\\':
                     state = "quote"
                 elif c == sep:
-                    yield ("string", s, line0, col0)
+                    yield ("string", conv(s), line0, col0)
                     state = "skip"
                 else:
                     s += c
@@ -77,12 +86,12 @@ def tokens(source):
                 elif c.isspace():
                     state = "skip"
                 else:
-                    yield (c, c, line0, col0)
+                    yield (conv(c), conv(c), line0, col0)
                     state = "skip"
         line += 1
 
     if state == "word":
-	yield ("token", s, line0, col0)
+	yield ("token", conv(s), line0, col0)
     elif state not in [ None, "skip", "comment" ]:
         if l[-1] == '\n':
             l = l[:-1]
