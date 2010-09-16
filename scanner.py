@@ -50,7 +50,7 @@ def tokens(source):
             if state == "skip":
                 state = None
             elif state == "word":
-                if c.isalnum() or c == "_":
+                if c.isalnum() or c in "-_":
                     s += c
                 else:
                     yield ("token", conv(s), line0, col0)
