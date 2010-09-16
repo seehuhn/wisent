@@ -271,7 +271,7 @@ class Automaton(object):
         self._generate_tables()
 
         conflicts = Conflicts()
-        shortcuts = self.g.shortcuts()
+        shortcuts = None
         nt_tab = self.nt_tab
 
         rtab = {}
@@ -312,6 +312,8 @@ class Automaton(object):
                         else:
                             res.add(('R', action[1]))
                     res = tuple(sorted(res))
+                    if shortcuts is None:
+                        shortcuts = self.g.shortcuts()
                     text = tuple(" ".join(repr(Y) for Y in shortcuts[Z])
                                  for Z in word)
                     conflicts.add(res, text)
