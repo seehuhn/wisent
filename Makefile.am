@@ -1,5 +1,5 @@
 ## Process this file with automake to produce Makefile.in
-# Copyright 2008  Jochen Voss
+# Copyright 2008, 2010  Jochen Voss
 
 SUBDIRS = doc examples
 
@@ -21,10 +21,12 @@ version.py: configure.ac Makefile.am
 	echo "VERSION=\"@VERSION@\"" >>$@
 
 wisent: wisent.py Makefile.am
-	sed -e "2 i# WARNING: automatically generated from $<, do not edit" \
-	  -e "2 i#" \
+	echo "#! /usr/bin/env python" >$@
+	echo "# WARNING: automatically generated from $<, do not edit" >>$@
+	echo "#" >>$@
+	sed -e "1 d" \
 	  -e "s;^# FIX PATH$$;sys.path = ['@pkgpythondir@'] + sys.path;" \
-	  $< >$@
+	  $< >>$@
 	chmod +x wisent
 
 CLEANFILES = wisent
