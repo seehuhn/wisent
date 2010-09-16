@@ -7,7 +7,7 @@
 from sys import stderr, argv
 
 from scanner import tokenize
-from header import Parser
+from parser import Parser
 
 def print_tree(tree, terminals, indent=0):
     """Print a parse tree to stdout."""
