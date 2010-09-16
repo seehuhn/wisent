@@ -44,6 +44,8 @@ def tokens(source):
     line = 1
     for l in source:
         l = l.expandtabs()
+        if not l.endswith("\n"):
+            l = l + '\n'
         for col, c in enumerate(l):
             if state == "skip":
                 state = None

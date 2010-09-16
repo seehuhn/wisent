@@ -3,14 +3,14 @@
 
 SUBDIRS = doc examples
 
-EXTRA_DIST = wisent.py check.py
+EXTRA_DIST = wisent.py check.py check2.py
 BUILT_SOURCES = version.py
 
 bin_SCRIPTS = wisent
 pkgpython_PYTHON = grammar.py automaton.py scanner.py parser.py	\
 	text.py helpers.py template.py version.py
 
-TESTS = check.py
+TESTS = check.py check2.py
 
 version.py: configure.ac Makefile.am
 	cd $(srcdir) && \
