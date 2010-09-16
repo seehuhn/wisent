@@ -1,0 +1,4 @@
+#! /bin/sh
+
+mkdir -p web/html web/cache
+sphinx-build -b html -d web/cache -c web  . web/html

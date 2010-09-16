@@ -1,10 +1,10 @@
 This directory contains the Wisent users' manual.
 
-The manual is written using the Sphix documentation generator.
+The manual is written using the Sphinx documentation generator.
 A pre-formatted version of the manual can be found in the html/
 sub-directory.  If you want to re-generate the documentation or
 to generate a pdf version, you will need spinx version 0.6 or
 newer.
 
 A copy of the manual can be found online at
-http://seehuhn.de/media/wisent/ .
+http://seehuhn.de/media/manuals/wisent/ .

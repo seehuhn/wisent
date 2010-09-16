@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.6',
+        VERSION:     '0.6.1',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -48,12 +48,12 @@
   <div class="section" id="documentation-for-the-generated-parser">
 <span id="ch-parser"></span><h1>Documentation for the Generated Parser<a class="headerlink" href="#documentation-for-the-generated-parser" title="Permalink to this headline">¶</a></h1>
 <p>This chapter describes the python module emitted by Wisent.  See the
-<a class="reference" href="ch3wisent.html#ch-wisent"><em>previous chapter</em></a> for information to about how to
+<a class="reference external" href="ch3wisent.html#ch-wisent"><em>previous chapter</em></a> for information to about how to
 generate this output.</p>
 <div class="section" id="the-parser-class">
 <span id="sec-parser"></span><h2>The Parser class<a class="headerlink" href="#the-parser-class" title="Permalink to this headline">¶</a></h2>
 <p>The output of Wisent is a complete Python source file, implementing
-a single Python class <a title="Parser" class="reference" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a>.  The generated file can be used
+a single Python class <a title="Parser" class="reference internal" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a>.  The generated file can be used
 stand-alone and has no dependency on Wisent any more.</p>
 <p>Assuming you wrote Wisent&#8217;s output to the file <tt class="docutils literal"><span class="pre">parser.py</span></tt>, you
 can use the generated parser as illustrated by the following code
@@ -71,11 +71,10 @@ sniplet:</p>
 <span class="c"># now `tree` contains the parse tree</span>
 </pre></div>
 </div>
-<p><a title="Parser" class="reference" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a> objects have the following attributes:</p>
+<p><a title="Parser" class="reference internal" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a> objects have the following attributes:</p>
 <dl class="class">
 <dt id="Parser">
-<em class="property">
-class </em><tt class="descname">Parser</tt><big>(</big><em>max_err=None</em>, <em>errcorr_pre=4</em>, <em>errcorr_post=4</em><big>)</big><a class="headerlink" href="#Parser" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descname">Parser</tt><big>(</big><em>max_err=None</em>, <em>errcorr_pre=4</em>, <em>errcorr_post=4</em><big>)</big><a class="headerlink" href="#Parser" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class implements the parser for input data in the form
 described by the Wisent input grammar.</p>
 <p>The constructor arguments are all optional, they control the
@@ -106,7 +105,7 @@ parse trees below.</dd></dl>
 <dl class="attribute">
 <dt id="Parser.ParseErrors">
 <tt class="descname">ParseErrors</tt><a class="headerlink" href="#Parser.ParseErrors" title="Permalink to this definition">¶</a></dt>
-<dd>A reference to the <a title="ParseErrors" class="reference" href="#ParseErrors"><tt class="xref docutils literal"><span class="pre">ParseErrors</span></tt></a> exception class.  This
+<dd>A reference to the <a title="ParseErrors" class="reference internal" href="#ParseErrors"><tt class="xref docutils literal"><span class="pre">ParseErrors</span></tt></a> exception class.  This
 allows you to use <tt class="docutils literal"><span class="pre">except</span> <span class="pre">Parser.ParseErrors</span></tt> clauses for
 error handling.</dd></dl>
 
@@ -114,12 +113,12 @@ error handling.</dd></dl>
 <dt id="Parser.EOF">
 <tt class="descname">EOF</tt><a class="headerlink" href="#Parser.EOF" title="Permalink to this definition">¶</a></dt>
 <dd>An object used internally to mark the end of input.  You might
-encounter this in data attached to a <a title="ParseErrors" class="reference" href="#ParseErrors"><tt class="xref docutils literal"><span class="pre">ParseErrors</span></tt></a>
+encounter this in data attached to a <a title="ParseErrors" class="reference internal" href="#ParseErrors"><tt class="xref docutils literal"><span class="pre">ParseErrors</span></tt></a>
 exception.</dd></dl>
 
 </dd></dl>
 
-<p>The parser class is always called <a title="Parser" class="reference" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a>.  In order to use
+<p>The parser class is always called <a title="Parser" class="reference internal" href="#Parser"><tt class="xref docutils literal"><span class="pre">Parser</span></tt></a>.  In order to use
 parsers for several different grammars in one project, you should
 write the parsers to different files and then import them as in the
 following example:</p>
@@ -131,7 +130,7 @@ following example:</p>
 <div class="section" id="parser-input">
 <h2>Parser Input<a class="headerlink" href="#parser-input" title="Permalink to this headline">¶</a></h2>
 <p>The input data to be parsed is given as the argument of the
-<a title="Parser.parse" class="reference" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a> method.  It must be an iterable, consisting of a
+<a title="Parser.parse" class="reference internal" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a> method.  It must be an iterable, consisting of a
 sequence of Python tuples and the first element of each tuple must be
 a terminal symbol of the grammar.  All other elements of the input
 tuples are copied into the output parse tree and are otherwise ignored
@@ -139,7 +138,7 @@ by the parser; you can use them to attach semantic values to the
 symbols or to keep track of input line numbers for use in error
 messages.</p>
 <p><strong>Example 4.</strong> For a parser generated from the grammar given in
-<a class="reference" href="ch3wisent.html#ex-1"><em>example 1</em></a>, the following Python sequence is a valid
+<a class="reference external" href="ch3wisent.html#ex-1"><em>example 1</em></a>, the following Python sequence is a valid
 input:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span> <span class="p">(</span> <span class="s">&#39;token&#39;</span><span class="p">,</span> <span class="s">&#39;grammar&#39;</span> <span class="p">),</span>
   <span class="p">(</span> <span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="p">),</span>
@@ -151,12 +150,12 @@ input:</p>
 <p>Normally, the parser input is obtained by &#8220;tokenizing&#8221; a string.  You
 can either use a generator function, or you can store the result of
 tokenization in a list and then pass this list to
-<a title="Parser.parse" class="reference" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a>.  See the section <a class="reference" href="ch2tutorial.html#sec-tokenizer"><em>Adding a Tokenizer</em></a> in the
+<a title="Parser.parse" class="reference internal" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a>.  See the section <a class="reference external" href="ch2tutorial.html#sec-tokenizer"><em>Adding a Tokenizer</em></a> in the
 tutorial for an example of the second approach.</p>
 </div>
 <div class="section" id="parse-trees">
 <span id="sec-tree"></span><h2>Parse Trees<a class="headerlink" href="#parse-trees" title="Permalink to this headline">¶</a></h2>
-<p>The <a title="Parser.parse" class="reference" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a> method returns a parse tree.  The definition
+<p>The <a title="Parser.parse" class="reference internal" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a> method returns a parse tree.  The definition
 of the tree is recursive, using tuples to represent sub-trees.
 There are two cases:</p>
 <blockquote>
@@ -165,7 +164,7 @@ There are two cases:</p>
 corresponding tuple from the input data.  These nodes form the
 leaves of the parse tree; they can be recognised by the fact that
 the first element of the tuple is contained in the list
-<a title="Parser.terminals" class="reference" href="#Parser.terminals"><tt class="xref docutils literal"><span class="pre">Parser.terminals</span></tt></a>.</li>
+<a title="Parser.terminals" class="reference internal" href="#Parser.terminals"><tt class="xref docutils literal"><span class="pre">Parser.terminals</span></tt></a>.</li>
 <li>All other tuples are inner nodes of the tree, they correspond to
 grammar rules.  These tuples have a non-terminal symbol as the
 first element.  The remaining elements are the sub-trees
@@ -174,10 +173,10 @@ corresponding rule.</li>
 </ul>
 </blockquote>
 <p>The complete tree is thus a collection of nested Python tuples.  The
-first element of the tree returned by <a title="Parser.parse" class="reference" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a> is always
+first element of the tree returned by <a title="Parser.parse" class="reference internal" href="#Parser.parse"><tt class="xref docutils literal"><span class="pre">Parser.parse()</span></tt></a> is always
 the start symbol of the grammar.  Following these recursive rules, the
 function <tt class="docutils literal"><span class="pre">print_tree</span></tt> from the example code in section
-<a class="reference" href="ch2tutorial.html#sec-examplerun"><em>Running Wisent</em></a> of the tutorial can be used to display a parse
+<a class="reference external" href="ch2tutorial.html#sec-examplerun"><em>Running Wisent</em></a> of the tutorial can be used to display a parse
 tree.</p>
 <p><strong>Example 5.</strong> The input from example 4 (we ignore the special role of
 symbols starting with <tt class="docutils literal"><span class="pre">_</span></tt> for a moment) leads to the following parse
@@ -227,11 +226,10 @@ possible can be found in one run.  Repairs are attempted by inserting,
 deleting or changing a single token in a neighbourhood of the first
 un-parseable token.</p>
 <p>All parse errors are returned simultaneously by raising a
-<a title="ParseErrors" class="reference" href="#ParseErrors"><tt class="xref docutils literal"><span class="pre">ParseErrors</span></tt></a> exception.</p>
+<a title="ParseErrors" class="reference internal" href="#ParseErrors"><tt class="xref docutils literal"><span class="pre">ParseErrors</span></tt></a> exception.</p>
 <dl class="exception">
 <dt id="ParseErrors">
-<em class="property">
-exception </em><tt class="descname">ParseErrors</tt><a class="headerlink" href="#ParseErrors" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descname">ParseErrors</tt><a class="headerlink" href="#ParseErrors" title="Permalink to this definition">¶</a></dt>
 <dd><p>The exception object has the following two attributes:</p>
 <dl class="attribute">
 <dt id="ParseErrors.errors">
@@ -240,7 +238,7 @@ exception </em><tt class="descname">ParseErrors</tt><a class="headerlink" href="
 consists of the first input token which could not be processed
 and the list of terminal symbols which were allowed at this
 point.  The list of allowed symbols might contain the special
-value <a title="Parser.EOF" class="reference" href="#Parser.EOF"><tt class="xref docutils literal"><span class="pre">Parser.EOF</span></tt></a> to indicate that an end of input was
+value <a title="Parser.EOF" class="reference internal" href="#Parser.EOF"><tt class="xref docutils literal"><span class="pre">Parser.EOF</span></tt></a> to indicate that an end of input was
 allowed at this point.</dd></dl>
 
 <dl class="attribute">
@@ -262,12 +260,12 @@ error checking, or None if no repair was possible.</dd></dl>
         <div class="sphinxsidebarwrapper">
             <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
-<li><a class="reference" href="">Documentation for the Generated Parser</a><ul>
-<li><a class="reference" href="#the-parser-class">The Parser class</a></li>
-<li><a class="reference" href="#parser-input">Parser Input</a></li>
-<li><a class="reference" href="#parse-trees">Parse Trees</a></li>
-<li><a class="reference" href="#transparent-symbols">Transparent Symbols</a></li>
-<li><a class="reference" href="#parse-errors">Parse Errors</a></li>
+<li><a class="reference external" href="#">Documentation for the Generated Parser</a><ul>
+<li><a class="reference external" href="#the-parser-class">The Parser class</a></li>
+<li><a class="reference external" href="#parser-input">Parser Input</a></li>
+<li><a class="reference external" href="#parse-trees">Parse Trees</a></li>
+<li><a class="reference external" href="#transparent-symbols">Transparent Symbols</a></li>
+<li><a class="reference external" href="#parse-errors">Parse Errors</a></li>
 </ul>
 </li>
 </ul>
@@ -311,8 +309,8 @@ error checking, or None if no repair was possible.</dd></dl>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009, Jochen Voss.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.2.
+      &copy; Copyright 2010, Jochen Voss.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.7.
     </div>
   </body>
 </html>

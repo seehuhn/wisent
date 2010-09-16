@@ -10,14 +10,14 @@
 body {
     font-family: sans-serif;
     font-size: 100%;
-    background-color: #B4C981;
+    background-color: #11303d;
     color: #000;
     margin: 0;
     padding: 0;
 }
 
 div.document {
-    background-color: #D4D991;
+    background-color: #1c4e63;
 }
 
 div.documentwrapper {
@@ -30,13 +30,13 @@ div.bodywrapper {
 }
 
 div.body {
-    background-color: #DBDEB7;
-    color: black;
+    background-color: #ffffff;
+    color: #000000;
     padding: 0 20px 30px 20px;
 }
 
 div.footer {
-    color: black;
+    color: #ffffff;
     width: 100%;
     padding: 9px 0 9px 0;
     text-align: center;
@@ -44,18 +44,18 @@ div.footer {
 }
 
 div.footer a {
-    color: black;
+    color: #ffffff;
     text-decoration: underline;
 }
 
 div.related {
-    background-color: #B4C981;
+    background-color: #133f52;
     line-height: 30px;
-    color: black;
+    color: #ffffff;
 }
 
 div.related a {
-    color: #C00000;
+    color: #ffffff;
 }
 
 div.sphinxsidebar {
@@ -63,7 +63,7 @@ div.sphinxsidebar {
 
 div.sphinxsidebar h3 {
     font-family: 'Trebuchet MS', sans-serif;
-    color: black;
+    color: #ffffff;
     font-size: 1.4em;
     font-weight: normal;
     margin: 0;
@@ -71,12 +71,12 @@ div.sphinxsidebar h3 {
 }
 
 div.sphinxsidebar h3 a {
-    color: black;
+    color: #ffffff;
 }
 
 div.sphinxsidebar h4 {
     font-family: 'Trebuchet MS', sans-serif;
-    color: black;
+    color: #ffffff;
     font-size: 1.3em;
     font-weight: normal;
     margin: 5px 0 0 0;
@@ -84,7 +84,7 @@ div.sphinxsidebar h4 {
 }
 
 div.sphinxsidebar p {
-    color: black;
+    color: #ffffff;
 }
 
 div.sphinxsidebar p.topless {
@@ -94,15 +94,15 @@ div.sphinxsidebar p.topless {
 div.sphinxsidebar ul {
     margin: 10px;
     padding: 0;
-    color: black;
+    color: #ffffff;
 }
 
 div.sphinxsidebar a {
-    color: #C00000;
+    color: #98dbcc;
 }
 
 div.sphinxsidebar input {
-    border: 1px solid #C00000;
+    border: 1px solid #98dbcc;
     font-family: sans-serif;
     font-size: 1em;
 }
@@ -110,7 +110,7 @@ div.sphinxsidebar input {
 /* -- body styles ----------------------------------------------------------- */
 
 a {
-    color: #C00000;
+    color: #355f7c;
     text-decoration: none;
 }
 
@@ -130,9 +130,9 @@ div.body h4,
 div.body h5,
 div.body h6 {
     font-family: 'Trebuchet MS', sans-serif;
-    background-color: #DBDEB7;
+    background-color: #f2f2f2;
     font-weight: normal;
-    color: black;
+    color: #20435c;
     border-bottom: 1px solid #ccc;
     margin: 20px -20px 10px -20px;
     padding: 3px 0 3px 10px;
@@ -146,14 +146,14 @@ div.body h5 { font-size: 110%; }
 div.body h6 { font-size: 100%; }
 
 a.headerlink {
-    color: black;
+    color: #c60f0f;
     font-size: 0.8em;
     padding: 0 4px 0 4px;
     text-decoration: none;
 }
 
 a.headerlink:hover {
-    background-color: black;
+    background-color: #c60f0f;
     color: white;
 }
 
@@ -164,6 +164,18 @@ div.body p, div.body dd, div.body li {
 
 div.admonition p.admonition-title + p {
     display: inline;
+}
+
+div.admonition p {
+    margin-bottom: 5px;
+}
+
+div.admonition pre {
+    margin-bottom: 5px;
+}
+
+div.admonition ul, div.admonition ol {
+    margin-bottom: 5px;
 }
 
 div.note {
@@ -195,8 +207,8 @@ p.admonition-title:after {
 
 pre {
     padding: 5px;
-    background-color: white;
-    color: black;
+    background-color: #eeffcc;
+    color: #333333;
     line-height: 120%;
     border: 1px solid #ac9;
     border-left: none;
@@ -207,4 +219,12 @@ tt {
     background-color: #ecf0f3;
     padding: 0 1px 0 1px;
     font-size: 0.95em;
+}
+
+.warning tt {
+    background: #efc2c2;
+}
+
+.note tt {
+    background: #d6d6d6;
 }

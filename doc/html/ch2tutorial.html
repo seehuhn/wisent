@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.6',
+        VERSION:     '0.6.1',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -51,8 +51,8 @@
 the Wisent parser generator.  Here we will implement a simple
 calculator.</p>
 <div class="section" id="creating-the-grammar-file">
-<span id="index-2"></span><h2>Creating The Grammar File<a class="headerlink" href="#creating-the-grammar-file" title="Permalink to this headline">¶</a></h2>
-<p>We create a file <a href="_downloads/calculator.wi"><strong>calculator.wi</strong></a> which contains the following
+<span id="index-7"></span><h2>Creating The Grammar File<a class="headerlink" href="#creating-the-grammar-file" title="Permalink to this headline">¶</a></h2>
+<p>We create a file <a href="_downloads/calculator.wi"><strong class="xref">calculator.wi</strong></a> which contains the following
 grammar.</p>
 <div class="highlight-python"><pre>expr: _additive ;
 
@@ -73,9 +73,9 @@ function: SYMBOL '(' _additive ')' ;
 </div>
 <p>This file describes the structure of the input for our calculator.
 The format of grammar files is describes in the section
-<a class="reference" href="ch3wisent.html#sec-grammar"><em>Describing the Format of your Input</em></a>.  The reason for the fact that some symbol names
+<a class="reference external" href="ch3wisent.html#sec-grammar"><em>Describing the Format of your Input</em></a>.  The reason for the fact that some symbol names
 are prefixed by <tt class="docutils literal"><span class="pre">_</span></tt> is explained in the section about
-<a class="reference" href="ch4parser.html#sec-transparent"><em>Transparent Symbols</em></a>.</p>
+<a class="reference external" href="ch4parser.html#sec-transparent"><em>Transparent Symbols</em></a>.</p>
 </div>
 <div class="section" id="running-wisent">
 <span id="sec-examplerun"></span><h2>Running Wisent<a class="headerlink" href="#running-wisent" title="Permalink to this headline">¶</a></h2>
@@ -84,12 +84,12 @@ convert the grammar file <tt class="docutils literal"><span class="pre">calculat
 <div class="highlight-python"><pre>$ wisent -o parser.py -e calc.py calculator.wi</pre>
 </div>
 <p>Detail about using the <strong>wisent</strong> program are describe in the
-section <a class="reference" href="ch3wisent.html#sec-invocation"><em>Running Wisent</em></a>.  The program call generates a (long)
+section <a class="reference external" href="ch3wisent.html#sec-invocation"><em>Running Wisent</em></a>.  The program call generates a (long)
 file <tt class="docutils literal"><span class="pre">parser.py</span></tt> which contains the generated parser.  You can
 use pythons introspection abilities, <em>e.g.</em> by calling <strong>pydoc
 parser</strong> on the command line.  The generated parser is described in
-more detail in the section <a class="reference" href="ch4parser.html#sec-parser"><em>The Parser class</em></a>.</p>
-<p id="index-3">The <tt class="docutils literal"><span class="pre">-e</span></tt> option instructs Wisent to generate example code in the
+more detail in the section <a class="reference external" href="ch4parser.html#sec-parser"><em>The Parser class</em></a>.</p>
+<p id="index-8">The <tt class="docutils literal"><span class="pre">-e</span></tt> option instructs Wisent to generate example code in the
 file <tt class="docutils literal"><span class="pre">calc.py</span></tt>.  This code will not be useful in itself, but
 it serves as an illustration of how to use the generated parser.
 It looks as follows:</p>
@@ -221,12 +221,12 @@ computes the numerical result:</p>
 </pre></div>
 </div>
 <p>Details about the format of the parse tree are contained in the
-section <a class="reference" href="ch4parser.html#sec-tree"><em>Parse Trees</em></a>.</p>
+section <a class="reference external" href="ch4parser.html#sec-tree"><em>Parse Trees</em></a>.</p>
 </div>
 <div class="section" id="putting-it-all-together">
 <h2>Putting it all Together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this headline">¶</a></h2>
 <p>The final result of our tutorial is the following python file
-<a href="_downloads/calc.py"><strong>calculator.wi</strong></a>:</p>
+<a href="_downloads/calc.py"><strong class="xref">calculator.wi</strong></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c">#! /usr/bin/env python</span>
 
 <span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stderr</span>
@@ -338,12 +338,12 @@ parse error before '-', expected one of '(', 'NUMBER', 'SYMBOL'</pre>
         <div class="sphinxsidebarwrapper">
             <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
-<li><a class="reference" href="">Tutorial</a><ul>
-<li><a class="reference" href="#creating-the-grammar-file">Creating The Grammar File</a></li>
-<li><a class="reference" href="#running-wisent">Running Wisent</a></li>
-<li><a class="reference" href="#adding-a-tokenizer">Adding a Tokenizer</a></li>
-<li><a class="reference" href="#computing-the-result-from-the-parse-tree">Computing the Result from the Parse Tree</a></li>
-<li><a class="reference" href="#putting-it-all-together">Putting it all Together</a></li>
+<li><a class="reference external" href="#">Tutorial</a><ul>
+<li><a class="reference external" href="#creating-the-grammar-file">Creating The Grammar File</a></li>
+<li><a class="reference external" href="#running-wisent">Running Wisent</a></li>
+<li><a class="reference external" href="#adding-a-tokenizer">Adding a Tokenizer</a></li>
+<li><a class="reference external" href="#computing-the-result-from-the-parse-tree">Computing the Result from the Parse Tree</a></li>
+<li><a class="reference external" href="#putting-it-all-together">Putting it all Together</a></li>
 </ul>
 </li>
 </ul>
@@ -387,8 +387,8 @@ parse error before '-', expected one of '(', 'NUMBER', 'SYMBOL'</pre>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009, Jochen Voss.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.2.
+      &copy; Copyright 2010, Jochen Voss.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.7.
     </div>
   </body>
 </html>
