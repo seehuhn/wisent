@@ -1,0 +1,14 @@
+# rules from appendix D of RFC 822
+destination: (_address ",")* _address;
+_address: mailbox | group ;
+group: phrase ":" ( ( mailbox "," )* mailbox ) ? ";" ;
+phrase: _word+ ;
+mailbox: addr-spec | phrase route-addr ;
+addr-spec: local-part "@" domain ;
+local-part: _word ( "." _word )* ;
+domain: ( _sub-domain "." )* _sub-domain ;
+_sub-domain: _domain-ref | domain-literal ;
+_domain-ref: atom;
+route-addr: "<" route? addr-spec ">" ;
+route: ( "@" domain "," )* "@" domain ":" ;
+_word: atom | quoted-string ;
