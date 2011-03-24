@@ -1,3 +1,10 @@
+- the following grammar gives incomprehensible
+  error messages:
+
+    module: function* expr* ;
+    expr: BARELITERAL+ ;
+    function: DEF NAME expr ENDDEF ;
+
 - conflict resolution leeds to parse errors:
     ABC: a X Y c;
     X: b | ! ;
