@@ -105,7 +105,7 @@ Download and Copying
 ====================
 
 You can download Wisent freely from the `Wisent homepage
-<http://seehuhn.de/pages/wisent>`_.  Wisent comes with *no warranty*,
+<http://www.seehuhn.de/pages/wisent>`_.  Wisent comes with *no warranty*,
 to the extent permitted by law.  You may redistribute copies of Wisent
 under the terms of the GNU General Public License.  For more
 information about these matters, read the file COPYING of the source

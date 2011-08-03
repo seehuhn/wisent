@@ -23,4 +23,4 @@ To run this example, first generate the parser:
 
 and then run the main program as follows:
 
-    ./readcss <somefile.css>
+    ./readcss.py <somefile.css>
