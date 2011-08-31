@@ -93,9 +93,9 @@ def tokens(source):
         line += 1
 
     if state == "word":
-	yield ("token", conv(s), line0, col0)
+        yield ("token", conv(s), line0, col0)
     elif state not in [ None, "skip", "comment" ]:
         if l[-1] == '\n':
             l = l[:-1]
         msg = "unterminated string"
-	raise SyntaxError(msg, (source.name, line0, col0, l[-20:]))
+        raise SyntaxError(msg, (source.name, line0, col0, l[-20:]))
