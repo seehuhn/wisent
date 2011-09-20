@@ -491,7 +491,7 @@ class Grammar(object):
                 continue
             head = repr(r[0])
             tail = " ".join(map(repr, r[1:]))
-            fd.write(prefix+"  %s -> %s\n"%(head, tail))
+            fd.write((prefix+"  %s -> %s"%(head, tail)).rstrip()+"\n")
 
     def write_example(self, fd=sys.stdout, params={}):
         word = [ self.rules[-1][1] ]
