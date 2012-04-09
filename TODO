@@ -1,3 +1,5 @@
+- Don't mention the start symbol "S" in error messages like
+  'error: symbols without finite expansion ("S", "list")'
 - the following grammar gives incomprehensible
   error messages:
 
