@@ -463,7 +463,8 @@ class Grammar(object):
                     still_todo.add(X)
             if still_todo == todo:
                 msg = "symbols without finite expansion ("
-                msg = msg + ", ".join('"%s"'%x for x in todo) + ")"
+                syms = sorted(x for x in todo if x != self.start)
+                msg = msg + ", ".join('"%s"'%x for x in syms) + ")"
                 raise RulesError(msg)
             todo = still_todo
         return res

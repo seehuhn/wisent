@@ -1,5 +1,3 @@
-- Don't mention the start symbol "S" in error messages like
-  'error: symbols without finite expansion ("S", "list")'
 - the following grammar gives incomprehensible
   error messages:
 
@@ -12,7 +10,6 @@
     X: b | ! ;
     Y: b | ;
   cannot parse 'a b b c'.  Fix this!
-- fix wisent to deal with "examples/crash.wi"
 - check the computation of expected tokens in case of parse errors
 - don't give an error for grammars like
     ABC: ( _X | _Y ) b c;
