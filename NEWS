@@ -1,3 +1,9 @@
+version 0.6.2 (2012-04-10):
+- better error messages for some grammar errors
+- allow hypens '-' in symbol names
+- add a parser for email addresses to the examples directory
+- minor fixes
+
 version 0.6.1 (2010-09-16):
 - bug fix: comments and multi-line strings in grammar files were broken
   in version 0.6

@@ -7,7 +7,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'wisent'
-copyright = '2010, Jochen Voss'
+copyright = '2012, Jochen Voss'
 
 m = re.search(r'AC_INIT\(wisent, *(([0-9]+\.[0-9]+)[^, ]*),',
               open("../configure.ac").read(),

@@ -1,3 +1,301 @@
+commit 59911d7db88f98a5bfab731a6a3df4756a3b2d8f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Apr 10 09:05:30 2012 +0100
+
+    fix the error message for symbols without finite expansion
+
+commit 59b41e97681b9e44b690548a145005b1eff0a60a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Apr 10 09:04:40 2012 +0100
+
+    rename old check.py to new check1.py
+
+commit a78982ebd488cfc1c98388a4b950a916c9b5b296
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Apr 9 15:10:09 2012 +0100
+
+    add a new TODO item
+
+commit d60fd89bcbec544b41f8ee8ee6e1868aa06543c5
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Dec 11 13:09:19 2011 +0000
+
+    minor big fixes to the Makefile
+
+commit c6bb0e5366e95fa6dd32fbdb7e43b9a466400ad0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 20 15:57:24 2011 +0100
+
+    avoid trailing white-space in the generated grammar
+
+commit f782d8b3c15836d7a99eff524a8215f14813d436
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Aug 31 21:51:24 2011 +0100
+
+    Check for infinite loops in grammar rules.
+    
+    Add an explicit test for symbols which have only
+    infinite expandsions and emit an error message
+    for these instead of crashing.
+
+commit d0166966e9919abae84df6f5e935ce6b91408701
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Aug 31 21:48:50 2011 +0100
+
+    whitespace fixes
+
+commit acdcdbf341c4764a642aa84b6fa8330799bef133
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Aug 3 22:30:04 2011 +0100
+
+    updates and minor fixes
+
+commit 5cb6d6bf1ba4f678f3e772ac62c3e592a02e588c
+Merge: 73a43c4 dae6f88
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Mar 24 12:03:30 2011 +0000
+
+    Merge branch 'master' of seehuhn.de:/srv/git/wisent
+
+commit 73a43c486c8c4fc450852e35d93045b6456e53ab
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Mar 24 12:03:26 2011 +0000
+
+    fix a typo in the TODO file
+
+commit dae6f88b672a07aee48bdad0c586e6bd54409b8e
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Mar 16 17:01:23 2011 +0000
+
+    add another TODO item
+
+commit 2673ac0ee9fd79054c253e4cab518edac910feb0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 16 19:49:21 2010 +0100
+
+    update the documentation
+
+commit 46f4167fd210e3856ead2f7c7cc5c8db7815c227
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 16 19:10:44 2010 +0100
+
+    defer generating the grammar shortcuts as long as possible
+
+commit 3f4fc25899ef0db3890f1c3341e574020fd860cc
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 16 19:07:29 2010 +0100
+
+    omit unnecessary "#! /usr/bin/env python" headers
+
+commit 75b189c5a4d8faf4c0c995b884c731413074bc34
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 16 19:00:24 2010 +0100
+
+    Make the code to create "wisent" from "wisent.py" more robust.
+
+commit 01b812740044311a2cac540e163fc9fcfd836dda
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 16 18:49:41 2010 +0100
+
+    rename old examples/email/header.wi to new examples/email/parser.wi
+
+commit 1834bc5fdf82960a85d78bafd6cb6bfecf43cc23
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 16 16:44:55 2010 +0100
+
+    Start a new example (a parser for email headers).
+
+commit 29f9039ce452ae4d3d059c1841047bacf15094df
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 16 16:43:12 2010 +0100
+
+    Change the input language to allow "-" in tokens.
+
+commit b0f576dde0add8f8f379f15c733474ad987f4e60
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 16 15:41:01 2010 +0100
+
+    bug fix (multiline strings/comments in grammar files)
+
+commit 26886d36dea9e5bb1cb5d472daaa5750863632dd
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Oct 11 00:33:27 2009 +0100
+
+    last minute fix: update the copyright date in the version string
+
+commit c4678d1ef830b55765f8999d3d426613ad36388e
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Oct 10 23:15:11 2009 +0100
+
+    Prepare for the Wisent 0.6 release.
+    
+    This updates the NEWS file, regenerates "parser.py", regenerates the
+    documentation, and updates the source copyright years.
+
+commit a3ad359f3f4448f06ecd76f3f9dab2173c076d98
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Oct 10 22:00:12 2009 +0100
+
+    Allow for utf-8 encoded grammar files.
+
+commit ec06010dfb35582671d55ed111e4da9e7e8aa9fc
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Oct 10 22:29:14 2009 +0100
+
+    Bug fix: 'open_executable' did not clear existing output files.
+    
+    Without this fix, the generated example code would have garbage at the
+    end of file in case a longer file with the same name existed before
+    the example code was written.
+
+commit 5a4afcea37e19dd4e3954aa23e7a641861bc784b
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Oct 10 21:23:34 2009 +0100
+
+    Cosmetic fixes to the source files.
+    
+    This removes the leading "#! /usr/bin/env python" from non-executable
+    files, renames old "lr1.py" to new "automaton.py" and adds a makefile
+    for the examples/css/ directory.
+
+commit 4fbae8dc39745bbe746ee1356d96d5f2cdf46bc9
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Oct 4 19:48:31 2009 +0100
+
+    regenerate HTML documentation
+
+commit ee3bde446b76d587652a7f84a59f5b5fc2b41036
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Oct 4 19:44:26 2009 +0100
+
+    minor fixes
+
+commit e20d96ea38dacf01f1af9c05ff049bbd1398875f
+Merge: 70ee4f8 ae00714
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Oct 4 19:31:07 2009 +0100
+
+    Merge branch 'master' of voss@seehuhn.de:/srv/git/wisent
+
+commit 70ee4f85397d477ca1c8c0cc18e66754756d775c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Jul 22 18:44:40 2009 +0100
+
+    minor fixes
+
+commit ae00714175365a7b15e5846aa72b144d6a63b0dc
+Merge: c14b9c0 d45a3c9
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Jul 17 10:49:26 2009 +0100
+
+    Merge branch 'master' of voss@seehuhn.de:/srv/git/wisent
+    
+    Conflicts:
+    	doc/ch1intro.txt
+
+commit c14b9c078a2ab140293dfce2c81c83c03e826624
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Jul 17 10:48:03 2009 +0100
+
+    minor fix to the manual
+
+commit d45a3c99d3b0728baf9389a42408ffd0f5a41955
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jul 16 23:57:49 2009 +0100
+
+    minor fix to the manual
+
+commit f55e5f8305369cf2097a0af0b81f112dd8b23e31
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jul 16 23:57:12 2009 +0100
+
+    examples/css: add a CSS parser
+
+commit 40c852e158a25a4baeef66f3b065ed09cecc8ff0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jul 16 23:31:15 2009 +0100
+
+    Make the auto-generated example files executable.
+
+commit bc517cfc4914f28ffb4dedba38dd56b2d1e1184a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jul 14 01:09:24 2009 +0100
+
+    Fixes in preprations for wisent release 0.5.
+
+commit 5600fcb2b60f6edd45ce96ede4d97956b0d4d993
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Jul 13 18:02:07 2009 +0100
+
+    finish the users' manual
+
+commit 7dd06b492c5f0a771efc673b6be868401e2cb432
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Jul 13 01:48:23 2009 +0100
+
+    Finish the first version of the tutorial.
+
+commit a99d361cbe005b170b9ffdee4750838f22cefcb5
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 12 23:17:11 2009 +0100
+
+    minor fixes
+
+commit 04bd727da14cebb8eb3788d227df12e7484b09bb
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 12 23:16:22 2009 +0100
+
+    Found a bug in wisent.
+    
+    For now, just add a test-case and a reminder in "TODO".
+
+commit 50ae84ff846445912d891bdc685d829bbd078c75
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 12 21:54:40 2009 +0100
+
+    Add beginnings of a manual.
+
+commit ed8b662f25c9df9d813a3b675a7b408e762c0d82
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 12 15:25:34 2009 +0100
+
+    Bug-fixes and cleanups.
+    
+    This removes some bugs where the rule-set optimisation would
+    confuse strings like "!" with the corresponding operators.
+    Also clean up the process of extracting the rules from the
+    parse tree and feeding them into the Grammar object.
+
+commit c7f62a04d9abd86825788136a9a852c08aa4b1fa
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 12 00:53:33 2009 +0100
+
+    Allow for brackets and the "?" operator in grammar files.
+
+commit 1eedff2269494a82376214b6df042ffb03cdab70
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Mar 22 20:46:28 2008 +0000
+
+    add option to generate example source code
+
+commit 2c48a1c6bebbb036a285e60452edd2016a613f49
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 21 23:13:46 2008 +0000
+
+    minor fixes
+
+commit 99515da530ebc0cc5828cc547e3ecb274f7c2aa4
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 21 21:30:42 2008 +0000
+
+    compatibility fix for Python 2.4 (where Exception is an oldstyle class)
+
+commit 38a621edc898106387e5e498647da1eb2b104c30
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 21 21:01:32 2008 +0000
+
+    prepare for Wisent release 0.4
+
 commit 81928b6430f4dbcafe7e6e081773bd3bd3628153
 Author: Jochen Voss <voss@seehuhn.de>
 Date:   Fri Mar 21 20:32:57 2008 +0000
@@ -45,7 +343,7 @@ commit 343a1132a94b696b53a5aea4a0c86b142a023461
 Author: Jochen Voss <voss@seehuhn.de>
 Date:   Wed Mar 19 22:13:36 2008 +0000
 
-    Implement the LR(1) parser generator suggested by Pager (1977).
+    Implement the LR(1) parser generator suggested by Pager (1975).
     
     Since this method is an efficient way to generate parsers for general
     LR(1) grammars, remove all code to select different parser types.

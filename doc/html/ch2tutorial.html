@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -11,13 +13,14 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.6.1',
-        COLLAPSE_MODINDEX: false,
+        VERSION:     '0.6.2',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="Wisent Users&#39; Manual" href="index.html" />
     <link rel="next" title="Documentation for Wisent" href="ch3wisent.html" />
@@ -51,8 +54,8 @@
 the Wisent parser generator.  Here we will implement a simple
 calculator.</p>
 <div class="section" id="creating-the-grammar-file">
-<span id="index-7"></span><h2>Creating The Grammar File<a class="headerlink" href="#creating-the-grammar-file" title="Permalink to this headline">¶</a></h2>
-<p>We create a file <a href="_downloads/calculator.wi"><strong class="xref">calculator.wi</strong></a> which contains the following
+<span id="index-0"></span><h2>Creating The Grammar File<a class="headerlink" href="#creating-the-grammar-file" title="Permalink to this headline">¶</a></h2>
+<p>We create a file <a class="reference download internal" href="_downloads/calculator.wi"><tt class="xref download docutils literal"><span class="pre">calculator.wi</span></tt></a> which contains the following
 grammar.</p>
 <div class="highlight-python"><pre>expr: _additive ;
 
@@ -73,24 +76,24 @@ function: SYMBOL '(' _additive ')' ;
 </div>
 <p>This file describes the structure of the input for our calculator.
 The format of grammar files is describes in the section
-<a class="reference external" href="ch3wisent.html#sec-grammar"><em>Describing the Format of your Input</em></a>.  The reason for the fact that some symbol names
+<a class="reference internal" href="ch3wisent.html#sec-grammar"><em>Describing the Format of your Input</em></a>.  The reason for the fact that some symbol names
 are prefixed by <tt class="docutils literal"><span class="pre">_</span></tt> is explained in the section about
-<a class="reference external" href="ch4parser.html#sec-transparent"><em>Transparent Symbols</em></a>.</p>
+<a class="reference internal" href="ch4parser.html#sec-transparent"><em>Transparent Symbols</em></a>.</p>
 </div>
 <div class="section" id="running-wisent">
 <span id="sec-examplerun"></span><h2>Running Wisent<a class="headerlink" href="#running-wisent" title="Permalink to this headline">¶</a></h2>
 <p>We use Wisent to generate a parser.  Execute the following command to
-convert the grammar file <tt class="docutils literal"><span class="pre">calculator.wi</span></tt> into python code:</p>
+convert the grammar file <tt class="file docutils literal"><span class="pre">calculator.wi</span></tt> into python code:</p>
 <div class="highlight-python"><pre>$ wisent -o parser.py -e calc.py calculator.wi</pre>
 </div>
-<p>Detail about using the <strong>wisent</strong> program are describe in the
-section <a class="reference external" href="ch3wisent.html#sec-invocation"><em>Running Wisent</em></a>.  The program call generates a (long)
-file <tt class="docutils literal"><span class="pre">parser.py</span></tt> which contains the generated parser.  You can
-use pythons introspection abilities, <em>e.g.</em> by calling <strong>pydoc
+<p>Detail about using the <strong class="command">wisent</strong> program are describe in the
+section <a class="reference internal" href="ch3wisent.html#sec-invocation"><em>Running Wisent</em></a>.  The program call generates a (long)
+file <tt class="file docutils literal"><span class="pre">parser.py</span></tt> which contains the generated parser.  You can
+use pythons introspection abilities, <em>e.g.</em> by calling <strong class="command">pydoc
 parser</strong> on the command line.  The generated parser is described in
-more detail in the section <a class="reference external" href="ch4parser.html#sec-parser"><em>The Parser class</em></a>.</p>
-<p id="index-8">The <tt class="docutils literal"><span class="pre">-e</span></tt> option instructs Wisent to generate example code in the
-file <tt class="docutils literal"><span class="pre">calc.py</span></tt>.  This code will not be useful in itself, but
+more detail in the section <a class="reference internal" href="ch4parser.html#sec-parser"><em>The Parser class</em></a>.</p>
+<p id="index-1">The <tt class="docutils literal"><span class="pre">-e</span></tt> option instructs Wisent to generate example code in the
+file <tt class="file docutils literal"><span class="pre">calc.py</span></tt>.  This code will not be useful in itself, but
 it serves as an illustration of how to use the generated parser.
 It looks as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stderr</span>
@@ -160,7 +163,7 @@ these elements to store the value of input numbers and function names.</p>
 </div>
 <div class="section" id="adding-a-tokenizer">
 <span id="sec-tokenizer"></span><h2>Adding a Tokenizer<a class="headerlink" href="#adding-a-tokenizer" title="Permalink to this headline">¶</a></h2>
-<p>The next step is to edit the file <tt class="docutils literal"><span class="pre">calc.py</span></tt> to add a tokenizer
+<p>The next step is to edit the file <tt class="file docutils literal"><span class="pre">calc.py</span></tt> to add a tokenizer
 which can convert a string typed by the user into a list of input
 tokens for <tt class="docutils literal"><span class="pre">p.parse</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">tokenize</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
@@ -221,12 +224,12 @@ computes the numerical result:</p>
 </pre></div>
 </div>
 <p>Details about the format of the parse tree are contained in the
-section <a class="reference external" href="ch4parser.html#sec-tree"><em>Parse Trees</em></a>.</p>
+section <a class="reference internal" href="ch4parser.html#sec-tree"><em>Parse Trees</em></a>.</p>
 </div>
 <div class="section" id="putting-it-all-together">
 <h2>Putting it all Together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this headline">¶</a></h2>
 <p>The final result of our tutorial is the following python file
-<a href="_downloads/calc.py"><strong class="xref">calculator.wi</strong></a>:</p>
+<a class="reference download internal" href="_downloads/calc.py"><tt class="xref download docutils literal"><span class="pre">calculator.wi</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c">#! /usr/bin/env python</span>
 
 <span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stderr</span>
@@ -336,37 +339,37 @@ parse error before '-', expected one of '(', 'NUMBER', 'SYMBOL'</pre>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">Tutorial</a><ul>
-<li><a class="reference external" href="#creating-the-grammar-file">Creating The Grammar File</a></li>
-<li><a class="reference external" href="#running-wisent">Running Wisent</a></li>
-<li><a class="reference external" href="#adding-a-tokenizer">Adding a Tokenizer</a></li>
-<li><a class="reference external" href="#computing-the-result-from-the-parse-tree">Computing the Result from the Parse Tree</a></li>
-<li><a class="reference external" href="#putting-it-all-together">Putting it all Together</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tutorial</a><ul>
+<li><a class="reference internal" href="#creating-the-grammar-file">Creating The Grammar File</a></li>
+<li><a class="reference internal" href="#running-wisent">Running Wisent</a></li>
+<li><a class="reference internal" href="#adding-a-tokenizer">Adding a Tokenizer</a></li>
+<li><a class="reference internal" href="#computing-the-result-from-the-parse-tree">Computing the Result from the Parse Tree</a></li>
+<li><a class="reference internal" href="#putting-it-all-together">Putting it all Together</a></li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="ch1intro.html"
-                                  title="previous chapter">Introduction</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="ch3wisent.html"
-                                  title="next chapter">Documentation for Wisent</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ch1intro.html"
+                        title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ch3wisent.html"
+                        title="next chapter">Documentation for Wisent</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -387,8 +390,8 @@ parse error before '-', expected one of '(', 'NUMBER', 'SYMBOL'</pre>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Jochen Voss.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.7.
+        &copy; Copyright 2012, Jochen Voss.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
     </div>
   </body>
 </html>

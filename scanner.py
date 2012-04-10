@@ -1,6 +1,6 @@
 # scanner.py - tokenize Wisent's input
 #
-# Copyright (C) 2008, 2009  Jochen Voss <voss@seehuhn.de>
+# Copyright (C) 2008, 2009, 2012  Jochen Voss <voss@seehuhn.de>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

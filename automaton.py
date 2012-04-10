@@ -1,6 +1,6 @@
 # automaton.py - the Automaton class
 #
-# Copyright (C) 2008  Jochen Voss <voss@seehuhn.de>
+# Copyright (C) 2008, 2012  Jochen Voss <voss@seehuhn.de>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

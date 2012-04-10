@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -11,13 +13,14 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.6.1',
-        COLLAPSE_MODINDEX: false,
+        VERSION:     '0.6.2',
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="Wisent Users&#39; Manual" href="index.html" />
     <link rel="prev" title="Documentation for the Generated Parser" href="ch4parser.html" /> 
@@ -46,15 +49,15 @@
 <p>The algorithm used in Wisent to generate the parser is based on the
 following article:</p>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li>David Pager, <em>A practical general method for constructing LR(k)
 parsers</em>.  Acta Informatica, volume 7 (1977), number 3, pages 249-268,
 DOI <a class="reference external" href="http://dx.doi.org/10.1007/BF00290336">10.1007/BF00290336</a>.</li>
 </ul>
-</blockquote>
+</div></blockquote>
 <p>More references are:</p>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li>Wikipedia has articles about <a class="reference external" href="http://en.wikipedia.org/wiki/Context-free_grammar">context free grammars</a>, <a class="reference external" href="http://en.wikipedia.org/wiki/LR_parser">LR
 parsers</a> and <a class="reference external" href="http://en.wikipedia.org/wiki/Wisent">Wisents</a>.</li>
 <li>The first edition of the book <em>Parsing Techniques &#8212; A
@@ -66,7 +69,7 @@ C++ projects.  Bison comes with an excellent manual.</li>
 Python parser generators.</li>
 <li>Xkcd <a class="reference external" href="http://xkcd.com/208/">knows regular expressions</a>.</li>
 </ul>
-</blockquote>
+</div></blockquote>
 </div>
 
 
@@ -75,22 +78,22 @@ Python parser generators.</li>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="ch4parser.html"
-                                  title="previous chapter">Documentation for the Generated Parser</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ch4parser.html"
+                        title="previous chapter">Documentation for the Generated Parser</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -108,8 +111,8 @@ Python parser generators.</li>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Jochen Voss.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.7.
+        &copy; Copyright 2012, Jochen Voss.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
     </div>
   </body>
 </html>
