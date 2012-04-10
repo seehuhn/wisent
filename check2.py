@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# check.py - check the scanner used in Wisent
+# check2.py - check the scanner used in Wisent
 #
 # Copyright (C) 2010  Jochen Voss <voss@seehuhn.de>
 #
