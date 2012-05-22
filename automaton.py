@@ -105,6 +105,9 @@ class Automaton(object):
 
         class StateIndex(object):
 
+            def __init__(self):
+                self.label = -1
+
             def set_label(self, label):
                 self.label = label
 
@@ -243,8 +246,8 @@ class Automaton(object):
         for key,ctx in self.reduce_tab[state].iteritems():
             for X in ctx:
                 res.setdefault(X, []).append(('R',key))
-        for X,next in self.shift_tab[state].iteritems():
-            res.setdefault(X, []).append(('S',next))
+        for X,next_state in self.shift_tab[state].iteritems():
+            res.setdefault(X, []).append(('S',next_state))
         return res
 
     def _check_overrides(self, state, X, action):
@@ -296,10 +299,10 @@ class Automaton(object):
 
                 for action in actions:
                     if action[0] == 'S':
-                        next = action[1]
-                        if next not in path:
-                            path[next] = word
-                            todo.add(next)
+                        next_state = action[1]
+                        if next_state not in path:
+                            path[next_state] = word
+                            todo.add(next_state)
 
                 if len(actions) > 1:
                     # conflict: more than one action possible
@@ -432,7 +435,7 @@ class Automaton(object):
                 ctxstr = "{"+",".join(str(x) for x in sorted(ctx))+"}"
                 write("  "+rulestr+" "+ctxstr)
 
-    def write_parser(self, fd, params={}):
+    def write_parser(self, fd, options={}):
         """Emit Python code implementing the parser.
 
         A complete, stand-alone Python source file implementing the
@@ -440,6 +443,8 @@ class Automaton(object):
         the output is prefixed with the string `prefix`.
         """
         self.check()
+
+        params = options.copy()
 
         from time import strftime
         params.setdefault('date', strftime("%Y-%m-%d %H:%M:%S"))
