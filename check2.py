@@ -55,8 +55,8 @@ for name in names:
 
     tt = list(tokens(text.splitlines()))
     if tt == result:
-        print "test %s: OK"%label
+        print("test %s: OK"%label)
     else:
-        print "test %s: FAIL"%label
+        print("test %s: FAIL"%label)
         for t in tt:
-            print t
+            print(t)

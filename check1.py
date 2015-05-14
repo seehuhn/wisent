@@ -19,8 +19,10 @@
 
 import sys
 from os import remove, rmdir
+from shutil import rmtree
 from os.path import join
 from tempfile import mkdtemp
+from imp import reload
 
 from grammar import Grammar
 from automaton import Automaton
@@ -51,7 +53,7 @@ EOF = FakeEOF()
 ignore = object()
 
 def check(rules, tests, parser_args={}):
-    print "-"*70
+    print("-"*70)
     g = Grammar(rules)
     a = Automaton(g)
     fd = open(join(testdir,"tmp.py"), "w")
@@ -68,11 +70,11 @@ def check(rules, tests, parser_args={}):
     for input,e_tree,e_err in tests:
         e_err = [ (x[0], frozenset(x[1])) for x in e_err ]
 
-        print "input: "+repr(input)
+        print("input: "+repr(input))
         try:
             tree = p.parse((x,k) for k,x in enumerate(input))
             err = []
-        except p.ParseErrors, e:
+        except p.ParseErrors as e:
             tree = e.tree
             err = e.errors
             err = [ (x[0], frozenset(x[1])) for x in err ]
@@ -80,22 +82,22 @@ def check(rules, tests, parser_args={}):
         success = True
         for e in e_err:
             if e not in err:
-                print "  missed error: "+repr(e)
+                print("  missed error: "+repr(e))
                 success = False
         for e in err:
             if e not in e_err:
-                print "  unexpected error: "+repr(e)
+                print("  unexpected error: "+repr(e))
                 success = False
         if e_tree != ignore and tree != e_tree:
-            print "  unexpected result:"
-            print "    expected: "+repr(e_tree)
-            print "    got: "+repr(tree)
+            print("  unexpected result:")
+            print("    expected: "+repr(e_tree))
+            print("    got: "+repr(tree))
             success = False
 
         if success:
-            print "  success"
+            print("  success")
         else:
-            print "  failure"
+            print("  failure")
             global errors
             errors += 1
     try:
@@ -185,7 +187,7 @@ tests = [
     ]
 check(rules, tests, {'errcorr_post':3})
 
-rmdir(testdir)
+rmtree(testdir, True)
 
 if errors:
     raise SystemExit(1)

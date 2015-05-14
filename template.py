@@ -32,9 +32,9 @@ def print_tree(tree, terminals, indent=0):
     """Print a parse tree to stdout."""
     prefix = "    "*indent
     if tree[0] in terminals:
-        print prefix + repr(tree)
+        print(prefix + repr(tree))
     else:
-        print prefix + unicode(tree[0])
+        print(prefix + tree[0].decode('ascii'))
         for x in tree[1:]:
             print_tree(x, terminals, indent+1)
 
@@ -119,7 +119,7 @@ class Parser(object):
         while state != self._halting_state:
             if read_next:
                 try:
-                    lookahead = input.next()
+                    lookahead = next(input)
                 except StopIteration:
                     return (False,count,state,None)
                 read_next = False
@@ -130,12 +130,12 @@ class Parser(object):
             for s in stack:
                 debug.extend([str(s[0]), repr(s[1][0])])
             debug.append(str(state))
-            print " ".join(debug)+" [%s]"%repr(token)
+            print(" ".join(debug)+" [%s]"%repr(token))
             #@ ENDIF parser_debugprint
 
             if (state,token) in self._shift:
                 #@ IF parser_debugprint
-                print "shift %s"%repr(token)
+                print("shift %s"%repr(token))
                 #@ ENDIF
                 stack.append((state,lookahead))
                 state = self._shift[(state,token)]
@@ -166,13 +166,13 @@ class Parser(object):
                     debug = [ ]
                     #@ ENDIF
                 #@ IF parser_debugprint
-                print "reduce %s -> %s"%(repr(debug),repr(X))
+                print("reduce %s -> %s"%(repr(debug),repr(X)))
                 #@ ENDIF
                 stack.append((state,tree))
                 state = self._goto[(state,X)]
             else:
                 #@ IF parser_debugprint
-                print "parse error"
+                print("parse error")
                 #@ ENDIF
                 return (False,count,state,lookahead)
         return (True,count,state,None)
@@ -217,7 +217,7 @@ class Parser(object):
             if done:
                 break
 
-            expect = [ t for s,t in self._reduce.keys()+self._shift.keys()
+            expect = [ t for s,t in chain(self._reduce.keys(),self._shift.keys())
                        if s == state ]
             #@ IF error_stacks
             errors.append((lookahead, expect, [ s[1] for s in stack ]))
@@ -228,7 +228,7 @@ class Parser(object):
                 raise self.ParseErrors(errors, None)
 
             #@ IF parser_debugprint
-            print "backtrack for error recovery"
+            print("backtrack for error recovery")
             #@ ENDIF
             queue = []
             def split_input(m, stack, lookahead, input, queue):
@@ -244,7 +244,7 @@ class Parser(object):
             m = len(queue)
             for i in range(0, self.n):
                 try:
-                    queue.append(input.next())
+                    queue.append(next(input))
                 except StopIteration:
                     break
 
@@ -274,7 +274,7 @@ class Parser(object):
             input = chain(best_queue, input)
             #@ IF parser_debugprint
             debug = " ".join(repr(x[0]) for x in best_queue)
-            print "restart with repaired input: "+debug
+            print("restart with repaired input: "+debug)
             #@ ENDIF
 
         tree = stack[0][1]

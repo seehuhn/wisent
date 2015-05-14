@@ -55,7 +55,7 @@ class Automaton(object):
         """Check whether S and T can be merged.
 
         This implements definition 1 (p. 254) from Pager, 1977."""
-        core = S.keys()
+        core = list(S.keys())
         if set(T.keys()) != set(core):
             return False
         if len(core) == 1:
@@ -140,7 +140,7 @@ class Automaton(object):
 
             state = self._closure(state_tab[state_no])
             shift = {}
-            for prod,ctx in state.iteritems():
+            for prod,ctx in state.items():
                 key,l,n = prod
                 r = rules[key]
                 if n == l:
@@ -155,7 +155,7 @@ class Automaton(object):
                     neighbour_ctx = X_neighbour.setdefault(p, set())
                     neighbour_ctx.update(ctx)
 
-            for X,S in shift.iteritems():
+            for X,S in shift.items():
                 for Tn in maybe_compatible[X]:
                     T = state_tab[Tn]
                     if not self._is_compatible(S, T):
@@ -225,7 +225,7 @@ class Automaton(object):
         action, the second element gives the new state of the
         automaton.
         """
-        ritems = self.reduce_tab[state].iteritems()
+        ritems = self.reduce_tab[state].items()
         actions = [ ('R',key) for key,ctx in ritems if X in ctx ]
         stab = self.shift_tab[state]
         if X in stab:
@@ -240,10 +240,10 @@ class Automaton(object):
         `_get_actions`.
         """
         res = {}
-        for key,ctx in self.reduce_tab[state].iteritems():
+        for key,ctx in self.reduce_tab[state].items():
             for X in ctx:
                 res.setdefault(X, []).append(('R',key))
-        for X,next in self.shift_tab[state].iteritems():
+        for X,next in self.shift_tab[state].items():
             res.setdefault(X, []).append(('S',next))
         return res
 
@@ -284,7 +284,7 @@ class Automaton(object):
         while todo:
             state = todo.pop()
 
-            for X,actions in self._get_all_actions(state).iteritems():
+            for X,actions in self._get_all_actions(state).items():
                 word = path[state] + (X,)
 
                 # try conflict overrides
@@ -426,7 +426,7 @@ class Automaton(object):
             for prod in sorted(U, key=keyfn):
                 k,l,n = prod
                 rule = self.g.rules[k]
-                rr = map(str, rule)
+                rr = list(map(str, rule))
                 rulestr = rr[0]+" -> "+" ".join(rr[1:n])+"."+" ".join(rr[n:l])
                 ctx = U[prod]
                 ctxstr = "{"+",".join(str(x) for x in sorted(ctx))+"}"
