@@ -23,10 +23,10 @@ from random import choice, uniform
 from inspect import getsource
 from functools import reduce
 
-from text import split_it, write_block
-from scanner import tokens
-from parser import Parser
-import template
+from .text import split_it, write_block
+from .scanner import tokens
+from .parser import Parser
+from . import template
 
 
 def _print_error(msg, lineno=None, offset=None, fname=None):

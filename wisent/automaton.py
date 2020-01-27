@@ -18,10 +18,10 @@
 
 from inspect import getsource, getcomments
 
-from grammar import read_grammar, Conflicts, Unique
-import template
-from text import split_it, write_block
-from version import VERSION
+from .grammar import read_grammar, Conflicts, Unique
+from . import template
+from .text import split_it, write_block
+from .version import VERSION
 
 
 class Automaton(object):
