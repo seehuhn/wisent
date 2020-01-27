@@ -494,8 +494,8 @@ class Grammar(object):
 
     def write_nonterminals(self, fd=sys.stdout, prefix=""):
         fd.write(prefix+"nonterminal symbols:\n")
-        all = self.nonterminals
-        symbols = [ x for x in all-set([self.start]) if str(x)[0] != '_' ]
+        nterms = self.nonterminals
+        symbols = [ x for x in nterms-set([self.start]) if str(x)[0] != '_' ]
         tt = map(repr, sorted(symbols))
         for l in split_it(tt, padding=prefix+"  "):
             fd.write(l+"\n")

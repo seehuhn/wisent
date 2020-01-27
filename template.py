@@ -103,10 +103,10 @@ class Parser(object):
                 for t in Parser.leaves(x):
                     yield t
 
-    def _parse(self, input, stack, state):
+    def _parse(self, tokens, stack, state):
         """Internal function to construct a parse tree.
 
-        'Input' is the input token stream, 'stack' is the inital stack
+        'Tokens' is the input token stream, 'stack' is the inital stack
         and 'state' is the inital state of the automaton.
 
         Returns a 4-tuple (done, count, state, error).  'done' is a
@@ -119,7 +119,7 @@ class Parser(object):
         while state != self._halting_state:
             if read_next:
                 try:
-                    lookahead = next(input)
+                    lookahead = next(tokens)
                 except StopIteration:
                     return (False,count,state,None)
                 read_next = False
@@ -177,10 +177,10 @@ class Parser(object):
                 return (False,count,state,lookahead)
         return (True,count,state,None)
 
-    def _try_parse(self, input, stack, state):
+    def _try_parse(self, tokens, stack, state):
         count = 0
-        while state != self._halting_state and count < len(input):
-            token = input[count][0]
+        while state != self._halting_state and count < len(tokens):
+            token = tokens[count][0]
 
             if (state,token) in self._shift:
                 stack.append(state)
@@ -197,23 +197,23 @@ class Parser(object):
                 break
         return count
 
-    def parse(self, input):
-        """Parse the tokens from `input` and construct a parse tree.
+    def parse(self, tokens):
+        """Parse the tokens from `tokens` and construct a parse tree.
 
-        `input` must be an interable over tuples.  The first element
+        `tokens` must be an interable over tuples.  The first element
         of each tuple must be a terminal symbol of the grammar which
         is used for parsing.  All other element of the tuple are just
         copied into the constructed parse tree.
 
-        If `input` is invalid, a ParseErrors exception is raised.
+        If `tokens` is invalid, a ParseErrors exception is raised.
         Otherwise the function returns the parse tree.
         """
         errors = []
-        input = chain(input, [(self.EOF,)])
+        tokens = chain(tokens, [(self.EOF,)])
         stack = []
         state = 0
         while True:
-            done,_,state,lookahead = self._parse(input, stack, state)
+            done,_,state,lookahead = self._parse(tokens, stack, state)
             if done:
                 break
 
@@ -231,20 +231,20 @@ class Parser(object):
             print("backtrack for error recovery")
             #@ ENDIF
             queue = []
-            def split_input(m, stack, lookahead, input, queue):
+            def split_input(m, stack, lookahead, queue):
                 for s in stack:
                     for t in self.leaves(s[1]):
                         queue.append(t)
                         if len(queue) > m:
                             yield queue.pop(0)
                 queue.append(lookahead)
-            in2 = split_input(self.m, stack, lookahead, input, queue)
+            in2 = split_input(self.m, stack, lookahead, queue)
             stack = []
             done,_,state,lookahead = self._parse(in2, stack, 0)
             m = len(queue)
             for i in range(0, self.n):
                 try:
-                    queue.append(next(input))
+                    queue.append(next(tokens))
                 except StopIteration:
                     break
 
@@ -271,7 +271,7 @@ class Parser(object):
                         break
             if best_val >= len(queue)-m+1:
                 raise self.ParseErrors(errors, None)
-            input = chain(best_queue, input)
+            tokens = chain(best_queue, tokens)
             #@ IF parser_debugprint
             debug = " ".join(repr(x[0]) for x in best_queue)
             print("restart with repaired input: "+debug)
