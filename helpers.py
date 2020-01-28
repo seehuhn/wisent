@@ -34,5 +34,5 @@ def open_executable(fname, mode='r', bufsize=-1):
         flags |= os.O_APPEND
     else:
         flags |= os.O_TRUNC
-    fd = os.open(fname, flags, 0777)
+    fd = os.open(fname, flags, 0o777)
     return os.fdopen(fd, mode, bufsize)

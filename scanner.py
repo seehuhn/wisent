@@ -20,9 +20,12 @@ def isascii(s):
     return all(ord(c)<128 for c in s)
 
 def conv(s):
-    if isinstance(s, unicode) and isascii(s):
-        return str(s)
-    else:
+    try:
+        if isinstance(s, unicode) and isascii(s):
+            return str(s)
+        else:
+            return s
+    except NameError:
         return s
 
 def tokens(source):

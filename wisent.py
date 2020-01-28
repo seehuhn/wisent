@@ -17,6 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function
 import sys
 # FIX PATH
 
@@ -53,16 +54,16 @@ getopt.add_option("-V","--version",action="store_true",dest="version_flag",
 
 if options.help_flag:
     getopt.print_help()
-    print ""
-    print "Please report bugs to <voss@seehuhn.de>."
+    print("")
+    print("Please report bugs to <voss@seehuhn.de>.")
     raise SystemExit(0)
 if options.version_flag:
-    print """wisent %s
+    print("""wisent %s
 Copyright (C) 2008, 2009 Jochen Voss <voss@seehuhn.de>
 Wisent comes with ABSOLUTELY NO WARRANTY, to the extent
 permitted by law.  You may redistribute copies of Wisent under
 the terms of the GNU General Public License.  For more
-information about these matters, see the file named COPYING."""%VERSION
+information about these matters, see the file named COPYING."""%VERSION)
     raise SystemExit(0)
 
 ######################################################################
@@ -98,9 +99,9 @@ else:
         fd = open(f_in, "rb")
         text = fd.read()
         fd.close()
-    except IOError, e:
+    except IOError as e:
         msg = '%s: error while reading "%s": %s'%(f_in, f_in, e.strerror)
-        print >>sys.stderr, msg
+        print(msg, file=sys.stderr)
         raise SystemExit(1)
 
 def check(g, params):
@@ -108,7 +109,7 @@ def check(g, params):
     a.check()
     return a
 
-a = read_grammar(unicode(text, "utf-8").splitlines(), params, check)
+a = read_grammar(text.decode("utf-8").splitlines(), params, check)
 del text
 
 ######################################################################
@@ -122,9 +123,9 @@ else:
         fd = open(f_out, "w")
         a.write_parser(fd, params)
         fd.close()
-    except IOError, e:
+    except IOError as e:
         msg = '%s: error while writing "%s": %s'%(progname, f_out, e.strerror)
-        print >>sys.stderr, msg
+        print(msg, file=sys.stderr)
         raise SystemExit(1)
 
 ######################################################################
@@ -136,7 +137,7 @@ if f_ex is not None:
         fd = open_executable(f_ex, "w")
         a.g.write_example(fd, params)
         fd.close()
-    except IOError, e:
+    except IOError as e:
         msg = '%s: error while writing "%s": %s'%(progname, f_ex, e.strerror)
-        print >>sys.stderr, msg
+        print(msg, file=sys.stderr)
         raise SystemExit(1)

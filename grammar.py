@@ -16,10 +16,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function
 import sys
 from os.path import basename
 from random import choice, uniform
 from inspect import getsource
+from functools import reduce
 
 from text import split_it, write_block
 from scanner import tokens
@@ -41,7 +43,7 @@ def _print_error(msg, lineno=None, offset=None, fname=None):
     prefix = "".join(parts)
     if prefix:
         prefix = prefix+" "
-    print >>sys.stderr, prefix+unicode(msg)
+    print(prefix+msg.decode('ascii'), file=sys.stderr)
 
 class RulesError(Exception):
 
@@ -80,7 +82,7 @@ class Conflicts(Exception):
         return len(self.list)
 
     def __iter__(self):
-        return self.list.iteritems()
+        return self.list.items()
 
     def add(self, data, text):
         """Add another conflict to the list.
@@ -177,6 +179,9 @@ class Unique(object):
 
     These objects are internally used to represent the start symbol
     and the end-of-input marker of the grammar.
+
+    They sort against integers and strings, being larger than any integer,
+    but smaller than any string.
     """
 
     def __init__(self, label):
@@ -190,6 +195,18 @@ class Unique(object):
     def __repr__(self):
         """Return the `label` given at object construction."""
         return self.label
+
+    def __lt__(self, other):
+        if isinstance(other, int):
+            return False
+        else:
+            return True
+
+    def __gt__(self, other):
+        if isinstance(other, int):
+            return True
+        else:
+            return False
 
 class Grammar(object):
 
@@ -216,7 +233,7 @@ class Grammar(object):
         if not rules:
             raise RulesError("empty grammar")
         first = True
-        for key, r in rules.iteritems():
+        for key, r in rules.items():
             self.rules[key] = r
             self.nonterminals.add(r[0])
             if first:
@@ -246,7 +263,7 @@ class Grammar(object):
         self.rule_from_head = {}
         for X in self.symbols:
             self.rule_from_head[X] = []
-        for k, rule in self.rules.iteritems():
+        for k, rule in self.rules.items():
             self.rule_from_head[rule[0]].append((k,len(rule)))
 
         # precompute the set of all nullable symbols
@@ -327,7 +344,7 @@ class Grammar(object):
         done = False
         while not done:
             done = True
-            for key, r in self.rules.iteritems():
+            for key, r in self.rules.items():
                 if r[0] in nbtab:
                     continue
                 for s in r[1:]:
@@ -348,7 +365,7 @@ class Grammar(object):
         done = False
         while not done:
             done = True
-            for key, r in self.rules.iteritems():
+            for key, r in self.rules.items():
                 fi = set()
                 for s in r[1:]:
                     fi |= fitab[s]
@@ -366,7 +383,7 @@ class Grammar(object):
         done = False
         while not done:
             done = True
-            for key, r in self.rules.iteritems():
+            for key, r in self.rules.items():
                 for i in range(1,len(r)):
                     fo = set()
                     for s in r[i+1:]:
@@ -434,7 +451,7 @@ class Grammar(object):
         rtab = {}
         for X in todo:
             rtab[X] = []
-        for r in self.rules.itervalues():
+        for r in self.rules.values():
             if r[0] in todo:
                 rtab[r[0]].append(r[1:])
 
@@ -593,12 +610,12 @@ def _parse_grammar_file(fd, params={}):
     try:
         tree = p.parse(tokens(fd))
         has_errors = False
-    except SyntaxError, e:
+    except SyntaxError as e:
         _print_error(e.msg, e.lineno, e.offset,
                      fname=params.get("fname", None))
         tree = None
         has_errors = True
-    except p.ParseErrors, e:
+    except p.ParseErrors as e:
         for token,expected in e.errors:
             if token[0] == p.EOF:
                 _print_error("unexpected end of file",
@@ -606,7 +623,7 @@ def _parse_grammar_file(fd, params={}):
                 continue
 
             def quote(x):
-                s = unicode(x)
+                s = x.decode('ascii')
                 if not s.isalpha():
                     s = "'"+s+"'"
                 return s
@@ -825,10 +842,10 @@ def optimise_rules(rules):
         # step 1: Remove duplicate rules.
         A = _rules_by_head(rules)
         B = {}
-        for head,rr in A.iteritems():
+        for head,rr in A.items():
             rr = frozenset(rr)
             B[rr] = B.get(rr,[]) + [head]
-        for hh in B.itervalues():
+        for hh in B.values():
             if len(hh) < 2:
                 continue
             head = hh.pop()
@@ -886,7 +903,7 @@ def optimise_rules(rules):
                     rlength[sym] = [ len(r[1:-1]) ]
 
         savings = []
-        for sym,rr in repl.iteritems():
+        for sym,rr in repl.items():
             k = len(rr)
             sk = sum(len(r) for r in rr)
             n_remove = sk + k
@@ -949,21 +966,21 @@ def read_grammar(fd, params={}, checkfunc=None):
 
     try:
         g = Grammar(rr)
-    except RulesError, e:
+    except RulesError as e:
         _print_error(e, fname=fname)
         raise SystemExit(1)
 
     # check for infinite loops
     try:
         g.shortcuts()
-    except RulesError, e:
+    except RulesError as e:
         _print_error(e)
         raise SystemExit(1)
 
     if checkfunc is not None:
         try:
             res = checkfunc(g, params)
-        except Conflicts, e:
+        except Conflicts as e:
             e.print_conflicts(g.rules, rule_locations, fname)
             n = len(e)
             if n == 1:
