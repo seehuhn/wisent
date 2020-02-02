@@ -33,6 +33,7 @@ def split_it(args, padding="", start1="", start2=None, sep=", ",
     if not args:
         yield padding + start1 + end2
         return
+    args = list(args)
     if start2 is None:
         start2 = " "*len(start1)
     args = [ str(arg) for arg in args[:-1] ] + [ str(args[-1])+end2 ]
