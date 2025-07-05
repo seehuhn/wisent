@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # check2.py - check the scanner used in Wisent
 #
 # Copyright (C) 2010  Jochen Voss <voss@seehuhn.de>
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from scanner import tokens
+from wisent_pkg.scanner import tokens
 
 in1 = ""
 out1 = [ ]
@@ -55,8 +55,8 @@ for name in names:
 
     tt = list(tokens(text.splitlines()))
     if tt == result:
-        print "test %s: OK"%label
+        print("test %s: OK"%label)
     else:
-        print "test %s: FAIL"%label
+        print("test %s: FAIL"%label)
         for t in tt:
-            print t
+            print(t)

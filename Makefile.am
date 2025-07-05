@@ -3,12 +3,12 @@
 
 SUBDIRS = doc examples
 
-EXTRA_DIST = wisent.py check1.py check2.py
+EXTRA_DIST = wisent_pkg/wisent.py check1.py check2.py
 BUILT_SOURCES = version.py
 
 bin_SCRIPTS = wisent
-pkgpython_PYTHON = grammar.py automaton.py scanner.py parser.py	\
-	text.py helpers.py template.py version.py
+pkgpython_PYTHON = wisent_pkg/grammar.py wisent_pkg/automaton.py wisent_pkg/scanner.py wisent_pkg/parser.py	\
+	wisent_pkg/text.py wisent_pkg/helpers.py wisent_pkg/template.py wisent_pkg/version.py version.py
 
 TESTS = check1.py check2.py
 
@@ -20,12 +20,13 @@ version.py: configure.ac Makefile.am
 	echo "PACKAGE=\"@PACKAGE@\"" >>$@ && \
 	echo "VERSION=\"@VERSION@\"" >>$@
 
-wisent: wisent.py Makefile.am
-	echo "#! /usr/bin/env python" >$@
+wisent: wisent_pkg/wisent.py Makefile.am
+	echo "#! /usr/bin/env python3" >$@
 	echo "# WARNING: automatically generated from $<, do not edit" >>$@
 	echo "#" >>$@
 	sed -e "1 d" \
 	  -e "s;^# FIX PATH$$;sys.path = ['@pkgpythondir@'] + sys.path;" \
+	  -e "s;^from \\.;from wisent_pkg.;g" \
 	  $< >>$@
 	chmod +x wisent
 

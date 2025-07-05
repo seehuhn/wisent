@@ -53,18 +53,18 @@ def eval_tree(tree):
 p = Parser()
 while True:
     try:
-        s = raw_input("calc: ")
+        s = input("calc: ")
     except EOFError:
-        print
+        print()
         break
-    input = tokenize(s)
+    tokens = tokenize(s)
 
     try:
-        tree = p.parse(input)
-    except p.ParseErrors, e:
+        tree = p.parse(tokens)
+    except p.ParseErrors as e:
         for token,expected in e.errors:
             if token[0] == p.EOF:
-                print >>stderr, "unexpected end of file"
+                print("unexpected end of file", file=stderr)
                 continue
 
             found = repr(token[0])
@@ -75,7 +75,7 @@ while True:
                 l = sorted([ repr(s) for s in expected ])
                 msg2 = "expected one of "+", ".join(l)
                 msg = msg1+msg2
-            print >>stderr, msg
+            print(msg, file=stderr)
         continue
 
-    print eval_tree(tree)
+    print(eval_tree(tree))

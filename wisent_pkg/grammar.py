@@ -20,11 +20,17 @@ import sys
 from os.path import basename
 from random import choice, uniform
 from inspect import getsource
+try:
+    # Python 2
+    reduce = reduce
+except NameError:
+    # Python 3
+    from functools import reduce
 
-from text import split_it, write_block
-from scanner import tokens
-from parser import Parser
-import template
+from .text import split_it, write_block
+from .scanner import tokens
+from .parser import Parser
+from . import template
 
 
 def _print_error(msg, lineno=None, offset=None, fname=None):
@@ -41,7 +47,7 @@ def _print_error(msg, lineno=None, offset=None, fname=None):
     prefix = "".join(parts)
     if prefix:
         prefix = prefix+" "
-    print >>sys.stderr, prefix+unicode(msg)
+    print(prefix+str(msg), file=sys.stderr)
 
 class RulesError(Exception):
 
@@ -80,7 +86,7 @@ class Conflicts(Exception):
         return len(self.list)
 
     def __iter__(self):
-        return self.list.iteritems()
+        return self.list.items()
 
     def add(self, data, text):
         """Add another conflict to the list.
@@ -216,7 +222,7 @@ class Grammar(object):
         if not rules:
             raise RulesError("empty grammar")
         first = True
-        for key, r in rules.iteritems():
+        for key, r in rules.items():
             self.rules[key] = r
             self.nonterminals.add(r[0])
             if first:
@@ -246,7 +252,7 @@ class Grammar(object):
         self.rule_from_head = {}
         for X in self.symbols:
             self.rule_from_head[X] = []
-        for k, rule in self.rules.iteritems():
+        for k, rule in self.rules.items():
             self.rule_from_head[rule[0]].append((k,len(rule)))
 
         # precompute the set of all nullable symbols
@@ -283,7 +289,7 @@ class Grammar(object):
         if self.start not in N:
             tmpl = "start symbol %s doesn't generate terminals"
             raise RulesError(tmpl%repr(self.start))
-        for key in R:
+        for key in list(R):
             if not set(self.rules[key]) <= (N|T):
                 del self.rules[key]
 
@@ -302,7 +308,7 @@ class Grammar(object):
                         done = False
         N &= gamma
         T &= gamma
-        for key in R:
+        for key in list(R):
             if not set(self.rules[key]) <= (N|T):
                 del self.rules[key]
 
@@ -327,7 +333,7 @@ class Grammar(object):
         done = False
         while not done:
             done = True
-            for key, r in self.rules.iteritems():
+            for key, r in self.rules.items():
                 if r[0] in nbtab:
                     continue
                 for s in r[1:]:
@@ -348,7 +354,7 @@ class Grammar(object):
         done = False
         while not done:
             done = True
-            for key, r in self.rules.iteritems():
+            for key, r in self.rules.items():
                 fi = set()
                 for s in r[1:]:
                     fi |= fitab[s]
@@ -366,7 +372,7 @@ class Grammar(object):
         done = False
         while not done:
             done = True
-            for key, r in self.rules.iteritems():
+            for key, r in self.rules.items():
                 for i in range(1,len(r)):
                     fo = set()
                     for s in r[i+1:]:
@@ -434,7 +440,7 @@ class Grammar(object):
         rtab = {}
         for X in todo:
             rtab[X] = []
-        for r in self.rules.itervalues():
+        for r in self.rules.values():
             if r[0] in todo:
                 rtab[r[0]].append(r[1:])
 
@@ -471,7 +477,7 @@ class Grammar(object):
 
     def write_terminals(self, fd=sys.stdout, prefix=""):
         fd.write(prefix+"terminal symbols:\n")
-        tt = map(repr, sorted(self.terminals-set([self.EOF])))
+        tt = list(map(repr, sorted(self.terminals-set([self.EOF]))))
         for l in split_it(tt, padding=prefix+"  "):
             fd.write(l+"\n")
 
@@ -479,7 +485,7 @@ class Grammar(object):
         fd.write(prefix+"nonterminal symbols:\n")
         nterms = self.nonterminals
         symbols = [ x for x in nterms-set([self.start]) if str(x)[0] != '_' ]
-        tt = map(repr, sorted(symbols))
+        tt = list(map(repr, sorted(symbols)))
         for l in split_it(tt, padding=prefix+"  "):
             fd.write(l+"\n")
 
@@ -554,10 +560,10 @@ class Grammar(object):
         p = Parser()
         try:
             tree = p.parse(input)
-        except p.ParseErrors, e:
+        except p.ParseErrors as e:
             for token,expected in e.errors:
                 if token[0] == p.EOF:
-                    print >>stderr, "unexpected end of file"
+                    print("unexpected end of file", file=stderr)
                     continue
 
                 found = repr(token[0])
@@ -568,7 +574,7 @@ class Grammar(object):
                     l = sorted([ repr(s) for s in expected ])
                     msg2 = "expected one of "+", ".join(l)
                     msg = msg1+msg2
-                print >>stderr, msg
+                print(msg, file=stderr)
             raise SystemExit(1)
         """)
         fd.write('\n')
@@ -593,12 +599,12 @@ def _parse_grammar_file(fd, params={}):
     try:
         tree = p.parse(tokens(fd))
         has_errors = False
-    except SyntaxError, e:
+    except SyntaxError as e:
         _print_error(e.msg, e.lineno, e.offset,
                      fname=params.get("fname", None))
         tree = None
         has_errors = True
-    except p.ParseErrors, e:
+    except p.ParseErrors as e:
         for token,expected in e.errors:
             if token[0] == p.EOF:
                 _print_error("unexpected end of file",
@@ -606,7 +612,7 @@ def _parse_grammar_file(fd, params={}):
                 continue
 
             def quote(x):
-                s = unicode(x)
+                s = str(x)
                 if not s.isalpha():
                     s = "'"+s+"'"
                 return s
@@ -825,10 +831,10 @@ def optimise_rules(rules):
         # step 1: Remove duplicate rules.
         A = _rules_by_head(rules)
         B = {}
-        for head,rr in A.iteritems():
+        for head,rr in A.items():
             rr = frozenset(rr)
             B[rr] = B.get(rr,[]) + [head]
-        for hh in B.itervalues():
+        for hh in B.values():
             if len(hh) < 2:
                 continue
             head = hh.pop()
@@ -886,7 +892,7 @@ def optimise_rules(rules):
                     rlength[sym] = [ len(r[1:-1]) ]
 
         savings = []
-        for sym,rr in repl.iteritems():
+        for sym,rr in repl.items():
             k = len(rr)
             sk = sum(len(r) for r in rr)
             n_remove = sk + k
@@ -949,21 +955,21 @@ def read_grammar(fd, params={}, checkfunc=None):
 
     try:
         g = Grammar(rr)
-    except RulesError, e:
+    except RulesError as e:
         _print_error(e, fname=fname)
         raise SystemExit(1)
 
     # check for infinite loops
     try:
         g.shortcuts()
-    except RulesError, e:
+    except RulesError as e:
         _print_error(e)
         raise SystemExit(1)
 
     if checkfunc is not None:
         try:
             res = checkfunc(g, params)
-        except Conflicts, e:
+        except Conflicts as e:
             e.print_conflicts(g.rules, rule_locations, fname)
             n = len(e)
             if n == 1:

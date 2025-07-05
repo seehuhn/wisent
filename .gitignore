@@ -1,4 +1,5 @@
 *.pyc
+__pycache__/
 *~
 INSTALL
 Makefile.in
@@ -9,3 +10,26 @@ install-sh
 missing
 py-compile
 version.py
+
+# Python packaging build artifacts
+*.egg-info/
+build/
+dist/
+
+# Generated documentation
+doc/html/
+doc/web/cache/
+
+# Build artifacts
+Makefile
+config.log
+config.status
+test-suite.log
+wisent
+*.log
+*.trs
+test-driver
+
+# Distribution artifacts
+*.tar.gz
+wisent-*/

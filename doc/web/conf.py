@@ -10,7 +10,7 @@ project = 'wisent'
 copyright = '2012, Jochen Voss'
 
 m = re.search(r'AC_INIT\(wisent, *(([0-9]+\.[0-9]+)[^, ]*),',
-              open("../../configure.ac").read(),
+              open("../../configure.ac", encoding="utf-8").read(),
               re.MULTILINE)
 version = m.group(2)
 release = m.group(1)

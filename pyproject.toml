@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools >= 61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wisent"
+version = "0.6.2"
+description = "LR(1) parser generator for Python"
+readme = "README.md"
+authors = [
+    {name = "Jochen Voss", email = "voss@seehuhn.de"},
+]
+license = "GPL-2.0-or-later"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Compilers",
+]
+keywords = ["parser", "generator", "lr1", "lalr", "compiler"]
+requires-python = ">=3.6"
+
+[project.urls]
+"Homepage" = "http://seehuhn.de/pages/wisent"
+"Bug Reports" = "https://github.com/seehuhn/wisent/issues"
+"Source" = "https://github.com/seehuhn/wisent"
+
+[project.scripts]
+wisent = "wisent_pkg.wisent:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wisent_pkg*"]
+exclude = ["tests*", "examples*", "doc*"]
+
+[tool.setuptools.package-data]
+wisent_pkg = ["*.py"]

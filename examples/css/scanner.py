@@ -98,7 +98,7 @@ for pat, val in patterns:
     try:
         pat = re.compile(pat, re.IGNORECASE)
     except:
-        print pat
+        print(pat)
         raise
     cpatterns.append((pat, val))
 

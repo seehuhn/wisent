@@ -20,7 +20,7 @@ def isascii(s):
     return all(ord(c)<128 for c in s)
 
 def conv(s):
-    if isinstance(s, unicode) and isascii(s):
+    if isinstance(s, str) and isascii(s):
         return str(s)
     else:
         return s

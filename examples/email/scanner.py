@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 def tokenize(s):
     """Tokenize the body of structured RFC 822 header fields."""

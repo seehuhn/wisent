@@ -1,24 +1,25 @@
 import sys, os, re
 
-extensions = []
+extensions = ['sphinx.ext.autodoc']
 templates_path = []
-source_suffix = '.txt'
+source_suffix = {'.txt': 'restructuredtext'}
 master_doc = 'index'
 
 # General information about the project.
 project = 'wisent'
 copyright = '2012, Jochen Voss'
+author = 'Jochen Voss'
 
 m = re.search(r'AC_INIT\(wisent, *(([0-9]+\.[0-9]+)[^, ]*),',
-              open("../configure.ac").read(),
+              open("../configure.ac", encoding="utf-8").read(),
               re.MULTILINE)
 version = m.group(2)
 release = m.group(1)
 del m
 
-# List of directories, relative to source directory, that shouldn't be searched
-# for source files.
-exclude_trees = [ 'html', 'web', 'latex' ]
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+exclude_patterns = ['html', 'web', 'latex', '_build']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -28,7 +29,8 @@ pygments_style = 'sphinx'
 # -----------------------
 
 html_title = "Wisent Users' Manual"
-html_use_modindex = False
+html_theme = 'alabaster'
+# html_use_modindex deprecated in Sphinx 1.0
 html_use_index = True
 html_copy_source = False
 
@@ -48,4 +50,4 @@ latex_documents = [
 ]
 
 # If false, no module index is generated.
-latex_use_modindex = False
+# latex_use_modindex deprecated in Sphinx 1.0

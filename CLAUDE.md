@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Wisent is an LR(1) parser generator for Python that converts context-free grammars into Python code. It's a mature, stable project (version 0.6.2) built with GNU Autotools.
+Wisent is an LR(1) parser generator for Python 3 that converts context-free grammars into Python code. It's a mature, stable project (version 0.6.2) built with GNU Autotools and modern Python packaging.
 
 **Current State:**
-- **Python 2 only** - Does not run on Python 3 (syntax errors prevent import)
+- **Python 3 compatible** - Fully migrated to Python 3.6+ with modern packaging
 - **Last major release:** April 10, 2012 (12+ years ago)
-- **Development status:** Maintenance mode - minimal activity since 2012
-- **Stability:** Very stable codebase with no recent breaking changes
+- **Development status:** Recently migrated to Python 3 with active maintenance
+- **Stability:** Very stable codebase with successful Python 3 migration
 
 ## Critical Architecture Understanding
 
@@ -29,10 +29,20 @@ The `template.py` file serves two purposes:
 ## Build System and Development Commands
 
 **Prerequisites:**
-- Python 2.7 (Python 3 not supported)
-- GNU Autotools (autoconf, automake, libtool)
+- Python 3.6+ (Python 2 no longer supported)
+- GNU Autotools (autoconf, automake, libtool) - for traditional build
+- pip - for modern Python package installation
 
 ### Building the Project
+
+**Modern Method (Recommended):**
+```bash
+pip install -e .    # Development install
+# or
+pip install .       # Regular install
+```
+
+**Traditional Method:**
 ```bash
 ./autogen.sh    # Generate configure script (often missing from docs)
 ./configure
@@ -41,9 +51,18 @@ make install
 ```
 
 ### Running Tests
+
+**Traditional Method:**
 ```bash
 make check
 ```
+
+**Direct Method:**
+```bash
+python3 check1.py
+python3 check2.py
+```
+
 This runs the test suite consisting of:
 - `check1.py` - Parser generation and parsing tests
 - `check2.py` - Scanner/tokenizer tests
@@ -61,9 +80,17 @@ sphinx-build -b html -d web/cache -c . . html/
 ```
 
 ### Running Wisent
-After building, the main executable is `wisent`:
+
+**After traditional build:**
 ```bash
 ./wisent [options] grammar_file
+```
+
+**After pip install:**
+```bash
+wisent [options] grammar_file
+# or
+python3 -m wisent_pkg.wisent [options] grammar_file
 ```
 
 Key options:
@@ -75,14 +102,17 @@ Key options:
 
 ## Core Components
 
-- **wisent.py** - Main entry point and command-line interface
-- **grammar.py** - Grammar parsing and representation
-- **automaton.py** - LR(1) automaton construction and parser generation
-- **scanner.py** - Tokenizer for grammar files
-- **parser.py** - Base parser classes and error handling
-- **template.py** - **CRITICAL**: Code generation templates (affects all generated parsers)
-- **helpers.py** - Utility functions
-- **text.py** - Text processing utilities
+**Package Structure:**
+- **wisent_pkg/** - Main package directory containing all core modules
+  - **wisent.py** - Main entry point and command-line interface
+  - **grammar.py** - Grammar parsing and representation
+  - **automaton.py** - LR(1) automaton construction and parser generation
+  - **scanner.py** - Tokenizer for grammar files
+  - **parser.py** - Base parser classes and error handling
+  - **template.py** - **CRITICAL**: Code generation templates (affects all generated parsers)
+  - **helpers.py** - Utility functions
+  - **text.py** - Text processing utilities
+  - **version.py** - Version information
 
 ## Grammar File Format
 
@@ -125,15 +155,17 @@ Generated parsers support sophisticated error recovery:
 - Infinite loop detection in grammar rules (added in 0.6.1)
 - Meaningful error messages with expected tokens
 
-## Known Issues and Limitations
+## Migration History
 
-### Python 3 Incompatibility
-- **Syntax errors** prevent import on Python 3
-- **Print statements** instead of print() function
-- **Exception handling** uses old `except Exception, e:` syntax
-- **Iterator protocol** uses `iterator.next()` instead of `next(iterator)`
-- **Dictionary iteration** uses `.iteritems()` instead of `.items()`
-- **Unicode handling** uses `unicode()` function
+### Python 3 Migration (Completed)
+- **✅ Syntax compatibility** - All code now Python 3 compatible
+- **✅ Print statements** - Converted to print() function
+- **✅ Exception handling** - Updated to modern syntax
+- **✅ Iterator protocol** - Uses `next()` function properly
+- **✅ Dictionary iteration** - Uses `.items()` method
+- **✅ Unicode handling** - Uses modern string handling
+- **✅ Package structure** - Organized into `wisent_pkg/` package
+- **✅ Modern packaging** - Added `setup.py` and `pyproject.toml`
 
 ### Security Vulnerabilities
 - **6 open Dependabot alerts** for jQuery 1.12.4 in documentation
@@ -151,31 +183,35 @@ Generated parsers support sophisticated error recovery:
 - **2012-2024:** Maintenance mode with minimal activity
 - **2024:** Only 2 minor commits (jQuery update attempt, test driver change)
 
-## Technical Debt
+## Current Status
 
-After 12+ years of minimal maintenance:
-- No Python 3 compatibility
-- Outdated dependencies (Sphinx, jQuery)
-- Missing modern Python packaging (no setup.py, PyPI presence)
-- Documentation gaps (installation process)
-- Security vulnerabilities in documentation assets
+After successful Python 3 migration:
+- **✅ Python 3 compatibility** - Fully working on Python 3.6+
+- **✅ Modern packaging** - setup.py and pyproject.toml added
+- **✅ Updated build system** - Works with both traditional and modern methods
+- **⚠️ Remaining issues:**
+  - Outdated dependencies (Sphinx, jQuery) in documentation
+  - Security vulnerabilities in documentation assets
+  - jQuery 1.12.4 needs updating
 
 ## Working with This Codebase
 
 ### Before Making Changes
-1. **Understand the template system** - changes to `template.py` affect all generated parsers
+1. **Understand the template system** - changes to `wisent_pkg/template.py` affect all generated parsers
 2. **Test with examples** - regenerate and test all parsers in `examples/`
-3. **Python 2 required** - current code will not run on Python 3
+3. **Python 3 required** - code now requires Python 3.6+
+4. **Package imports** - use `from wisent_pkg.module import ...` for internal imports
 
 ### Testing Strategy
-1. Run test suite: `python2 check1.py && python2 check2.py`
-2. Test parser generation: `python2 wisent.py examples/calculator/calculator.wi -o test.py`
-3. Test generated parser: `python2 -c "import test; print('OK')"`
-4. Test examples: `cd examples/calculator && python2 calc.py`
+1. Run test suite: `python3 check1.py && python3 check2.py` or `make check`
+2. Test parser generation: `python3 -m wisent_pkg.wisent examples/calculator/calculator.wi -o test.py`
+3. Test generated parser: `python3 -c "import test; print('OK')"`
+4. Test examples: `cd examples/calculator && python3 calc.py`
 
 ### Code Generation Testing
 Since generated parsers are the primary output:
 1. Test all `.wi` files in examples directory
-2. Verify generated parsers are syntactically valid
+2. Verify generated parsers are syntactically valid Python 3
 3. Compare parser behavior before/after changes
 4. Test error handling and recovery mechanisms
+5. Verify all examples work with Python 3

@@ -1,0 +1,145 @@
+# Modified version of the JavaScript grammar found at
+# http://hepunx.rl.ac.uk/~adye/jsspec11/llr.htm
+
+Program
+  : Element*
+  ;
+Element
+  : FUNCTION IDENTIFIER '(' ParameterListOpt ')' CompoundStatement
+  | Statement
+  ;
+ParameterListOpt
+  : ParameterList ?
+  ;
+ParameterList
+  : IDENTIFIER ( ',' IDENTIFIER )*
+  ;
+CompoundStatement
+  : '{' Statements '}'
+  ;
+Statements
+  : Statement*
+  ;
+Statement
+  : ';'
+  | IF Condition Statement
+  | IF Condition Statement ! ELSE Statement
+  | WHILE Condition Statement
+  | FOR '(' ';' ExpressionOpt ';' ExpressionOpt ')' Statement
+  | FOR '(' VariablesOrExpression ';' ExpressionOpt ';' ExpressionOpt ')' Statement
+  | FOR '(' VariablesOrExpression IN Expression ')' Statement
+  | BREAK ';'
+  | CONTINUE ';'
+  | WITH '(' Expression ')' Statement
+  | RETURN ExpressionOpt ';'
+  | CompoundStatement
+  | VariablesOrExpression ';'
+  ;
+Condition
+  : ( Expression )
+  ;
+VariablesOrExpression
+  : VAR Variables
+  | Expression
+  ;
+Variables
+  : Variable ( ',' Variable )*
+  ;
+Variable
+  : IDENTIFIER
+  | IDENTIFIER '=' AssignmentExpression
+  ;
+ExpressionOpt
+  : Expression ?
+  ;
+Expression
+  : AssignmentExpression
+  | AssignmentExpression ',' Expression
+  ;
+AssignmentExpression
+  : ConditionalExpression
+  | ConditionalExpression ! ASSIGNMENT_OPERATOR AssignmentExpression
+  ;
+ConditionalExpression
+  : OrExpression
+  | OrExpression '?' AssignmentExpression ':' AssignmentExpression
+  ;
+OrExpression
+  : AndExpression
+  | AndExpression '||' OrExpression
+  ;
+AndExpression
+  : BitwiseOrExpression
+  | BitwiseOrExpression '&&' AndExpression
+  ;
+BitwiseOrExpression
+  : BitwiseXorExpression
+  | BitwiseXorExpression '|' BitwiseOrExpression
+  ;
+BitwiseXorExpression
+  : BitwiseAndExpression
+  | BitwiseAndExpression '^' BitwiseXorExpression
+  ;
+BitwiseAndExpression
+  : EqualityExpression
+  | EqualityExpression '&' BitwiseAndExpression
+  ;
+EqualityExpression
+  : RelationalExpression
+  | RelationalExpression EQUALITY_OPERATOR EqualityExpression
+  ;
+RelationalExpression
+  : ShiftExpression
+  | RelationalExpression RELATIONAL_OPERATOR ShiftExpression
+  ;
+ShiftExpression
+  : AdditiveExpression
+  | AdditiveExpression SHIFT_OPERATOR ShiftExpression
+  ;
+AdditiveExpression
+  : MultiplicativeExpression
+  | MultiplicativeExpression '+' AdditiveExpression
+  | MultiplicativeExpression ! '-' AdditiveExpression
+  ;
+MultiplicativeExpression
+  : UnaryExpression
+  | UnaryExpression MULTIPLICATIVE_OPERATOR MultiplicativeExpression
+  ;
+UnaryExpression
+  : MemberExpression
+  | UNARY_OPERATOR UnaryExpression
+  | '-' UnaryExpression
+  | INCREMENT_OPERATOR MemberExpression
+  | MemberExpression ! INCREMENT_OPERATOR
+  | NEW ( THIS '.' )? ConstructorCall
+  | DELETE MemberExpression
+  ;
+ConstructorCall
+  : IDENTIFIER
+  | IDENTIFIER ! '(' ArgumentListOpt ')'
+  | IDENTIFIER '.' ConstructorCall
+  ;
+MemberExpression
+  : PrimaryExpression
+  | PrimaryExpression '.' MemberExpression
+  | PrimaryExpression '[' Expression ']'
+  | PrimaryExpression ! '(' ArgumentListOpt ')'
+  ;
+ArgumentListOpt
+  : ArgumentList ?
+  ;
+ArgumentList
+  : AssignmentExpression
+  | AssignmentExpression ',' ArgumentList
+  ;
+PrimaryExpression
+  : '(' Expression ')'
+  | IDENTIFIER
+  | INTEGER
+  | FLOAT
+  | STRING
+  | FALSE
+  | TRUE
+  | NULL
+  | THIS
+  ;
