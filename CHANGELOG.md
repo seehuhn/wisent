@@ -5,12 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - TBD
+## [1.0.0] - 2025-07-06
 
 ### Added
 - Modern Python packaging with `setup.py` and `pyproject.toml`
 - pip installation support (`pip install wisent`)
-- Comprehensive test suite (`test_appel.py`)
+- test suite (`test_appel.py`)
 - New JavaScript parser examples (ECMAScript and simplified JavaScript grammars)
 - New example parsers with generated code
 - Console script entry point for system-wide installation
@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Import statements updated for package-relative imports
 - Generated parser compatibility with Python 3
 - Code cleanup to reduce pychecker warnings
+- Template parameter bug in `write_example` function that caused KeyError on missing date/version variables
 
 ### Removed
 - Python 2 compatibility code

@@ -9,12 +9,11 @@ master_doc = 'index'
 project = 'wisent'
 copyright = '2012, Jochen Voss'
 
-m = re.search(r'AC_INIT\(wisent, *(([0-9]+\.[0-9]+)[^, ]*),',
-              open("../../configure.ac", encoding="utf-8").read(),
-              re.MULTILINE)
-version = m.group(2)
-release = m.group(1)
-del m
+# Import version from the package
+sys.path.insert(0, os.path.abspath('../../wisent_pkg'))
+from version import VERSION
+version = '.'.join(VERSION.split('.')[:2])  # Major.minor (e.g., "0.6")
+release = VERSION  # Full version (e.g., "0.6.2")
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
