@@ -1,238 +1,70 @@
 # Wisent - LR(1) Parser Generator for Python
 
-Wisent is an LR(1) parser generator for Python 3 that converts context-free grammars into Python code.
-
-## Requirements
-
-- Python 3.6 or later
-- pip (Python package manager)
+Wisent is an LR(1) parser generator for Python 3 that converts context-free grammars into Python code. It provides a simple way to build robust parsers for custom languages and data formats, making it ideal for compiler construction, configuration file parsing, and domain-specific language development.
 
 ## Installation
 
-### Method 1: Install via pip (Recommended)
-
-The easiest way to install Wisent is using pip:
+The easiest way to install Wisent is using pip, which will handle all dependencies automatically. For most users, a simple `pip install wisent` is sufficient. If you need the latest development version or want to contribute to the project, you can install from source using git.
 
 ```bash
+# Install from PyPI (recommended)
 pip install wisent
-```
 
-Install for current user only:
-```bash
-pip install --user wisent
-```
-
-Upgrade to the latest version:
-```bash
-pip install --upgrade wisent
-```
-
-### Method 2: Install from Source
-
-Install the latest development version from source:
-
-```bash
+# Install from source for development
 git clone https://github.com/seehuhn/wisent.git
 cd wisent
-pip install .
-```
-
-For development installation (editable):
-```bash
 pip install -e .
 ```
 
-### Method 3: Traditional Build System
+For users without administrator privileges, add the `--user` flag to install only for your account. Python 3.6 or later is required.
 
-For the traditional autotools build process:
+## Quick Start
 
-```bash
-./configure
-make
-make install
-```
-
-#### Build Dependencies
-
-For building from source using autotools:
-- autotools (autoconf, automake)
-- Python 3.6+ development headers
-- make
-
-#### Detailed Build Steps
-
-1. **Configure the build:**
-   ```bash
-   ./configure
-   ```
-   
-   Specify installation prefix:
-   ```bash
-   ./configure --prefix=/usr/local
-   ```
-
-2. **Build the project:**
-   ```bash
-   make
-   ```
-
-3. **Run tests (optional):**
-   ```bash
-   python3 tests/test_parser_generation.py
-   python3 tests/test_scanner.py
-   ```
-
-4. **Install:**
-   ```bash
-   make install
-   ```
-
-5. **Run without installing:**
-   ```bash
-   ./wisent --version
-   ```
-
-## Verification
-
-After installation, verify that Wisent is working:
+After installation, you can immediately start generating parsers from grammar files. Wisent uses a simple grammar syntax with `.wi` file extensions. Here's how to get started:
 
 ```bash
+# Check that Wisent is working
 wisent --version
-```
 
-Expected output:
-```
-wisent 0.6.2
-Copyright (C) 2008, 2009 Jochen Voss <voss@seehuhn.de>
-...
-```
+# Generate a parser from a grammar file
+wisent your_grammar.wi -o parser.py
 
-## Usage
-
-Generate a parser from a grammar file:
-```bash
-wisent grammar.wi
-```
-
-Get help:
-```bash
-wisent --help
-```
-
-## Examples
-
-The installation includes several example grammars in the `examples/` directory:
-
-- `examples/calculator/calculator.wi` - Simple calculator grammar
-- `examples/css/css.wi` - CSS parser grammar  
-- `examples/email/parser.wi` - Email address parser
-
-Try the calculator example:
-```bash
+# Try the included calculator example
 wisent examples/calculator/calculator.wi
 ```
 
-## Troubleshooting
+The examples directory contains several ready-to-use grammars including a calculator, CSS parser, and email address parser that demonstrate different parsing techniques and language features.
 
-### Python Version Issues
+## Testing Your Installation
 
-Check your Python version:
-```bash
-python3 --version
-```
+To verify that everything is working correctly, run the included test suite. These tests validate both the parser generation process and the grammar tokenizer functionality:
 
-Use python3 explicitly:
-```bash
-python3 -m pip install wisent
-```
-
-### Permission Issues
-
-Install for current user only:
-```bash
-pip install --user wisent
-```
-
-Or use a virtual environment:
-```bash
-python3 -m venv wisent-env
-source wisent-env/bin/activate  # On Windows: wisent-env\\Scripts\\activate
-pip install wisent
-```
-
-### Build Issues
-
-Install development tools:
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install build-essential python3-dev
-```
-
-**CentOS/RHEL:**
-```bash
-sudo yum install gcc python3-devel
-```
-
-**macOS:**
-```bash
-xcode-select --install
-```
-
-Regenerate build files:
-```bash
-./autogen.sh
-./configure
-make
-```
-
-## Development
-
-### Setup
-
-Clone and install in development mode:
-```bash
-git clone https://github.com/seehuhn/wisent.git
-cd wisent
-pip install -e .
-```
-
-### Testing
-
-Run tests:
 ```bash
 python3 tests/test_parser_generation.py
 python3 tests/test_scanner.py
 ```
 
-### Documentation
+Both tests should complete with success messages, indicating that your installation is ready for use.
 
-Build documentation:
-```bash
-cd doc/
-sphinx-build -b html . html/
+## Grammar File Format
+
+Wisent grammars use a straightforward syntax similar to BNF notation. Rules are defined with colons and alternatives separated by vertical bars. The grammar format supports modern features like UTF-8 encoding, hyphenated symbol names, grouping with parentheses, and optional expressions with the `?` operator.
+
+```
+rule_name: symbol1 symbol2 | alternative ;
+optional_expr: required_part optional_part? ;
+grouped: symbol1 ( group_a | group_b ) symbol2 ;
 ```
 
-## Uninstallation
+See the examples directory and online documentation for complete grammar examples and advanced features.
 
-Remove Wisent:
-```bash
-pip uninstall wisent
-```
+## Documentation and Support
 
-## Documentation
-
-The complete Wisent manual can be found in the `doc/html/` subdirectory of the source archive or online at http://seehuhn.de/media/manuals/wisent/
+Complete documentation including a tutorial and reference manual is available online at http://seehuhn.de/media/manuals/wisent/. For bug reports or questions, contact <voss@seehuhn.de> and include the output of `wisent --version`.
 
 ## License
 
-Wisent comes with NO WARRANTY, to the extent permitted by law. You may redistribute copies of Wisent under the terms of the GNU General Public License. For more information, see the COPYING file.
-
-## Support
-
-- **Bug reports:** Send to <voss@seehuhn.de> (include version from `wisent -V`)  
-- **Homepage:** http://seehuhn.de/pages/wisent
+Wisent is free software distributed under the GNU General Public License. It comes with absolutely no warranty to the extent permitted by law. See the COPYING file for complete license terms.
 
 ---
-
-Copyright (C) 2008, 2009 Jochen Voss <voss@seehuhn.de>
+Copyright (C) 2008, 2009 Jochen Voss
