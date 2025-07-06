@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Modern Python packaging with `setup.py` and `pyproject.toml`
-- pip installation support (`pip install wisent`)
+- pip installation support (`pip install wisent-parser`)
 - test suite (`test_appel.py`)
 - New JavaScript parser examples (ECMAScript and simplified JavaScript grammars)
 - New example parsers with generated code

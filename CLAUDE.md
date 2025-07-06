@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Wisent is an LR(1) parser generator for Python 3 that converts context-free grammars into Python code. It's a mature, stable project (version 0.6.2) with modern Python packaging.
+Wisent is an LR(1) parser generator for Python 3 that converts context-free grammars into Python code. It's a mature, stable project (version 1.0.2) with modern Python packaging.
 
 **Current State:**
 - **Python 3 compatible** - Fully migrated to Python 3.6+ with modern packaging
-- **Last major release:** April 10, 2012 (12+ years ago)
+- **Last major release:** July 6, 2025 (version 1.0.1)
 - **Development status:** Recently migrated to Python 3 with active maintenance
 - **Stability:** Very stable codebase with successful Python 3 migration
-- **Current version:** 0.6.2 (verified in setup.py, pyproject.toml, and version files)
+- **Current version:** 1.0.2 (verified in pyproject.toml and version files)
 
 ## Critical Architecture Understanding
 
@@ -42,9 +42,9 @@ pip install -e .    # Development install
 pip install .       # Regular install
 ```
 
-**From PyPI (when available):**
+**From PyPI:**
 ```bash
-pip install wisent
+pip install wisent-parser
 ```
 
 ### Running Tests

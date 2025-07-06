@@ -4,11 +4,11 @@ Wisent is an LR(1) parser generator for Python 3 that converts context-free gram
 
 ## Installation
 
-The easiest way to install Wisent is using pip, which will handle all dependencies automatically. For most users, a simple `pip install wisent` is sufficient. If you need the latest development version or want to contribute to the project, you can install from source using git.
+The easiest way to install Wisent is using pip, which will handle all dependencies automatically. For most users, a simple `pip install wisent-parser` is sufficient. If you need the latest development version or want to contribute to the project, you can install from source using git.
 
 ```bash
 # Install from PyPI (recommended)
-pip install wisent
+pip install wisent-parser
 
 # Install from source for development
 git clone https://github.com/seehuhn/wisent.git
