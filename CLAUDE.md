@@ -11,6 +11,7 @@ Wisent is an LR(1) parser generator for Python 3 that converts context-free gram
 - **Last major release:** April 10, 2012 (12+ years ago)
 - **Development status:** Recently migrated to Python 3 with active maintenance
 - **Stability:** Very stable codebase with successful Python 3 migration
+- **Current version:** 0.6.2 (verified in setup.py, pyproject.toml, and version files)
 
 ## Critical Architecture Understanding
 
@@ -69,9 +70,8 @@ This runs the test suite consisting of:
 
 ### Building Documentation
 The project uses Sphinx for documentation generation:
-- Documentation source in `doc/` 
+- Documentation source in `doc/`
 - Built documentation in `doc/html/` and `doc/web/html/`
-- Uses Sphinx with old jQuery 1.12.4 (security vulnerabilities)
 
 ```bash
 cd doc/
@@ -155,45 +155,6 @@ Generated parsers support sophisticated error recovery:
 - Infinite loop detection in grammar rules (added in 0.6.1)
 - Meaningful error messages with expected tokens
 
-## Migration History
-
-### Python 3 Migration (Completed)
-- **✅ Syntax compatibility** - All code now Python 3 compatible
-- **✅ Print statements** - Converted to print() function
-- **✅ Exception handling** - Updated to modern syntax
-- **✅ Iterator protocol** - Uses `next()` function properly
-- **✅ Dictionary iteration** - Uses `.items()` method
-- **✅ Unicode handling** - Uses modern string handling
-- **✅ Package structure** - Organized into `wisent_pkg/` package
-- **✅ Modern packaging** - Added `setup.py` and `pyproject.toml`
-
-### Security Vulnerabilities
-- **6 open Dependabot alerts** for jQuery 1.12.4 in documentation
-- All related to XSS vulnerabilities in generated Sphinx documentation
-- Files affected: `doc/html/_static/jquery.js`, `doc/web/html/_static/jquery.js`
-
-### GitHub Issues
-- **Issue #1 (2014):** Installation documentation incomplete (missing autogen.sh step)
-- **Issue #2 (2014):** Request for PyPI distribution
-
-## Development History
-
-- **2008-2012:** Active development period (87 commits)
-- **2012:** Last major release (0.6.2) 
-- **2012-2024:** Maintenance mode with minimal activity
-- **2024:** Only 2 minor commits (jQuery update attempt, test driver change)
-
-## Current Status
-
-After successful Python 3 migration:
-- **✅ Python 3 compatibility** - Fully working on Python 3.6+
-- **✅ Modern packaging** - setup.py and pyproject.toml added
-- **✅ Updated build system** - Works with both traditional and modern methods
-- **⚠️ Remaining issues:**
-  - Outdated dependencies (Sphinx, jQuery) in documentation
-  - Security vulnerabilities in documentation assets
-  - jQuery 1.12.4 needs updating
-
 ## Working with This Codebase
 
 ### Before Making Changes
@@ -207,6 +168,7 @@ After successful Python 3 migration:
 2. Test parser generation: `python3 -m wisent_pkg.wisent examples/calculator/calculator.wi -o test.py`
 3. Test generated parser: `python3 -c "import test; print('OK')"`
 4. Test examples: `cd examples/calculator && python3 calc.py`
+5. Test console script: `wisent examples/calculator/calculator.wi -o test.py` (after pip install)
 
 ### Code Generation Testing
 Since generated parsers are the primary output:
