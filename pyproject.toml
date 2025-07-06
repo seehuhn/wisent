@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wisent"
-version = "1.0.0"
+dynamic = ["version"]
 description = "LR(1) parser generator for Python"
 readme = "README.md"
 authors = [
@@ -44,3 +44,6 @@ exclude = ["tests*", "examples*", "doc*"]
 
 [tool.setuptools.package-data]
 wisent_pkg = ["*.py"]
+
+[tool.setuptools.dynamic]
+version = {attr = "wisent_pkg.version.VERSION"}

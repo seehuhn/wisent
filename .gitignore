@@ -9,7 +9,6 @@ configure
 install-sh
 missing
 py-compile
-version.py
 
 # Python packaging build artifacts
 *.egg-info/
