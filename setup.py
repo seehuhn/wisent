@@ -7,11 +7,12 @@ import os
 import re
 from setuptools import setup, find_packages
 
-# Read version from configure.ac
+# Read version from wisent_pkg/version.py
 def get_version():
-    with open("configure.ac", "r", encoding="utf-8") as f:
+    version_file = os.path.join("wisent_pkg", "version.py")
+    with open(version_file, "r", encoding="utf-8") as f:
         content = f.read()
-    match = re.search(r'AC_INIT\(wisent, *(([0-9]+\.[0-9]+)[^, ]*),', content, re.MULTILINE)
+    match = re.search(r'VERSION = ["\']([^"\']*)["\']', content)
     if match:
         return match.group(1)
     return "0.6.2"
@@ -31,7 +32,7 @@ setup(
     author_email="voss@seehuhn.de",
     url="http://seehuhn.de/pages/wisent",
     license="GPL-2.0-or-later",
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests", "tests.*"]),
     entry_points={
         "console_scripts": [
             "wisent=wisent_pkg.wisent:main",

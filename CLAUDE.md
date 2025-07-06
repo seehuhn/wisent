@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Wisent is an LR(1) parser generator for Python 3 that converts context-free grammars into Python code. It's a mature, stable project (version 0.6.2) built with GNU Autotools and modern Python packaging.
+Wisent is an LR(1) parser generator for Python 3 that converts context-free grammars into Python code. It's a mature, stable project (version 0.6.2) with modern Python packaging.
 
 **Current State:**
 - **Python 3 compatible** - Fully migrated to Python 3.6+ with modern packaging
@@ -31,34 +31,24 @@ The `template.py` file serves two purposes:
 
 **Prerequisites:**
 - Python 3.6+ (Python 2 no longer supported)
-- GNU Autotools (autoconf, automake, libtool) - for traditional build
-- pip - for modern Python package installation
+- pip (Python package manager)
 
 ### Building the Project
 
-**Modern Method (Recommended):**
+**Installation:**
 ```bash
 pip install -e .    # Development install
 # or
 pip install .       # Regular install
 ```
 
-**Traditional Method:**
+**From PyPI (when available):**
 ```bash
-./autogen.sh    # Generate configure script (often missing from docs)
-./configure
-make
-make install
+pip install wisent
 ```
 
 ### Running Tests
 
-**Traditional Method:**
-```bash
-make check
-```
-
-**Direct Method:**
 ```bash
 python3 check1.py
 python3 check2.py
@@ -80,11 +70,6 @@ sphinx-build -b html -d web/cache -c . . html/
 ```
 
 ### Running Wisent
-
-**After traditional build:**
-```bash
-./wisent [options] grammar_file
-```
 
 **After pip install:**
 ```bash
@@ -164,7 +149,7 @@ Generated parsers support sophisticated error recovery:
 4. **Package imports** - use `from wisent_pkg.module import ...` for internal imports
 
 ### Testing Strategy
-1. Run test suite: `python3 check1.py && python3 check2.py` or `make check`
+1. Run test suite: `python3 check1.py && python3 check2.py`
 2. Test parser generation: `python3 -m wisent_pkg.wisent examples/calculator/calculator.wi -o test.py`
 3. Test generated parser: `python3 -c "import test; print('OK')"`
 4. Test examples: `cd examples/calculator && python3 calc.py`
