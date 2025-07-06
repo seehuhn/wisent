@@ -50,13 +50,13 @@ pip install wisent
 ### Running Tests
 
 ```bash
-python3 check1.py
-python3 check2.py
+python3 tests/test_parser_generation.py
+python3 tests/test_scanner.py
 ```
 
 This runs the test suite consisting of:
-- `check1.py` - Parser generation and parsing tests
-- `check2.py` - Scanner/tokenizer tests
+- `test_parser_generation.py` - Parser generation and parsing tests
+- `test_scanner.py` - Scanner/tokenizer tests
 
 ### Building Documentation
 The project uses Sphinx for documentation generation:
@@ -149,7 +149,7 @@ Generated parsers support sophisticated error recovery:
 4. **Package imports** - use `from wisent_pkg.module import ...` for internal imports
 
 ### Testing Strategy
-1. Run test suite: `python3 check1.py && python3 check2.py`
+1. Run test suite: `python3 tests/test_parser_generation.py && python3 tests/test_scanner.py`
 2. Test parser generation: `python3 -m wisent_pkg.wisent examples/calculator/calculator.wi -o test.py`
 3. Test generated parser: `python3 -c "import test; print('OK')"`
 4. Test examples: `cd examples/calculator && python3 calc.py`

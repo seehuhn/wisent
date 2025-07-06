@@ -78,7 +78,8 @@ For building from source using autotools:
 
 3. **Run tests (optional):**
    ```bash
-   make check
+   python3 tests/test_parser_generation.py
+   python3 tests/test_scanner.py
    ```
 
 4. **Install:**
@@ -200,7 +201,8 @@ pip install -e .
 
 Run tests:
 ```bash
-make check
+python3 tests/test_parser_generation.py
+python3 tests/test_scanner.py
 ```
 
 ### Documentation
