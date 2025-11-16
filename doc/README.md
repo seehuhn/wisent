@@ -28,42 +28,26 @@ pip install sphinx
 
 #### HTML Documentation
 
-**Standard build:**
 ```bash
 cd doc/
-sphinx-build -b html -d web/cache -c . . html/
+sphinx-build -b html -c . . html/
 ```
-
-**Using the convenience script:**
-```bash
-cd doc/
-./generate-web-doc
-```
-
-This script:
-- Creates necessary directories (`web/html`, `web/cache`)
-- Builds HTML documentation with proper permissions
-- Uses the web configuration from `web/conf.py`
 
 #### PDF Documentation
 
 To generate a PDF version:
 ```bash
 cd doc/
-sphinx-build -b latex -d web/cache -c . . latex/
+sphinx-build -b latex -c . . latex/
 cd latex/
 make
 ```
 
 ### Configuration
 
-The documentation uses two configuration files:
-- `conf.py` - Main configuration for standard HTML build
-- `web/conf.py` - Configuration for web version (used by `generate-web-doc`)
+The documentation uses `conf.py` for Sphinx configuration.
 
 ### Output Directories
 
-- `html/` - Standard HTML documentation
-- `web/html/` - Web version HTML documentation (created by `generate-web-doc`)
-- `web/cache/` - Sphinx cache directory
+- `html/` - HTML documentation
 - `latex/` - LaTeX output (if generating PDF)

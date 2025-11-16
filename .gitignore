@@ -17,7 +17,6 @@ dist/
 
 # Generated documentation
 doc/html/
-doc/web/cache/
 
 # Build artifacts
 Makefile

@@ -61,12 +61,11 @@ This runs the test suite consisting of:
 ### Building Documentation
 The project uses Sphinx for documentation generation:
 - Documentation source in `doc/`
-- Built documentation in `doc/html/` and `doc/web/html/`
+- Built documentation in `doc/html/`
 
 ```bash
 cd doc/
-sphinx-build -b html -d web/cache -c . . html/
-./generate-web-doc  # Alternative build script
+sphinx-build -b html -c . . html/
 ```
 
 ### Running Wisent
